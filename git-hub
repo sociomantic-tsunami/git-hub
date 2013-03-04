@@ -610,7 +610,9 @@ class PullreqCmd (IssueCmd):
 				msg = cls.comment_editor(msg)
 			if msg:
 				cls.clean_and_post_comment(args.pull, msg)
-			pull = req.patch(cls.url(args.pull), state='closed')
+			pull = req.get(cls.url(args.pull))
+			if pull['state'] == 'open':
+				pull = req.patch(cls.url(args.pull), state='closed')
 			cls.print_issue(pull)
 
 
