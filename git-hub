@@ -4,199 +4,8 @@
 """\
 Git command line interface to GitHub.
 
-
-Usage:
-  git-hub -h | --help
-  git-hub --version
-  git-hub issue [list] [--closed]
-  git-hub issue show ISSUES...
-  git-hub issue new [-m|--message=MSG] [-l|--label=LABEL] [-a|--assign=USER] [-M|--milestone=ID]
-  git-hub issue update [--close|--open] [-m|--message=MSG] [-e|--edit-message] [-l|--label=LABEL] [-a|--assign=USER] [-M|--milestone=ID] ISSUE
-  git-hub issue comment [-m|--message=MSG] ISSUE
-  git-hub issue close [-m|--message=MSG] [-e|--edit-message] ISSUE
-  git-hub pullreq [list] [--closed]
-  git-hub pullreq show PULLS...
-  git-hub pullreq new [-m|--message=MSG] [-b|--base BASE] [HEAD]
-  git-hub pullreq attach [-m|--message=MSG] [-e|--edit-message] [-b|--base BASE] ISSUE [HEAD]
-  git-hub pullreq rebase [-m|--message=MSG] [-e|--edit-message] PULL
-  git-hub pullreq update [--close|--open] [-m|--message=MSG] [-e|--edit-message] [-l|--label=LABEL] [-a|--assign=USER] [-M|--milestone=ID] PULL
-  git-hub pullreq comment [-m|--message=MSG] PULL
-  git-hub pullreq close [-m|--message=MSG] [-e|--edit-message] PULL
-
-
-Description:
-  git hub is a simple command line interface to github, enabling most useful
-  GitHub tasks (like creating and listing pull request or issues) to be accessed
-  directly through the git command line.
-
-  To use this command you need to configure at least two git configuration
-  variables: hub.upstream and hub.password. All commands here will use the
-  hub.upstream GitHub repository (issues, pull requests, etc.). See the
-  Configuration section for more details.
-
-
-Commands:
-  issue
-    This command is used to manage GitHub issues through a set of subcommands.
-    Is no subcommand is specified, 'list' is used.
-
-    list
-      Show a list of open issues (or closed issues if --closed is specified).
-
-    show
-      Show the issues identified by the number passed in ISSUES.
-
-    new
-      Create a new issue. If no message is specified (through -m or --message)
-      the default GIT_EDITOR is opened to write one. The first line is used as
-      the issue title and any text after an empty line is used as the optional
-      body. When creating the issue, labels, an assignee or a milestone ID can
-      be specified. See the Options section for more details.
-
-    update
-      Similar to 'new' but update an existing issue identified by the number
-      ISSUE. The issue can be (re)opened or closed too (see the 'close'
-      subcommand for a shorter and convenient alias to close an issue). If you
-      want to change the issue title or body, you have to specify it with the
-      --message option or use the --edit-message option to spawn an editor to
-      edit the message (the old message will be used as a default).
-
-    comment
-      Add a new comment to an existing issue identified by the number ISSUE. If
-      no --message option is specified, an editor will be open to write the
-      message.
-
-    close
-      Alias for 'update --close' (+ 'comment' if --message or --edit-message is
-      specified).
-
-  pullreq
-    This command is used to manage GitHub pull requests. Since pull requests in
-    GitHub are also issues, most of the subcommands are repeated from the
-    'issue' command for convenience. Only the 'list', 'new' and 'attach'
-    commands are really different.
-
-    list
-      Show a list of open pull requests (or closed issues if --closed is
-      specified).
-
-    show
-      Alias for 'issue show'.
-
-    new
-      Create a new pull request. If the HEAD argument is not specified, your
-      current branch is used as the head for the pull request (the repository is
-      taken from the hub.forkrepo configuration, which defaults to
-      hub.username/<hub.upstream project part>). If the --base option is not
-      present, then the base branch from the configuration hub.pullbase is used
-      (or just 'master' if that configuration is not present either).  The
-      repository to use as the base is taken from hub.upstream. Same as for
-      issues, if --message is not present, the GIT_EDITOR will be open so you
-      can write the title and body for the pull request. If the HEAD branch have
-      a proper description (see git branch --edit-description), that description
-      will be used as the default message in the editor and if not, the message
-      of the last commit will be used instead.
-      If the branch used as HEAD is not pushed to your fork remote, a push will
-      be automatically done before creating the pull request.
-
-    attach
-      Convert the pull request identified by the number ISSUE to a pull request
-      by attaching commits to it. The HEAD argument and --base option have the
-      same meaning as for the 'new' subcommand. If --message or --edit-message
-      are used, a comment will be added to the issue too (--edit-message will
-      open an editor, using the same default message as in the 'new'
-      subcommand).
-
-    rebase
-      Close a pull request identified by the number PULL by rebasing it to the
-      base (specified in the pull request) instead of merging as the Merge
-      Button™ would do. If the operation is successful, a comment will be
-      posted informing the new HEAD commit of the branch that has been rebased
-      and the pull request will be closed. If you want to specify a different
-      comment before closing the pull request, you can use --message or
-      --edit-message (--edit-message will open an editor with the default
-      comment). If you don't specify any message, the default comment will be
-      used! Use -m '' (or -e and clean the message in the editor) instead if
-      you really want to omit the comment. The type of URL used to fetch and
-      push can be specified through the 'hub.pullurltype' configuration
-      variable (see Configuration: for more details). Your working copy should
-      stay the same ideally, if everything went OK.
-      The operations performed by this command are roughly these: stash, fetch
-      pullhead, checkout -b tmp FETCH_HEAD, pull --rebase pullbase, push
-      pullbase, checkout oldhead, branch -D tmp
-
-    update
-      Alias for 'issue update'.
-
-    comment
-      Alias for 'issue comment'.
-
-    close
-      Alias for 'issue close'.
-
-
-Configuration:
-  This program use the git configuration facilities to get its configuration
-  from. These are the git config keys used:
-
-  hub.username [default: current OS username]
-    Your GitHub username.
-
-  hub.password [required]
-    Your GitHub password.
-
-  hub.upstream [required]
-    Blessed repository used to get the issues from and make the pull requests
-    to. The format is <owner>/<project>.
-
-  hub.forkrepo [defaul: <username>/(upstream <project> part)]
-    Your blessed repository fork. The format is <owner>/<project>. Used to set
-    the head for your pull requests.
-
-  hub.forkremote [default: origin]
-    Remote name for accessing your fork. Used to push branches before creating
-    a pull request.
-
-  hub.pullbase [default: master]
-    Default remote branch (or git reference) you want your changes pulled into
-    when creating a pull request.
-
-  hub.pullurltype [default: ssh_url]
-    Type of URL to use when an URL from a GitHub API is needed (for example,
-    when 'pull rebase' is used). At the time of writing it could be ssh_url
-    or clone_url for HTTP). See this link for possible options:
-    http://developer.github.com/v3/pulls/#get-a-single-pull-request
-
-
-Options:
-  -h --help                Show help message and quit
-  --version                Show program version and quit
-  --closed                 Show only closed pull requests
-  -m MSG, --message=MSG    Issue/pull request message or comment; when the text
-                           of an issue or pull request is being addressed the
-                           first line is interpreted as the title and any
-                           (optional) text after and empty line is interpreted
-                           as the description
-  -e, --edit-message       Edit the message provided by --message or a previous
-                           message (if --message is not present) in an editor
-  -l LABEL, --label=LABEL  Labels to set for the issue/pull request (can be
-                           specified multiple times to set multiple labels);
-                           if only an empty label (-l'' for example) is found
-                           during an update, all labels will be cleared
-  --clear-labels           Clear all issues/pull request labels
-  -a USER, --assign=USER   User to be assigned to the issue/pull request
-  -M ID, --milestone=ID    Milestone number the issue/pull request will be
-                           attached to
-  --open                   Set issue/pull request state to open
-  --close                  Set issue/pull request state to closed
-  -b BASE, --base=BASE     Remote branch (or git ref) you want your changes
-                           pulled into [default is "master" or hub.pullbase git
-                           config variable]
-
-
 Written by Leandro Lucarella <leandro.lucarella@sociomantic.com>.
 """
-
 
 import sys
 import json
@@ -206,8 +15,8 @@ import urllib
 import urllib2
 import getpass
 import os.path
+import argparse
 import subprocess
-from docopt import docopt
 
 
 def out(msg):
@@ -346,46 +155,6 @@ for method in ('head', 'get', 'post', 'patch', 'put', 'delete'):
 	setattr(RequestManager, method, make_method(method))
 
 
-def getoptarg(name):
-	value = args['--' + name]
-	if value:
-		return value[-1]
-	return None
-
-
-def namedict(named_list, name='name'):
-	return dict([(x[name], x) for x in named_list])
-
-
-def print_dict(d, prefix=''):
-	kwidth = max((len(k) for k in d))
-	for k, v in d.items():
-		out('{0}{1: <{2}}'.format(prefix, k, kwidth))
-		if isinstance(v, dict):
-			outf()
-			print_dict(v, prefix + '\t')
-		elif isinstance(v, list):
-			outf()
-			for i, d in enumerate(v):
-				outf('{}Item {}', prefix, i)
-				print_obj(d, prefix + '\t')
-				outf()
-		elif v:
-			outf(" {}", v)
-
-
-def print_obj(obj, prefix=''):
-	if isinstance(obj, dict):
-		print_dict(obj, prefix)
-	elif isinstance(obj, list):
-		for i, d in enumerate(obj):
-			outf('{}Item {}', prefix, i)
-			print_obj(d, prefix + '\t')
-			outf()
-	elif obj:
-		outf('{}{}', prefix, obj)
-
-
 def check_empty_message(msg):
 	if not msg.strip():
 		die("Message is empty, aborting...")
@@ -423,29 +192,39 @@ def split_titled_message(msg):
 	return (title, body)
 
 
-class CmdDispatcher (object):
+class CmdGroup (object):
 
-	suffix = 'cmd_'
-	default_cmd = None
+	subcommand_suffix = 'Cmd'
 
-	def dispatch(self):
-		cmds = [m[len(self.suffix):] for m in dir(self)
-				if m.startswith(self.suffix)]
-		for cmd in cmds:
-			if args[cmd]:
-				getattr(self, self.suffix + cmd)()
-				return True
-		if self.default_cmd:
-			getattr(self, self.suffix + self.default_cmd)()
-			return True
-		return False
+	@classmethod
+	def setup_parser(cls, parser):
+		suffix = cls.subcommand_suffix
+		subcommands = [getattr(cls, a) for a in dir(cls)
+				if a.endswith(suffix)]
+		if not subcommands:
+			return
+		title = None
+		if hasattr(cls, 'cmd_title'):
+			title = cls.cmd_title
+		subparsers = parser.add_subparsers(title=title)
+		for cmd in subcommands:
+			name = cmd.__name__.lower()[:-len(suffix)]
+			if hasattr(cmd, 'cmd_name'):
+				name = cmd.cmd_name
+			help = cmd.__doc__
+			if hasattr(cmd, 'cmd_help'):
+				help = cmd.cmd_help
+			p = subparsers.add_parser(name, help=help)
+			cmd.setup_parser(p)
+			if hasattr(cmd, 'run'):
+				p.set_defaults(run=cmd.run)
 
 
-class IssueCmd (CmdDispatcher):
+class IssueUtil (object):
 
+	name = 'pull request'
 	gh_path = 'issues'
 	id_var = 'ISSUE'
-	default_cmd = 'list'
 	help_msg = '''
 # Please enter the title and description below.
 #
@@ -463,136 +242,232 @@ class IssueCmd (CmdDispatcher):
 #
 ''' + message_markdown_help
 
-	@staticmethod
-	def print_issue(issue):
+	@classmethod
+	def print_issue(cls, issue):
 		outf('[{number}] {title} ({user[login]})\n{}{html_url}',
 				' ' * (len(str(issue['number'])) + 3),
 				**issue)
 
-	@staticmethod
-	def print_comment(comment):
+	@classmethod
+	def print_comment(cls, comment):
 		body = comment['body']
 		outf('[{id}] {}{} ({user[login]})', body[:60],
 				'…' if len(body) > 60 else '',
 				' ' * (len(str(comment['id'])) + 3),
 				**comment)
 
-	def url(self, number=None):
-		s = '/repos/%s/%s' % (config.upstream, self.gh_path)
+	@classmethod
+	def url(cls, number=None):
+		s = '/repos/%s/%s' % (config.upstream, cls.gh_path)
 		if number:
 			s += '/' + number
 		return s
 
-	def editor(self, msg=None):
-		return editor(self.help_msg, msg)
+	@classmethod
+	def editor(cls, msg=None):
+		return editor(cls.help_msg, msg)
 
-	def comment_editor(self, msg=None):
-		return editor(self.comment_help_msg, msg)
+	@classmethod
+	def comment_editor(cls, msg=None):
+		return editor(cls.comment_help_msg, msg)
 
-	def clean_and_post_comment(self, issue_num, body):
+	@classmethod
+	def clean_and_post_comment(cls, issue_num, body):
 		# URL fixed to issues, pull requests comments are made through
 		# issues
 		url = '/repos/%s/issues/%s/comments' % (config.upstream,
 				issue_num)
 		body = check_empty_message(clean_message(body))
 		comment = req.post(url, body=body)
-		self.print_comment(comment)
+		cls.print_comment(comment)
 
-	def cmd_list(self):
-		state = 'closed' if args['--closed'] else 'open'
-		issues = req.get(self.url(), state=state)
-		for issue in issues:
-			self.print_issue(issue)
+class IssueCmd (CmdGroup):
 
-	# TODO: results retrieved by this legacy search are not the same as the
-	#       results retrieved by the new API, and we can't distinguish
-	#       between issues and pull requests, so this needs more work
-	#def cmd_search(self):
-	#	term = ' '.join(args['TERM'])
-	#	state = 'closed' if args['--closed'] else 'open'
-	#	issue = req.get('/legacy/issues/search/%s/%s/%s' %
-	#			(config.upstream, state, term))
-	#	self.print_issue(issue)
+	cmd_title = 'subcommands to manage issues'
+	cmd_help = 'manage issues'
 
-	def cmd_show(self):
-		numbers = args[self.id_var+'S']
-		for number in numbers:
-			issue = req.get(self.url(number))
-			self.print_issue(issue)
+	class ListCmd (IssueUtil):
+		cmd_help = "show a list of open %ss" % IssueUtil.name
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('-c', '--closed',
+				action='store_true', default=False,
+				help="show only closed pull requests")
+		@classmethod
+		def run(cls, parser, args):
+			state = 'closed' if args.closed else 'open'
+			issues = req.get(cls.url(), state=state)
+			for issue in issues:
+				cls.print_issue(issue)
 
-	def cmd_new(self):
-		labels = args['--label']
-		assignee = getoptarg('assign')
-		milestone = getoptarg('milestone')
-		msg = getoptarg('message') or self.editor()
-		(title, body) = split_titled_message(msg)
-		issue = req.post(self.url(), title=title, body=body,
-				assignee=assignee, labels=labels,
-				milestone=milestone)
-		self.print_issue(issue)
+	class ShowCmd (IssueUtil):
+		cmd_help = "show details for existing %ss" % IssueUtil.name
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('issues',
+				nargs='+', metavar=cls.id_var+'S',
+				help="numbers identifying the issues to show")
+		@classmethod
+		def run(cls, parser, args):
+			for number in args.issues:
+				issue = req.get(cls.url(number))
+				cls.print_issue(issue)
 
-	def cmd_update(self):
-		# URL fixed to issues, pull requests updates are made through
-		# issues to allow changing labels, assignee and milestone
-		url = '/repos/%s/issues/%s' % (config.upstream,
-				args[self.id_var])
-		params = dict()
-		labels = args['--label']
-		# Should labels be cleared?
-		if labels and len(labels) == 1 and not labels[0]:
-			params['labels'] = []
-		elif labels:
-			params['labels'] = labels
-		if args['--open']:
-			params['state'] = 'open'
-		if args['--close']:
-			params['state'] = 'closed'
-		assignee = getoptarg('assign')
-		if assignee is not None:
-			params['assignee'] = assignee
-		milestone = getoptarg('milestone')
-		if milestone is not None:
-			params['milestone'] = milestone
-		msg = getoptarg('message')
-		if args['--edit-message']:
-			if not msg:
-				issue = req.get(url)
-				msg = issue['title']
-				if issue['body']:
-					msg += '\n\n' + issue['body']
-			msg = self.editor(msg)
+	class NewCmd (IssueUtil):
+		cmd_help = "create a new %s" % IssueUtil.name
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('-m', '--message', metavar='MSG',
+				help="issue's title (and description); the "
+				"first line is used as the issue title and "
+				"any text after an empty line is used as "
+				"the optional body")
+			parser.add_argument('-l', '--label',
+				metavar='LABEL', action='append',
+				help="attach LABEL to the issue (can be "
+				"specified multiple times to set multiple "
+				"labels)")
+			parser.add_argument('-a', '--assign', metavar='USER',
+				help="assign an user to the issue; must be a "
+				"valid GitHub login name")
+			parser.add_argument('-M', '--milestone', metavar='ID',
+				help="assign the milestone identified by the "
+				"number ID to the issue")
+		@classmethod
+		def run(cls, parser, args):
+			msg = args.message or cls.editor()
 			(title, body) = split_titled_message(msg)
-			params['title'] = title
-			params['body'] = body
-		issue = req.patch(url, **params)
-		self.print_issue(issue)
+			issue = req.post(cls.url(), title=title, body=body,
+				assignee=args.assignee, labels=args.labels,
+				milestone=args.milestone)
+			cls.print_issue(issue)
 
-	def cmd_close(self):
-		issue_num = args[self.id_var]
-		msg = getoptarg('message')
-		if args['--edit-message']:
-			msg = self.comment_editor(msg)
-		if msg:
-			self.clean_and_post_comment(issue_num, msg)
-		issue = req.patch(self.url(issue_num), state='closed')
-		self.print_issue(issue)
+	class UpdateCmd (IssueUtil):
+		cmd_help = "update an existing %s" % IssueUtil.name
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('issue', metavar=cls.id_var,
+				help="numbers identifying the issue to update")
+			parser.add_argument('-m', '--message', metavar='MSG',
+				help="new issue title (and description); the "
+				"first line is used as the issue title and "
+				"any text after " "an empty line is used as "
+				"the optional body")
+			parser.add_argument('-e', '--edit-message',
+				action='store_true', default=False,
+				help="open the default $GIT_EDITOR to edit the "
+				"current title (and description) of the issue")
+			parser.add_argument('-o', '--open',
+				action='store_true', default=False,
+				help="reopen the issue")
+			parser.add_argument('-c', '--close',
+				action='store_true', default=False,
+				help="close the issue")
+			parser.add_argument('-l', '--label',
+				metavar='LABEL', action='append',
+				help="if one or more labels are specified, "
+				"they will replace the current issue labels; "
+				"otherwise the labels are unchanged. If one of "
+				"the labels is empty, the labels will be "
+				"cleared (so you can use -l'' to clear the "
+				"labels of an issue)")
+			parser.add_argument('-a', '--assign', metavar='USER',
+				help="assign an user to the issue; must be a "
+				"valid GitHub login name")
+			parser.add_argument('-M', '--milestone', metavar='ID',
+				help="assign the milestone identified by the "
+				"number ID to the issue")
+		@classmethod
+		def run(cls, parser, args):
+			# URL fixed to issues, pull requests updates are made
+			# through issues to allow changing labels, assignee and
+			# milestone (even when GitHub itself doesn't support it
+			# :D)
+			url = '/repos/%s/issues/%s' % (config.upstream,
+					args.issue)
+			params = dict()
+			# Should labels be cleared?
+			if (args.labels and len(args.labels) == 1 and
+					not args.labels[0]):
+				params['labels'] = []
+			elif args.labels:
+				params['labels'] = args.labels
+			if args.open:
+				params['state'] = 'open'
+			if args.close:
+				params['state'] = 'closed'
+			if args.assign is not None:
+				params['assignee'] = args.assign
+			if args.milestone is not None:
+				params['milestone'] = args.milestone
+			msg = args.message
+			if args.edit_message:
+				if not msg:
+					issue = req.get(url)
+					msg = issue['title']
+					if issue['body']:
+						msg += '\n\n' + issue['body']
+				msg = cls.editor(msg)
+				(title, body) = split_titled_message(msg)
+				params['title'] = title
+				params['body'] = body
+			issue = req.patch(url, **params)
+			cls.print_issue(issue)
 
-	def cmd_comment(self):
-		body = getoptarg('message') or self.comment_editor()
-		self.clean_and_post_comment(args[self.id_var], body)
+	class CommentCmd (IssueUtil):
+		cmd_help = "add a comment to an existing %s" % IssueUtil.name
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('issue', metavar=cls.id_var,
+				help="numbers identifying the issue to close")
+			parser.add_argument('-m', '--message', metavar='MSG',
+				help="comment to be added to the issue; if "
+				"this option is not used, the default "
+				"$GIT_EDITOR is opened to write the comment")
+		@classmethod
+		def run(cls, parser, args):
+			body = args.message or cls.comment_editor()
+			cls.clean_and_post_comment(args.issue, body)
+
+	class CloseCmd (IssueUtil):
+		cmd_help = "close an opened %s" % IssueUtil.name
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('issue', metavar=cls.id_var,
+				help="numbers identifying the issue to close")
+			parser.add_argument('-m', '--message', metavar='MSG',
+				help="add a comment to the issue before "
+				"closing it")
+			parser.add_argument('-e', '--edit-message',
+				action='store_true', default=False,
+				help="open the default $GIT_EDITOR to write "
+				"a comment to be added to the issue before "
+				"closing it")
+		@classmethod
+		def run(cls, parser, args):
+			msg = args.message
+			if args.edit_message:
+				msg = cls.comment_editor(msg)
+			if msg:
+				cls.clean_and_post_comment(args.issue, msg)
+			issue = req.patch(cls.url(args.issue), state='closed')
+			cls.print_issue(issue)
 
 
-class PullCmd (IssueCmd):
+class PullreqUtil (IssueUtil):
 
+	name = 'pull request'
 	gh_path = 'pulls'
 	id_var = 'PULL'
-	rebase = 'This pull request has been rebased via ' \
+	rebase_msg = 'This pull request has been rebased via ' \
 			'`git hub pullreq rebase` and the new HEAD is {}'
 
-	def head_ref(self):
+	@classmethod
+	def head_ref(cls):
 		return git('rev-parse --abbrev-ref HEAD')
 
-	def push(self, head):
+	@classmethod
+	def push(cls, head):
 		local = git('rev-parse', head)
 		remote = 'x' # dummy variable that doesn't match any git hash
 		remote_head = '%s/%s' % (config.forkremote, head)
@@ -603,117 +478,158 @@ class PullCmd (IssueCmd):
 		if local != remote:
 			git('push', config.forkremote, head+':'+head)
 
-	def get_default_branch_msg(self, branch_name):
+	@classmethod
+	def get_default_branch_msg(cls, branch_name):
 		msg = git_config('branch.%s.description' % branch_name, '', '')
 		if msg:
 			return msg
 		return git('log -1 --pretty=format:%s%n%n%b ' + branch_name)
 
-	def cmd_new(self):
-		head = args['HEAD'] or self.head_ref()
-		base = getoptarg('base') or config.pullbase
-		msg = getoptarg('message')
-		gh_head = config.username + ':' + head
-		if not msg:
-			msg = self.editor(self.get_default_branch_msg(head))
-		(title, body) = split_titled_message(msg)
-		self.push(head)
-		pull = req.post(self.url(), head=gh_head, base=base,
-				title=title, body=body)
-		self.print_issue(pull)
+class PullreqCmd (IssueCmd):
 
-	def cmd_attach(self):
-		issue_num = args['ISSUE']
-		head = args['HEAD'] or self.head_ref()
-		base = getoptarg('base') or config.pullbase
-		msg = getoptarg('message')
-		if args['--edit-message']:
+	cmd_title = 'subcommands to manage pull requests'
+	cmd_help = 'manage pull requests'
+
+	class NewCmd (PullreqUtil):
+		cmd_help = "create a new %s" % PullreqUtil.name
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('head', metavar='HEAD', nargs='?',
+				help="branch (or git ref) where your changes "
+				"are implemented")
+			parser.add_argument('-m', '--message', metavar='MSG',
+				help="pull request title (and description); "
+				"the first line is used as the pull request "
+				"title and any text after an empty line is "
+				"used as the optional body")
+			parser.add_argument('-b', '--base', metavar='BASE',
+				help="branch (or git ref) you want your "
+				"changes pulled into (uses hub.pullbase or "
+				"'master' in hub.upstream by default)")
+		@classmethod
+		def run(cls, parser, args):
+			head = args.head or cls.head_ref()
+			base = args.base or config.pullbase
+			msg = args.message
+			gh_head = config.username + ':' + head
 			if not msg:
-				msg = self.get_default_branch_msg(head)
-			msg = self.comment_editor(msg)
-		gh_head = config.username + ':' + head
-		self.push(head)
-		pull = req.post(self.url(), issue=issue_num, base=base,
-				head=gh_head)
-		self.print_issue(pull)
-		if msg:
-			self.clean_and_post_comment(issue_num, msg)
+				msg = cls.editor(cls.get_default_branch_msg(head))
+			(title, body) = split_titled_message(msg)
+			cls.push(head)
+			pull = req.post(cls.url(), head=gh_head, base=base,
+					title=title, body=body)
+			cls.print_issue(pull)
 
-	def cmd_rebase(self):
-		# TODO: Add rebase --continue --abort --skip
-		pull_num = args['PULL']
-		pull = req.get(self.url(pull_num))
-		head_url = pull['head']['repo'][config.pullurltype]
-		head_ref = pull['head']['ref']
-		base_url = pull['base']['repo'][config.pullurltype]
-		base_ref = pull['base']['ref']
-		tmp_ref = 'git-hub-pullreq-rebase-%s' % pull_num
-		old_ref = self.head_ref()
-		git('stash save --all "Stashed by git hub pullreq rebase '
-			'to rebase pull request %s"' % pull_num)
-		try:
-			git('fetch', head_url, head_ref)
-			git('checkout', '-b', tmp_ref, 'FETCH_HEAD')
+	class AttachCmd (PullreqUtil):
+		cmd_help = "attach code to an existing issue"
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('issue', metavar='ISSUE',
+				help="issue ID to attach code to")
+			parser.add_argument('head', metavar='HEAD', nargs='?',
+				help="branch (or git ref) where your changes "
+				"are implemented")
+			parser.add_argument('-m', '--message', metavar='MSG',
+				help="add a comment to the issue/new pull "
+				"request")
+			parser.add_argument('-e', '--edit-message',
+				action='store_true', default=False,
+				help="open the default $GIT_EDITOR to write "
+				"a comment to be added to the issue after "
+				"attaching the code to it")
+			parser.add_argument('-b', '--base', metavar='BASE',
+				help="branch (or git ref) you want your "
+				"changes pulled into (uses hub.pullbase or "
+				"'master' in hub.upstream by default)")
+		@classmethod
+		def run(cls, parser, args):
+			head = args.head or cls.head_ref()
+			base = args.base or config.pullbase
+			msg = args.message
+			if args.edit_message:
+				if not msg:
+					msg = cls.get_default_branch_msg(head)
+				msg = cls.comment_editor(msg)
+			gh_head = config.username + ':' + head
+			cls.push(head)
+			pull = req.post(cls.url(), issue=args.issue, base=base,
+					head=gh_head)
+			cls.print_issue(pull)
+			if msg:
+				cls.clean_and_post_comment(args.issue, msg)
+
+	class RebaseCmd (PullreqUtil):
+		cmd_help = "close a pull request by rebasing its base branch"
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('pull', metavar=cls.id_var,
+				help="numbers identifying the pull request "
+				"to rebase")
+			parser.add_argument('-m', '--message', metavar='MSG',
+				help="add a comment to the pull request before "
+				"closing it; if not specified a default "
+				"comment is added (to avoid adding a comment "
+				"at all use -m'')")
+			parser.add_argument('-e', '--edit-message',
+				action='store_true', default=False,
+				help="open the default $GIT_EDITOR to edit "
+				"the comment to be added to the pull request "
+				"before closing it")
+		@classmethod
+		def run(cls, parser, args):
+			# TODO: Add rebase --continue --abort --skip
+			pull = req.get(cls.url(args.pull))
+			head_url = pull['head']['repo'][config.pullurltype]
+			head_ref = pull['head']['ref']
+			base_url = pull['base']['repo'][config.pullurltype]
+			base_ref = pull['base']['ref']
+			tmp_ref = 'git-hub-pullreq-rebase-%s' % args.pull
+			old_ref = cls.head_ref()
+			git('stash save --all "Stashed by git hub pullreq rebase '
+				'to rebase pull request %s"' % args.pull)
 			try:
-				git('pull', '--rebase', base_url, base_ref)
-				git('push', base_url, 'HEAD:' + base_ref)
-				pushed_sha = git('rev-parse HEAD')
+				git('fetch', head_url, head_ref)
+				git('checkout', '-b', tmp_ref, 'FETCH_HEAD')
+				try:
+					git('pull', '--rebase', base_url, base_ref)
+					git('push', base_url, 'HEAD:' + base_ref)
+					pushed_sha = git('rev-parse HEAD')
+				finally:
+					git('reset', '--hard') # just in case of errors
+					git('checkout', old_ref)
+					git('branch', '-D', tmp_ref)
 			finally:
-				git('reset', '--hard') # just in case of errors
-				git('checkout', old_ref)
-				git('branch', '-D', tmp_ref)
-		finally:
-			git('stash', 'pop')
-		msg = getoptarg('message') or self.rebase_msg.format(pushed_sha)
-		if args['--edit-message']:
-			msg = self.comment_editor(msg)
-		if msg:
-			self.clean_and_post_comment(pull_num, msg)
-		pull = req.patch(self.url(pull_num), state='closed')
-		self.print_issue(pull)
+				git('stash', 'pop')
+			msg = args.message or cls.rebase_msg.format(pushed_sha)
+			if args.edit_message:
+				msg = cls.comment_editor(msg)
+			if msg:
+				cls.clean_and_post_comment(args.pull, msg)
+			pull = req.patch(cls.url(args.pull), state='closed')
+			cls.print_issue(pull)
 
 
-class HubCmd (CmdDispatcher):
-
-	def cmd_issue(self):
-		IssueCmd().dispatch()
-
-	def cmd_pullreq(self):
-		PullCmd().dispatch()
-
-
-def get_docopt_text():
-	blocksep = '\n\n'
-	blocks = string.split(__doc__, '\n\n\n')
-	text = blocks[0] # header
-	for block in blocks[1:]:
-		if block.startswith('Usage:'):
-			text += blocksep + block
-		elif block.startswith('Options:'):
-			text += blocksep + block
-	text += blocksep + blocks[-1] # footer
-	return text
-
-
-def process_help():
-	if not args['--help']:
-		return
-	out(__doc__)
-	sys.exit(0)
+class HubCmd (CmdGroup):
+	cmd_title = "subcommands"
+	cmd_help = "git command line interface to GitHub"
+	IssueCmd = IssueCmd
+	PullreqCmd = PullreqCmd
 
 
 def main():
 	global args, config, req
 
-	args = docopt(get_docopt_text(), help=False, version='git-hub 0.1')
-
-	process_help()
+	parser = argparse.ArgumentParser(
+			description='Git command line interface to GitHub')
+	parser.add_argument('--version', action='version', version='git-hub 0.1')
+	HubCmd.setup_parser(parser)
+	args = parser.parse_args()
 
 	config = Config()
 
 	req = RequestManager()
 
-	HubCmd().dispatch()
+	args.run(parser, args)
 
 
 if __name__ == '__main__':
