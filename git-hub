@@ -585,8 +585,12 @@ class PullreqCmd (IssueCmd):
 			base_ref = pull['base']['ref']
 			tmp_ref = 'git-hub-pullreq-rebase-%s' % args.pull
 			old_ref = cls.head_ref()
+			stashed_before = git('stash list')
+			stashed = False
 			git('stash save --all "Stashed by git hub pullreq rebase '
 				'to rebase pull request %s"' % args.pull)
+			if stashed_before != git('stash list'):
+				stashed = True
 			try:
 				git('fetch', head_url, head_ref)
 				git('checkout', '-b', tmp_ref, 'FETCH_HEAD')
@@ -599,7 +603,8 @@ class PullreqCmd (IssueCmd):
 					git('checkout', old_ref)
 					git('branch', '-D', tmp_ref)
 			finally:
-				git('stash', 'pop')
+				if stashed:
+					git('stash', 'pop')
 			msg = args.message or cls.rebase_msg.format(pushed_sha)
 			if args.edit_message:
 				msg = cls.comment_editor(msg)
