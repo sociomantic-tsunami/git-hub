@@ -254,10 +254,10 @@ from. These are the git config keys used:
 
 `hub.pullurltype`
   Type of URL to use when an URL from a GitHub API is needed (for example,
-  when 'pull rebase' is used). At the time of writing it could be ssh_url
-  or clone_url for HTTP). See this link for possible options:
-  http://developer.github.com/v3/pulls/#get-a-single-pull-request
-  [default: ssh_url]
+  when 'pull rebase' is used). At the time of writing it could be *ssh_url*
+  or *clone_url* for HTTP). See GitHub's API documentation[1] for more
+  details or options. [default: *ssh_url*]
 
+[1] http://developer.github.com/v3/pulls/#get-a-single-pull-request
 
 .. vim: set et sw=2 :
