@@ -7,7 +7,7 @@ default: all
 .PHONY: all
 all: git-hub.1
 
-git-hub.1: git-hub.1.rst
+git-hub.1: man.rst
 	rst2man $^ > $@
 
 .PHONY: install
