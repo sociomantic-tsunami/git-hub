@@ -5,7 +5,10 @@ prefix ?= /usr/local
 default: all
 
 .PHONY: all
-all: git-hub.1
+all: man
+
+.PHONY: man
+man: git-hub.1
 
 git-hub.1: man.rst
 	rst2man $^ > $@
