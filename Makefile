@@ -7,6 +7,10 @@ default: all
 .PHONY: all
 all: man
 
+.PHONY: deb
+deb:
+	debuild -uc -us -tc
+
 .PHONY: man
 man: git-hub.1
 
