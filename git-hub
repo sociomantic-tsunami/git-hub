@@ -454,13 +454,13 @@ class IssueCmd (CmdGroup):
 			cls.print_issue(issue)
 
 
-class PullreqUtil (IssueUtil):
+class PullUtil (IssueUtil):
 
 	name = 'pull request'
 	gh_path = 'pulls'
 	id_var = 'PULL'
 	rebase_msg = 'This pull request has been rebased via ' \
-			'`git hub pullreq rebase` and the new HEAD is {}'
+			'`git hub pull rebase` and the new HEAD is {}'
 
 	@classmethod
 	def head_ref(cls):
@@ -485,13 +485,13 @@ class PullreqUtil (IssueUtil):
 			return msg
 		return git('log -1 --pretty=format:%s%n%n%b ' + branch_name)
 
-class PullreqCmd (IssueCmd):
+class PullCmd (IssueCmd):
 
 	cmd_title = 'subcommands to manage pull requests'
 	cmd_help = 'manage pull requests'
 
-	class NewCmd (PullreqUtil):
-		cmd_help = "create a new %s" % PullreqUtil.name
+	class NewCmd (PullUtil):
+		cmd_help = "create a new %s" % PullUtil.name
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('head', metavar='HEAD', nargs='?',
@@ -520,7 +520,7 @@ class PullreqCmd (IssueCmd):
 					title=title, body=body)
 			cls.print_issue(pull)
 
-	class AttachCmd (PullreqUtil):
+	class AttachCmd (PullUtil):
 		cmd_help = "attach code to an existing issue"
 		@classmethod
 		def setup_parser(cls, parser):
@@ -558,7 +558,7 @@ class PullreqCmd (IssueCmd):
 			if msg:
 				cls.clean_and_post_comment(args.issue, msg)
 
-	class RebaseCmd (PullreqUtil):
+	class RebaseCmd (PullUtil):
 		cmd_help = "close a pull request by rebasing its base branch"
 		@classmethod
 		def setup_parser(cls, parser):
@@ -583,11 +583,11 @@ class PullreqCmd (IssueCmd):
 			head_ref = pull['head']['ref']
 			base_url = pull['base']['repo'][config.pullurltype]
 			base_ref = pull['base']['ref']
-			tmp_ref = 'git-hub-pullreq-rebase-%s' % args.pull
+			tmp_ref = 'git-hub-pull-rebase-%s' % args.pull
 			old_ref = cls.head_ref()
 			stashed_before = git('stash list')
 			stashed = False
-			git('stash save --all "Stashed by git hub pullreq rebase '
+			git('stash save --all "Stashed by git hub pull rebase '
 				'to rebase pull request %s"' % args.pull)
 			if stashed_before != git('stash list'):
 				stashed = True
@@ -620,7 +620,7 @@ class HubCmd (CmdGroup):
 	cmd_title = "subcommands"
 	cmd_help = "git command line interface to GitHub"
 	IssueCmd = IssueCmd
-	PullreqCmd = PullreqCmd
+	PullCmd = PullCmd
 
 
 def main():

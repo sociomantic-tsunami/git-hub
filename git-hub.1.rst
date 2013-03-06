@@ -117,7 +117,7 @@ COMMANDS
       Open the default `GIT_EDITOR` to write a comment to be added to the issue
       before closing it.
 
-`pullreq`
+`pull`
   This command is used to manage GitHub pull requests. Since pull requests in
   GitHub are also issues, most of the subcommands are repeated from the
   `issue` command for convenience. Only the `list` and `new` commands are
