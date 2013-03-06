@@ -1,0 +1,5 @@
+git-hub.1
+debian/files
+debian/git-hub/*
+debian/git-hub.substvars
+debian/git-hub.debhelper.log
