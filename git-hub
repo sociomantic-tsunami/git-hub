@@ -33,6 +33,8 @@ def die(fmt='', *args, **kwargs):
 	sys.exit(1)
 
 
+GIT_CONFIG_PREFIX = 'hub.'
+
 def git(*args, **kwargs):
 	if len(args) == 1:
 		args = args[0].split()
@@ -40,11 +42,12 @@ def git(*args, **kwargs):
 		args = list(args)
 	return subprocess.check_output(['git'] + args, **kwargs).rstrip('\n')
 
-
-def git_config(name, default=None, prefix='hub.'):
+def git_config(name, default=None, prefix=GIT_CONFIG_PREFIX, value=None):
 	name = prefix + name
 	try:
-		return git('config', name)
+		if value is None:
+			return git('config', name)
+		return git('config', name, value)
 	except subprocess.CalledProcessError as e:
 		if e.returncode == 1:
 			if default is not None:
@@ -74,15 +77,21 @@ class Config:
 	def __init__(self):
 		self.username = git_config('username', getpass.getuser())
 		self.password = git_config('password')
-		self.upstream = git_config('upstream')
-		if '/' not in self.upstream:
+		self.upstream = git_config('upstream', '')
+		if self.upstream and '/' not in self.upstream:
 			die("Invalid hub.upstream configuration, '/' not found")
-		upstream = self.upstream.split('/')
-		self.forkrepo = git_config('forkrepo',
-				self.username + '/' + upstream[1])
+		self.forkrepo = git_config('forkrepo', '')
+		if not self.forkrepo and self.upstream:
+			upstream = self.upstream.split('/')
+			self.forkrepo = self.username + '/' + upstream[1]
 		self.forkremote = git_config('forkremote', 'origin')
 		self.pullbase = git_config('pullbase', 'master')
-		self.pullurltype = git_config('pullurltype', 'ssh_url')
+		self.urltype = git_config('urltype', 'ssh_url')
+
+	def check(self, name):
+		if getattr(self, name) is None:
+			die("Can't find 'hub.{}' config key in git config",
+					name)
 
 
 # Manages GitHub request handling authentication and content headers.
@@ -215,12 +224,53 @@ class CmdGroup (object):
 				help = cmd.cmd_help
 			p = subparsers.add_parser(name, help=help)
 			cmd.setup_parser(p)
-			if hasattr(cmd, 'run'):
+			if not hasattr(cmd, 'run'):
+				continue
+			if hasattr(cmd, 'cmd_required_config'):
+				def check_config_and_run(parser, args):
+					for c in cmd.cmd_required_config:
+						config.check(c)
+					cmd.run(parser, args)
+				p.set_defaults(run=check_config_and_run)
+			else:
 				p.set_defaults(run=cmd.run)
+
+
+class CloneCmd (object):
+
+	cmd_help = 'clone a GitHub repository'
+
+	@classmethod
+	def setup_parser(cls, parser):
+		parser.add_argument('origin', metavar='ORIGIN',
+			help="name of the repository to be cloned in "
+			"<owner>/<project> format (if <owner> is omitted, the "
+			"configuration 'hub.username' is used as <owner>)")
+		parser.add_argument('-u', '--upstream', metavar='UPSTREAM',
+			help="name of the repository to be user as upstream in "
+			"<owner>/<project> format (will be saved in the "
+			"'hub.upstream' configuration variable in the new "
+			"cloned repository); if the <project> part is "
+			"omitted, the ORIGIN <project> part is used")
+	@classmethod
+	def run(cls, parser, args):
+		origin = args.origin
+		if '/' not in origin:
+			origin = config.username + '/' + origin
+		repo = req.get('/repos/' + origin)
+		git('clone', repo[config.urltype])
+		if args.upstream:
+			upstream = args.upstream
+			if '/' not in upstream:
+				_, proj = origin.split('/', 1)
+				upstream = upstream + '/' + proj
+			os.chdir(repo['name'])
+			git_config('upstream', value=upstream)
 
 
 class IssueUtil (object):
 
+	cmd_required_config = ['upstream']
 	name = 'pull request'
 	gh_path = 'issues'
 	id_var = 'ISSUE'
@@ -593,9 +643,9 @@ class PullCmd (IssueCmd):
 		def run(cls, parser, args):
 			# TODO: Add rebase --continue --abort --skip
 			pull = req.get(cls.url(args.pull))
-			head_url = pull['head']['repo'][config.pullurltype]
+			head_url = pull['head']['repo'][config.urltype]
 			head_ref = pull['head']['ref']
-			base_url = pull['base']['repo'][config.pullurltype]
+			base_url = pull['base']['repo'][config.urltype]
 			base_ref = pull['base']['ref']
 			tmp_ref = 'git-hub-pull-rebase-%s' % args.pull
 			old_ref = cls.head_ref()
@@ -633,6 +683,7 @@ class PullCmd (IssueCmd):
 class HubCmd (CmdGroup):
 	cmd_title = "subcommands"
 	cmd_help = "git command line interface to GitHub"
+	CloneCmd = CloneCmd
 	IssueCmd = IssueCmd
 	PullCmd = PullCmd
 

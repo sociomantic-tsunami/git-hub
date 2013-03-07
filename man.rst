@@ -34,6 +34,18 @@ CONFIGURATION_ section for more details.
 COMMANDS
 ========
 
+`clone`
+  This command is used to clone a GitHub repository by using only the
+  *<owner>/<project>* name as *ORIGIN*. If *<owner>* is omitted, the
+  configuration `hub.username` is used as *<owner>*.
+
+  -u UPSTREAM, --upstream=UPSTREAM
+    Name of the repository to be user as upstream in *<owner>/<project>*
+    format (will be saved in the `hub.upstream` configuration variable in
+    the new cloned repository). If the *<project>* part is omitted, the
+    *ORIGIN* *<project>* part is used
+
+
 `issue`
   This command is used to manage GitHub issues through a set of subcommands.
   Is no subcommand is specified, `list` is used.
@@ -116,6 +128,7 @@ COMMANDS
     -e, --edit-message
       Open the default `GIT_EDITOR` to write a comment to be added to the issue
       before closing it.
+
 
 `pull`
   This command is used to manage GitHub pull requests. Since pull requests in
@@ -237,7 +250,8 @@ from. These are the git config keys used:
 
 `hub.upstream` required
   Blessed repository used to get the issues from and make the pull requests
-  to. The format is <owner>/<project>.
+  to. The format is *<owner>/<project>*. This option is not really required for
+  the `clone` command.
 
 `hub.forkrepo`
   Your blessed repository fork. The format is <owner>/<project>. Used to set
@@ -252,7 +266,7 @@ from. These are the git config keys used:
   Default remote branch (or git reference) you want your changes pulled into
   when creating a pull request. [default: *master*]
 
-`hub.pullurltype`
+`hub.urltype`
   Type of URL to use when an URL from a GitHub API is needed (for example,
   when 'pull rebase' is used). At the time of writing it could be *ssh_url*
   or *clone_url* for HTTP). See GitHub's API documentation[1] for more
