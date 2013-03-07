@@ -346,7 +346,7 @@ class IssueCmd (CmdGroup):
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issue', metavar=cls.id_var,
-				help="numbers identifying the issue to update")
+				help="number identifying the issue to update")
 			parser.add_argument('-m', '--message', metavar='MSG',
 				help="new issue title (and description); the "
 				"first line is used as the issue title and "
@@ -418,7 +418,7 @@ class IssueCmd (CmdGroup):
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issue', metavar=cls.id_var,
-				help="numbers identifying the issue to close")
+				help="number identifying the issue to close")
 			parser.add_argument('-m', '--message', metavar='MSG',
 				help="comment to be added to the issue; if "
 				"this option is not used, the default "
@@ -433,7 +433,7 @@ class IssueCmd (CmdGroup):
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issue', metavar=cls.id_var,
-				help="numbers identifying the issue to close")
+				help="number identifying the issue to close")
 			parser.add_argument('-m', '--message', metavar='MSG',
 				help="add a comment to the issue before "
 				"closing it")
@@ -577,7 +577,7 @@ class PullCmd (IssueCmd):
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('pull', metavar=cls.id_var,
-				help="numbers identifying the pull request "
+				help="number identifying the pull request "
 				"to rebase")
 			parser.add_argument('-m', '--message', metavar='MSG',
 				help="add a comment to the pull request before "
