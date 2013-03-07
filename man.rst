@@ -80,10 +80,10 @@ COMMANDS
       Open the default `GIT_EDITOR` to edit the current title (and description)
       of the issue.
 
-    --open
+    -o, --open
       Reopen the issue.
 
-    --close
+    -c, --close
       Close the issue.
 
     -l LABEL, --label=LABEL
