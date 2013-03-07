@@ -5,6 +5,9 @@
 # Based on the _git_svn completion function in git distribution's bash
 # completion.
 
+issue_arg_cmds="issue-show issue-update issue-comment issue-close pull-attach"
+pull_arg_cmds="pull-show pull-update pull-comment pull-close"
+
 get_opts()
 {
 	./git-hub "$@" -h |
@@ -23,6 +26,19 @@ get_cmds()
 cmds=$(get_cmds)
 
 cat <<EOT
+
+__git_hub_get_issues()
+{
+	git hub issue list 2> /dev/null |
+			sed -n 's/^\[\([0-9]\+\)\] .*$/\1/p' | 	tr '\n' ' '
+}
+
+__git_hub_get_pulls()
+{
+	git hub pull list 2> /dev/null |
+			sed -n 's/^\[\([0-9]\+\)\] .*$/\1/p' | tr '\n' ' '
+}
+
 _git_hub ()
 {
 	local subcommand="\$(__git_find_on_cmdline "$cmds")"
@@ -65,9 +81,17 @@ EOT
 					;;
 EOT
 	done
+	reply="COMPREPLY=()"
+	if [ "$issue_arg_cmds" != "${issue_arg_cmds/$cmd-$subcmd/}" ]
+	then
+		reply="__gitcomp \"\$(__git_hub_get_issues)\""
+	elif [ "$pull_arg_cmds" != "${pull_arg_cmds/$cmd-$subcmd/}" ]
+	then
+		reply="__gitcomp \"\$(__git_hub_get_pulls)\""
+	fi
 	cat <<EOT
 				*)
-					COMPREPLY=()
+					$reply
 					;;
 				esac
 			fi
