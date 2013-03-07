@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# Generates a bash-completion script as a git subcommand to stdout
+#
+# Based on the _git_svn completion function in git distribution's bash
+# completion.
+
+get_opts()
+{
+	./git-hub "$@" -h |
+		sed -n 's/^  \(-., \)\?\(--[^ ]\+\) .*$/\2/p' |
+		tr '\n' ' '
+	./git-hub "$@" -h |
+		sed -n 's/^  \(-. \([A-Z]\+\), \)\?\(--[^ ]\+\) \2\( .*\)\?$/\3=/p' |
+		tr '\n' ' '
+}
+
+get_cmds()
+{
+	./git-hub "$@" -h | sed -n 's/,/ /g;s/^  {\(.*\)}$/\1/p'
+}
+
+cmds=$(get_cmds)
+
+cat <<EOT
+_git_hub ()
+{
+	local subcommand="\$(__git_find_on_cmdline "$cmds")"
+	if [ -z "\$subcommand" ]; then
+		case "\$cur" in
+		--*)
+			__gitcomp "$(get_opts)"
+			;;
+		*)
+			__gitcomp "$cmds"
+			;;
+		esac
+	else
+		case "\$subcommand" in
+EOT
+
+for cmd in $cmds
+do
+	subcmds=$(get_cmds $cmd)
+	cat <<EOT
+		$cmd)
+			local subsubcommand="\$(__git_find_on_cmdline "$subcmds")"
+			if [ -z "\$subsubcommand" ]; then
+				case "\$cur" in
+				--*)
+					__gitcomp "$(get_opts $cmd)"
+					;;
+				*)
+					__gitcomp "$subcmds"
+					;;
+				esac
+			else
+				case "\$subsubcommand,\$cur" in
+EOT
+	for subcmd in $subcmds
+	do
+		cat <<EOT
+				$subcmd,--*)
+					__gitcomp "$(get_opts $cmd $subcmd)"
+					;;
+EOT
+	done
+	cat <<EOT
+				*)
+					COMPREPLY=()
+					;;
+				esac
+			fi
+			;;
+EOT
+done
+
+cat <<EOT
+		*)
+			COMPREPLY=()
+			;;
+		esac
+	fi
+}
+EOT
+
