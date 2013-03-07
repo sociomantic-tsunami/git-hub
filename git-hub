@@ -43,7 +43,6 @@ def git(*args, **kwargs):
 
 def git_config(name, default=None, prefix='hub.'):
 	name = prefix + name
-	cmd = ['git', 'config', name]
 	try:
 		return git('config', name)
 	except subprocess.CalledProcessError as e:
