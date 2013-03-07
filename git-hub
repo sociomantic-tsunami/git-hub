@@ -490,6 +490,21 @@ class PullCmd (IssueCmd):
 	cmd_title = 'subcommands to manage pull requests'
 	cmd_help = 'manage pull requests'
 
+	class ListCmd (PullUtil, IssueCmd.ListCmd):
+		pass
+
+	class ShowCmd (PullUtil, IssueCmd.ShowCmd):
+		pass
+
+	class UpdateCmd (PullUtil, IssueCmd.UpdateCmd):
+		pass
+
+	class CommentCmd (PullUtil, IssueCmd.CommentCmd):
+		pass
+
+	class CloseCmd (PullUtil, IssueCmd.CloseCmd):
+		pass
+
 	class NewCmd (PullUtil):
 		cmd_help = "create a new %s" % PullUtil.name
 		@classmethod
