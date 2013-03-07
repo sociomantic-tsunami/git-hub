@@ -227,11 +227,13 @@ class CmdGroup (object):
 			if not hasattr(cmd, 'run'):
 				continue
 			if hasattr(cmd, 'cmd_required_config'):
-				def check_config_and_run(parser, args):
-					for c in cmd.cmd_required_config:
-						config.check(c)
-					cmd.run(parser, args)
-				p.set_defaults(run=check_config_and_run)
+				def make_closure(cmd):
+					def check_config_and_run(parser, args):
+						for c in cmd.cmd_required_config:
+							config.check(c)
+						cmd.run(parser, args)
+					return check_config_and_run
+				p.set_defaults(run=make_closure(cmd))
 			else:
 				p.set_defaults(run=cmd.run)
 
