@@ -7,9 +7,11 @@ Git command line interface to GitHub
 ------------------------------------
 
 :Author: Leandro Lucarella <leandro.lucarella@sociomantic.com>
-:Date: 2013-02-27
+:Date: |date|
 :Manual section: 1
 :Manual group: Git Manual
+
+.. |date| date::
 
 
 SYNOPSYS
