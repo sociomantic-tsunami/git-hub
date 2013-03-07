@@ -124,103 +124,103 @@ COMMANDS
   really different, and `attach` and `rebase` are added.
 
  `list`
-    Show a list of open pull requests.
+   Show a list of open pull requests.
 
-    --closed
-      Show closed pull requests instead.
+   --closed
+     Show closed pull requests instead.
 
-  `show`
-    Alias for `issue show`.
+ `show`
+   Alias for `issue show`.
 
-  `new`
-    Create a new pull request. If an argument is specified, it will be used as
-    the branch (or git ref) where your changes are implemented (the head).
-    Otherwise the current branch is used. If the branch used as head is not
-    pushed to your fork remote, a push will be automatically done before
-    creating the pull request.
+ `new`
+   Create a new pull request. If an argument is specified, it will be used as
+   the branch (or git ref) where your changes are implemented (the head).
+   Otherwise the current branch is used. If the branch used as head is not
+   pushed to your fork remote, a push will be automatically done before
+   creating the pull request.
 
-    The repository to issue the pull request from is taken from the
-    `hub.forkrepo` configuration, which defaults to
-    **hub.username/<hub.upstream project part>**.
+   The repository to issue the pull request from is taken from the
+   `hub.forkrepo` configuration, which defaults to
+   **hub.username/<hub.upstream project part>**.
 
-    -m MSG, --message=MSG
-      Pull request title (and description). The first line is used as the pull
-      request title and any text after an empty line is used as the optional
-      body.  If this option is not used, the default `GIT_EDITOR` is opened.
-      If the HEAD branch have a proper description (see `git branch
-      --edit-description`), that description will be used as the default
-      message in the editor and if not, the message of the last commit will be
-      used instead.
+   -m MSG, --message=MSG
+     Pull request title (and description). The first line is used as the pull
+     request title and any text after an empty line is used as the optional
+     body.  If this option is not used, the default `GIT_EDITOR` is opened.
+     If the HEAD branch have a proper description (see `git branch
+     --edit-description`), that description will be used as the default
+     message in the editor and if not, the message of the last commit will be
+     used instead.
 
-    -b BASE, --base=BASE
-      Branch (or git ref) you want your changes pulled into. If this option is
-      not present, then the base branch is taken from the configuration
-      `hub.pullbase` (or just **master** if that configuration is not present
-      either). The repository to use as the base is taken from the
-      `hub.upstream` configuration.
+   -b BASE, --base=BASE
+     Branch (or git ref) you want your changes pulled into. If this option is
+     not present, then the base branch is taken from the configuration
+     `hub.pullbase` (or just **master** if that configuration is not present
+     either). The repository to use as the base is taken from the
+     `hub.upstream` configuration.
 
-  `attach`
-    Convert the issue identified by the number passed as the first argument to
-    a pull request by attaching commits to it. The head can be optionally
-    passed as the second argument. This subcommand is very similar to the `new`
-    subcommand, please refer to it for more details.
+ `attach`
+   Convert the issue identified by the number passed as the first argument to
+   a pull request by attaching commits to it. The head can be optionally
+   passed as the second argument. This subcommand is very similar to the `new`
+   subcommand, please refer to it for more details.
 
-    -m MSG, --message=MSG
-      Add a comment to the issue/new pull request.
+   -m MSG, --message=MSG
+     Add a comment to the issue/new pull request.
 
-    -e, --edit-message
-      Open the default `GIT_EDITOR` to write a comment to be added to the
-      issue/new pull request. The default message is taken from the
-      **--message** option if present, otherwise the branch description or the
-      first commit message is used as with the `new` subcommand.
+   -e, --edit-message
+     Open the default `GIT_EDITOR` to write a comment to be added to the
+     issue/new pull request. The default message is taken from the
+     **--message** option if present, otherwise the branch description or the
+     first commit message is used as with the `new` subcommand.
 
-    -b BASE, --base=BASE
-      Base branch to which issue the pull request. If this option is not
-      present, then the base branch is taken from the configuration
-      `hub.pullbase` (or just **master** if that configuration is not present
-      either). The repository to use as the base is taken from the
-      `hub.upstream` configuration.
+   -b BASE, --base=BASE
+     Base branch to which issue the pull request. If this option is not
+     present, then the base branch is taken from the configuration
+     `hub.pullbase` (or just **master** if that configuration is not present
+     either). The repository to use as the base is taken from the
+     `hub.upstream` configuration.
 
-  `rebase`
-    Close a pull request identified by the number passed as argument by
-    rebasing its base branch (specified in the pull request) instead of merging
-    as GitHub's *Merge Button™* would do.
+ `rebase`
+   Close a pull request identified by the number passed as argument by
+   rebasing its base branch (specified in the pull request) instead of merging
+   as GitHub's *Merge Button™* would do.
 
-    If the operation is successful, a comment will be posted informing the new
-    HEAD commit of the branch that has been rebased and the pull request will
-    be closed.
+   If the operation is successful, a comment will be posted informing the new
+   HEAD commit of the branch that has been rebased and the pull request will
+   be closed.
 
-    The type of URL used to fetch and push can be specified through the
-    `hub.pullurltype` configuration variable (see CONFIGURATION_ for more
-    details). Your working copy should stay the same ideally, if everything
-    went OK.
+   The type of URL used to fetch and push can be specified through the
+   `hub.pullurltype` configuration variable (see CONFIGURATION_ for more
+   details). Your working copy should stay the same ideally, if everything
+   went OK.
 
-    The operations performed by this subcommand are roughly these:
+   The operations performed by this subcommand are roughly these:
 
-    1. git stash
-    2. git fetch `pullhead`
-    3. git checkout -b `tmp` FETCH_HEAD
-    4. git pull --rebase `pullbase`
-    5. git push `pullbase`
-    6. git checkout `oldhead`
-    7. git branch -D `tmp`
-    8. git pop
+   1. git stash
+   2. git fetch `pullhead`
+   3. git checkout -b `tmp` FETCH_HEAD
+   4. git pull --rebase `pullbase`
+   5. git push `pullbase`
+   6. git checkout `oldhead`
+   7. git branch -D `tmp`
+   8. git pop
 
-    -m MSG, --message=MSG
-      Use this message for the comment instead of the default. Specify an empty
-      message (**-m''**) to completely omit the comment.
+   -m MSG, --message=MSG
+     Use this message for the comment instead of the default. Specify an empty
+     message (**-m''**) to completely omit the comment.
 
-    -e, --edit-message
-      Open the default `GIT_EDITOR` to write the comment.
+   -e, --edit-message
+     Open the default `GIT_EDITOR` to write the comment.
 
-  `update`
-    Alias for `issue update`.
+ `update`
+   Alias for `issue update`.
 
-  `comment`
-    Alias for `issue comment`.
+ `comment`
+   Alias for `issue comment`.
 
-  `close`
-    Alias for `issue close`.
+ `close`
+   Alias for `issue close`.
 
 
 CONFIGURATION
