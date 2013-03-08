@@ -26,7 +26,13 @@ def outf(fmt='', *args, **kwargs):
 	sys.stdout.write(fmt.format(*args, **kwargs) + '\n')
 
 def errf(fmt='', *args, **kwargs):
-	sys.stderr.write(fmt.format(*args, **kwargs) + '\n')
+	if sys.stderr.isatty():
+		sys.stderr.write('\033[31m')
+	sys.stderr.write('Error: ')
+	sys.stderr.write(fmt.format(*args, **kwargs))
+	if sys.stderr.isatty():
+		sys.stderr.write('\033[0m')
+	sys.stderr.write('\n')
 
 def die(fmt='', *args, **kwargs):
 	errf(fmt, *args, **kwargs)
