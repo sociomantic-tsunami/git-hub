@@ -90,8 +90,8 @@ class Config:
 
 	def check(self, name):
 		if getattr(self, name) is None:
-			die("Can't find 'hub.{}' config key in git config",
-					name)
+			die("Can't find '{}.{}' config key in git config",
+					GIT_CONFIG_PREFIX, name)
 
 
 # Manages GitHub request handling authentication and content headers.
