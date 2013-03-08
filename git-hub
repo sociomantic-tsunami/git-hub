@@ -97,7 +97,7 @@ class Config:
 
 	def check(self, name):
 		if getattr(self, name) is None:
-			die("Can't find '{}.{}' config key in git config",
+			die("Can't find '{}{}' config key in git config",
 					GIT_CONFIG_PREFIX, name)
 
 
