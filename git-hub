@@ -25,6 +25,16 @@ def out(msg):
 def outf(fmt='', *args, **kwargs):
 	sys.stdout.write(fmt.format(*args, **kwargs) + '\n')
 
+def warnf(fmt='', *args, **kwargs):
+	if sys.stderr.isatty():
+		sys.stderr.write('\033[33m')
+	sys.stderr.write('Warning: ')
+	sys.stderr.write(fmt.format(*args, **kwargs))
+	if sys.stderr.isatty():
+		sys.stderr.write('\033[0m')
+	sys.stderr.write('\n')
+	sys.stderr.flush()
+
 def errf(fmt='', *args, **kwargs):
 	if sys.stderr.isatty():
 		sys.stderr.write('\033[31m')
@@ -49,12 +59,13 @@ def git(*args, **kwargs):
 		args = list(args)
 	return subprocess.check_output(['git'] + args, **kwargs).rstrip('\n')
 
-def git_config(name, default=None, prefix=GIT_CONFIG_PREFIX, value=None):
+def git_config(name, default=None, prefix=GIT_CONFIG_PREFIX, value=None, opts=()):
 	name = prefix + name
+	cmd = ['config'] + list(opts) + [name]
 	try:
-		if value is None:
-			return git('config', name)
-		return git('config', name, value)
+		if value is not None:
+			cmd.append(value)
+		return git(*cmd)
 	except subprocess.CalledProcessError as e:
 		if e.returncode == 1:
 			if default is not None:
@@ -83,7 +94,7 @@ class Config:
 
 	def __init__(self):
 		self.username = git_config('username', getpass.getuser())
-		self.password = git_config('password')
+		self.oauthtoken = git_config('oauthtoken', '')
 		self.upstream = git_config('upstream', '')
 		if self.upstream and '/' not in self.upstream:
 			die("Invalid hub.upstream configuration, '/' not found")
@@ -121,12 +132,16 @@ class Config:
 class RequestManager:
 
 	base_url = 'https://api.github.com'
+	basic_auth = None
+
+	def set_basic_auth(self, username, password):
+		self.basic_auth = "Basic " + base64.urlsafe_b64encode("%s:%s" %
+			(username, password))
 
 	def auth_urlopen(self, url, method, body):
 		req = urllib2.Request(self.base_url + url, body)
-		auth_str = base64.urlsafe_b64encode("%s:%s" %
-			(config.username, config.password))
-		req.add_header("Authorization", "Basic " + auth_str)
+		if self.basic_auth:
+			req.add_header("Authorization", self.basic_auth)
 		req.add_header("Content-Type", "application/json")
 		req.add_header("Accept", "application/json")
 		req.add_header("Content-Length", str(len(body) if body else 0))
@@ -147,6 +162,8 @@ class RequestManager:
 		return None
 
 	def json_req(self, url, method, *args, **kwargs):
+		if not self.basic_auth:
+			kwargs['access_token'] = config.oauthtoken
 		if method.lower() in ('post', 'patch', 'put'):
 			body = self.dump(*args, **kwargs)
 		else:
@@ -245,6 +262,53 @@ class CmdGroup (object):
 				p.set_defaults(run=cmd.run)
 
 
+class SetupCmd (object):
+
+	cmd_help = 'perform an initial setup to connect to GitHub'
+
+	@classmethod
+	def setup_parser(cls, parser):
+		parser.add_argument('-u', '--username',
+			help="GitHub's username (login name)")
+		parser.add_argument('-p', '--password',
+			help="GitHub's password (will not be stored)")
+		group = parser.add_mutually_exclusive_group()
+		group.add_argument('--global',
+			dest='opts', action='store_const', const=['--global'],
+			help="store settings in the global configuration "
+			"(see git config --global for details)")
+		group.add_argument('--system',
+			dest='opts', action='store_const', const=['--system'],
+			help="store settings in the system configuration "
+			"(see git config --system for details)")
+		parser.set_defaults(opts=[])
+	@classmethod
+	def setup(cls, username=None, password=None, opts=()):
+		if (username is None or password is None) and \
+				not sys.stdin.isatty():
+			die("Can't perform an interactive setup outside a tty")
+		if username is None:
+			username = getpass.getuser()
+			reply = raw_input('GitHub username [%s]: ' % username)
+			if reply:
+				username = reply
+		if password is None:
+			password = getpass.getpass(
+				'GitHub password (will not be stored): ')
+		req.set_basic_auth(username, password)
+		note = 'git-hub'
+		if config.forkrepo:
+			proj = config.forkrepo.split('/', 1)[1]
+			note += ' (%s)' % proj
+		auth = req.post('/authorizations', note=note,
+				scopes=['user', 'repo'])
+		git_config('username', value=username, opts=opts)
+		git_config('oauthtoken', value=auth['token'], opts=opts)
+	@classmethod
+	def run(cls, parser, args):
+		cls.setup(args.username, args.password, args.opts)
+
+
 class CloneCmd (object):
 
 	cmd_help = 'clone a GitHub repository'
@@ -279,7 +343,7 @@ class CloneCmd (object):
 
 class IssueUtil (object):
 
-	cmd_required_config = ['upstream']
+	cmd_required_config = ['upstream', 'oauthtoken']
 	name = 'pull request'
 	gh_path = 'issues'
 	id_var = 'ISSUE'
@@ -692,6 +756,7 @@ class PullCmd (IssueCmd):
 class HubCmd (CmdGroup):
 	cmd_title = "subcommands"
 	cmd_help = "git command line interface to GitHub"
+	SetupCmd = SetupCmd
 	CloneCmd = CloneCmd
 	IssueCmd = IssueCmd
 	PullCmd = PullCmd
@@ -709,6 +774,14 @@ def main():
 	config = Config()
 
 	req = RequestManager()
+
+	# Temporary warning to note the configuration variable changes
+	if git_config('password', ''):
+		warnf('It looks like your {0}password configuration '
+			'variable is set.\nThis variable is not used '
+			'anymore, you might want to delete it.\nFor example: '
+			'git config --global --unset {0}password',
+			GIT_CONFIG_PREFIX)
 
 	args.run(parser, args)
 

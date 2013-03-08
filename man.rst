@@ -27,14 +27,36 @@ DESCRIPTION
 GitHub tasks (like creating and listing pull request or issues) to be accessed
 directly through the git command line.
 
-To use this command you need to configure at least two git configuration
-variables: `hub.upstream` and `hub.password`. All commands here will use
-the `hub.upstream` GitHub repository (issues, pull requests, etc.). See the
-CONFIGURATION_ section for more details.
+To use this command you'll probably need to make an initial configuration to
+get authorization from GitHub. To do this you can use the `setup` command.
+need to configure at least two git configuration. See the CONFIGURATION_
+section for more configuration options.
 
 
 COMMANDS
 ========
+
+`setup`
+  This command performs an initial setup to connect to GitHub. It basically
+  asks GitHub for an authorization token and stores it in the configuration
+  variable `hub.oauthtoken` for future use so you don't need to type your
+  password each time (or store it in the config). The username is also stored
+  for future use in the `hub.username` variable.
+
+  -u USERNAME, --username=USERNAME
+    GitHub's username (login name), will be stored in the configuration
+    variable `hub.username`.
+
+  -p PASSWORD, --password=PASSWORD
+    GitHub's password (will not be stored).
+
+  --global
+    Store settings in the global configuration (see --global option in `git
+    config(1)` for details).
+
+  --system
+    Store settings in the system configuration (see --system option in `git
+    config(1)` for details).
 
 `clone`
   This command is used to clone a GitHub repository by using only the
@@ -247,8 +269,10 @@ from. These are the git config keys used:
 `hub.username`
   Your GitHub username. [default: *current OS username*]
 
-`hub.password` required
-  Your GitHub password.
+`hub.oauthtoken` required
+  This is the authorization token obtained via the `setup` command. Even when
+  required, you shouldn't need to set this variable manually. Use the `setup`
+  command instead.
 
 `hub.upstream` required
   Blessed repository used to get the issues from and make the pull requests
