@@ -15,10 +15,10 @@ deb:
 man: git-hub.1
 
 git-hub.1: man.rst
-	rst2man $^ > $@
+	rst2man --exit-status=1 $^ > $@ || ($(RM) $@ && false)
 
 bash-completion: generate-bash-completion git-hub
-	./$^ > $@
+	./$^ > $@ || ($(RM) $@ && false)
 
 .PHONY: install
 install: git-hub git-hub.1 bash-completion
