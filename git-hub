@@ -18,11 +18,24 @@ import os.path
 import argparse
 import subprocess
 
+DEBUG = 3
+INFO  = 2
+WARN  = 1
+ERR   = 0
 
-def outf(fmt='', *args, **kwargs):
+def debugf(fmt='', *args, **kwargs):
+	if verbose < DEBUG:
+		return
+	sys.stdout.write(fmt.format(*args, **kwargs) + '\n')
+
+def infof(fmt='', *args, **kwargs):
+	if verbose < INFO:
+		return
 	sys.stdout.write(fmt.format(*args, **kwargs) + '\n')
 
 def warnf(fmt='', *args, **kwargs):
+	if verbose < WARN:
+		return
 	if sys.stderr.isatty():
 		sys.stderr.write('\033[33m')
 	sys.stderr.write('Warning: ')
@@ -33,6 +46,8 @@ def warnf(fmt='', *args, **kwargs):
 	sys.stderr.flush()
 
 def errf(fmt='', *args, **kwargs):
+	if verbose < ERR:
+		return
 	if sys.stderr.isatty():
 		sys.stderr.write('\033[31m')
 	sys.stderr.write('Error: ')
@@ -146,9 +161,9 @@ class RequestManager:
 		req.add_header("Accept", "application/json")
 		req.add_header("Content-Length", str(len(body) if body else 0))
 		req.get_method = lambda: method
-		#print req.get_full_url()
-		#print req.header_items()
-		#print req.get_data()
+		debugf('{}', req.get_full_url())
+		debugf('{}', req.header_items())
+		debugf('{}', req.get_data())
 		return urllib2.urlopen(req)
 
 	def dump(self, *args, **kwargs):
@@ -364,14 +379,14 @@ class IssueUtil (object):
 
 	@classmethod
 	def print_issue(cls, issue):
-		outf('[{number}] {title} ({user[login]})\n{}{html_url}',
+		infof('[{number}] {title} ({user[login]})\n{}{html_url}',
 				' ' * (len(str(issue['number'])) + 3),
 				**issue)
 
 	@classmethod
 	def print_comment(cls, comment):
 		body = comment['body']
-		outf('[{id}] {}{} ({user[login]})', body[:60],
+		infof('[{id}] {}{} ({user[login]})', body[:60],
 				'…' if len(body) > 60 else '',
 				' ' * (len(str(comment['id'])) + 3),
 				**comment)
@@ -761,13 +776,20 @@ class HubCmd (CmdGroup):
 
 
 def main():
-	global args, config, req
+	global args, config, req, verbose
 
 	parser = argparse.ArgumentParser(
 			description='Git command line interface to GitHub')
 	parser.add_argument('--version', action='version', version='git-hub 0.1')
+	parser.add_argument('-v', '--verbose', action='count', default=INFO,
+		help="be more verbose (can be specified multiple times to get "
+		"extra verbosity)")
+	parser.add_argument('-s', '--silent', action='count', default=0,
+		help="be less verbose (can be specified multiple times to get "
+		"less verbosity)")
 	HubCmd.setup_parser(parser)
 	args = parser.parse_args()
+	verbose = args.verbose - args.silent
 
 	config = Config()
 
