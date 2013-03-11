@@ -19,9 +19,6 @@ import argparse
 import subprocess
 
 
-def out(msg):
-	sys.stdout.write(msg)
-
 def outf(fmt='', *args, **kwargs):
 	sys.stdout.write(fmt.format(*args, **kwargs) + '\n')
 
