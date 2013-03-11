@@ -139,6 +139,9 @@ class RequestManager:
 		req = urllib2.Request(self.base_url + url, body)
 		if self.basic_auth:
 			req.add_header("Authorization", self.basic_auth)
+		elif config.oauthtoken:
+			req.add_header("Authorization", "bearer " +
+					config.oauthtoken)
 		req.add_header("Content-Type", "application/json")
 		req.add_header("Accept", "application/json")
 		req.add_header("Content-Length", str(len(body) if body else 0))
@@ -159,8 +162,6 @@ class RequestManager:
 		return None
 
 	def json_req(self, url, method, *args, **kwargs):
-		if not self.basic_auth:
-			kwargs['access_token'] = config.oauthtoken
 		if method.lower() in ('post', 'patch', 'put'):
 			body = self.dump(*args, **kwargs)
 		else:
