@@ -822,6 +822,10 @@ if __name__ == '__main__':
 					if 'message' in err:
 						errf('{}{message}',
 							' ' * len(prefix), **e)
+			debugf('{}', error)
+			debugf('{}', error.geturl())
+			debugf('{}', error.headers)
+			debugf('{}', error.read())
 		except:
 			errf('{}', error)
 			errf('{}', error.geturl())
