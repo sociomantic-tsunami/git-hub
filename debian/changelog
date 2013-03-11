@@ -1,4 +1,17 @@
-git-hub (0.1) UNRELEASED; urgency=low
+git-hub (0.2) precise; urgency=low
+
+  * Fix `pull` subcommand aliases for `issue` (a18c812)
+  * Add completion of issue and pull request numbers (1e97144)
+  * Add a `clone` command (3e9934b)
+  * Add colors to errors (f9ebca1)
+  * Authenticate using OAuth, adding new command `setup` to get the OAuth
+    token (71e9cbd, d10e1cc)
+  * Make the amount of output configurable through --verbose (-v) and --silent
+    (-s) (03f6337, 0613521, 8d10941, 38fb590)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Mon, 11 Mar 2013 17:56:55 +0100
+
+git-hub (0.1) precise; urgency=low
 
   * Initial release.
 
