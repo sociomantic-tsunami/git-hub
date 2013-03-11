@@ -824,9 +824,9 @@ if __name__ == '__main__':
 							' ' * len(prefix), **e)
 		except:
 			errf('{}', error)
-			errf('{}', error.read())
 			errf('{}', error.geturl())
 			errf('{}', error.headers)
+			errf('{}', error.read())
 			sys.exit(3)
 		sys.exit(4)
 
