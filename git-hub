@@ -182,8 +182,10 @@ class RequestManager:
 		else:
 			body = None
 			url += '?' + urllib.urlencode(kwargs)
+		debugf("Request: {} {}\n{}", method, url, body)
 		res = self.auth_urlopen(url, method, body)
 		data = res.read()
+		debugf("Response:\n{}", data)
 		if data:
 			return json.loads(data)
 		return None
