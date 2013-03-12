@@ -607,7 +607,10 @@ class PullUtil (IssueUtil):
 
 	@classmethod
 	def head_ref(cls):
-		return git('rev-parse --abbrev-ref HEAD')
+		ref = git('rev-parse --abbrev-ref HEAD')
+		if ref == 'HEAD':
+			ref = git('rev-list -1 HEAD')
+		return ref
 
 	@classmethod
 	def push(cls, head):
