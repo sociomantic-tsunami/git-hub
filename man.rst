@@ -59,9 +59,9 @@ COMMANDS
     config(1)` for details).
 
 `clone`
-  This command is used to clone a GitHub repository by using only the
-  *<owner>/<project>* name as *ORIGIN*. If *<owner>* is omitted, the
-  configuration `hub.username` is used as *<owner>*.
+  This command is used to clone a GitHub repository to a *DEST* directory by
+  using only the *<owner>/<project>* name as *ORIGIN*. If *<owner>* is omitted,
+  the configuration `hub.username` is used as *<owner>*.
 
   -u UPSTREAM, --upstream=UPSTREAM
     Name of the repository to be user as upstream in *<owner>/<project>*
