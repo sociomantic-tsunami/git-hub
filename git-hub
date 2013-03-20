@@ -332,8 +332,9 @@ class CloneCmd (object):
 	def setup_parser(cls, parser):
 		parser.add_argument('origin', metavar='ORIGIN',
 			help="name of the repository to be cloned in "
-			"<owner>/<project> format (if <owner> is omitted, the "
-			"configuration 'hub.username' is used as <owner>)")
+			"<owner>/<project> format (if only the <project> "
+			"part is provided, the configuration 'hub.username' "
+			"is used as <owner>)")
 		parser.add_argument('dest', metavar='DEST', nargs='?',
 			help="destination directory where to put the new "
 			"cloned repository")
@@ -341,8 +342,8 @@ class CloneCmd (object):
 			help="name of the repository to be user as upstream in "
 			"<owner>/<project> format (will be saved in the "
 			"'hub.upstream' configuration variable in the new "
-			"cloned repository); if the <project> part is "
-			"omitted, the ORIGIN <project> part is used")
+			"cloned repository); if only the <owner> part is "
+			"provided, the <project> part is taken from ORIGIN")
 	@classmethod
 	def run(cls, parser, args):
 		origin = args.origin
