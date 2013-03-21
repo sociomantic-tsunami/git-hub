@@ -58,14 +58,15 @@ COMMANDS
     Store settings in the system configuration (see --system option in `git
     config(1)` for details).
 
-`clone`
-  This command is used to clone *REPO*, a GitHub repository, to a *DEST*
-  directory. If the repository is specified in *<owner>/<project>* form, the
-  *REPO* will be used as upstream and a personal fork will be looked up. If
-  none is found, a new fork will be created. In both cases, the fork will be
-  cloned instead of the upstream repository.
+`clone` REPO [DEST]
+  This command is used to clone **REPO**, a GitHub repository, to a **DEST**
+  directory (defaults to the name of the project being cloned). If the
+  repository is specified in *<owner>/<project>* form, the **REPO** will be
+  used as upstream and a personal fork will be looked up. If none is found,
+  a new fork will be created. In both cases, the fork will be cloned instead of
+  the upstream repository.
 
-  If only *<project>* is specified as *REPO*, then the configuration
+  If only *<project>* is specified as **REPO**, then the configuration
   `hub.username` is used as *<owner>*, and the parent repository is looked up
   at GitHub to determine the real upstream repository.
 
@@ -89,8 +90,8 @@ COMMANDS
     --closed
       Show closed issues instead.
 
-  `show`
-    Show the issues identified by the number passed as arguments.
+  `show` ISSUE [ISSUE ...]
+    Show issues identified by **ISSUE**.
 
   `new`
     Create a new issue.
@@ -110,9 +111,8 @@ COMMANDS
     -M ID, --milestone=ID
       Assign the milestone identified by the number ID to the issue.
 
-  `update`
-    Similar to `new` but update an existing issue identified by the number
-    passed as argument.
+  `update` ISSUE
+    Similar to `new` but update an existing issue identified by **ISSUE**.
 
     A convenient shortcut to close an issue is provided by the `close`
     subcommand.
@@ -143,17 +143,16 @@ COMMANDS
     -M ID, --milestone=ID
       Assign the milestone identified by the number ID to the issue.
 
-  `comment`
-    Add a new comment to an existing issue identified by the number passed as
-    argument.
+  `comment` ISSUE
+    Add a new comment to an existing issue identified by **ISSUE**.
 
     -m MSG, --message=MSG
       Comment to be added to the issue. If this option is not used, the default
       `GIT_EDITOR` is opened to write the comment.
 
-  `close`
+  `close` ISSUE
     Alias for `update --close`. (+ `comment` if **--message** or
-    **--edit-message** is specified).
+    **--edit-message** is specified). Closes issue identified by **ISSUE**.
 
     -m MSG, --message=MSG
       Add a comment to the issue before closing it.
@@ -175,15 +174,15 @@ COMMANDS
    --closed
      Show closed pull requests instead.
 
- `show`
+ `show` PULL [PULL ...]
    Alias for `issue show`.
 
- `new`
-   Create a new pull request. If an argument is specified, it will be used as
-   the branch (or git ref) where your changes are implemented (the head).
-   Otherwise the current branch is used. If the branch used as head is not
-   pushed to your fork remote, a push will be automatically done before
-   creating the pull request.
+ `new` [HEAD]
+   Create a new pull request. If **HEAD** is specified, it will be used as the
+   branch (or git ref) where your changes are implemented.  Otherwise the
+   current branch is used. If the branch used as head is not pushed to your
+   fork remote, a push will be automatically done before creating the pull
+   request.
 
    The repository to issue the pull request from is taken from the
    `hub.forkrepo` configuration, which defaults to
@@ -205,10 +204,11 @@ COMMANDS
      either). The repository to use as the base is taken from the
      `hub.upstream` configuration.
 
- `attach`
-   Convert the issue identified by the number passed as the first argument to
-   a pull request by attaching commits to it. The head can be optionally
-   passed as the second argument. This subcommand is very similar to the `new`
+ `attach` ISSUE [HEAD]
+   Convert the issue identified by **ISSUE** to a pull request by attaching
+   commits to it. The branch (or git ref) where your changes are
+   implementedhead can be optionally specified with **HEAD** (otherwise the
+   current branch is used). This subcommand is very similar to the `new`
    subcommand, please refer to it for more details.
 
    -m MSG, --message=MSG
@@ -227,8 +227,8 @@ COMMANDS
      either). The repository to use as the base is taken from the
      `hub.upstream` configuration.
 
- `rebase`
-   Close a pull request identified by the number passed as argument by
+ `rebase` PULL
+   Close a pull request identified by **PULL** by
    rebasing its base branch (specified in the pull request) instead of merging
    as GitHub's *Merge Button™* would do.
 
