@@ -59,15 +59,24 @@ COMMANDS
     config(1)` for details).
 
 `clone`
-  This command is used to clone a GitHub repository to a *DEST* directory by
-  using only the *<owner>/<project>* name as *ORIGIN*. If *<owner>* is omitted,
-  the configuration `hub.username` is used as *<owner>*.
+  This command is used to clone *REPO*, a GitHub repository, to a *DEST*
+  directory. If the repository is specified in *<owner>/<project>* form, the
+  *REPO* will be used as upstream and a personal fork will be looked up. If
+  none is found, a new fork will be created. In both cases, the fork will be
+  cloned instead of the upstream repository.
 
-  -u UPSTREAM, --upstream=UPSTREAM
-    Name of the repository to be user as upstream in *<owner>/<project>*
-    format (will be saved in the `hub.upstream` configuration variable in
-    the new cloned repository). If the *<project>* part is omitted, the
-    *ORIGIN* *<project>* part is used
+  If only *<project>* is specified as *REPO*, then the configuration
+  `hub.username` is used as *<owner>*, and the parent repository is looked up
+  at GitHub to determine the real upstream repository.
+
+  The upstream repository is also added as a remote by the name `upstream` and
+  the `hub.upstream` configuration variable is set (see CONFIGURATION_), unless
+  only *<project>* was used and the resulting repository is not really a fork,
+  in which case is impossible to automatically determine the upstream
+  repository.
+
+  -r NAME, --remote=NAME
+    Use `NAME` as the upstream remote repository name instead of the default.
 
 
 `issue`
