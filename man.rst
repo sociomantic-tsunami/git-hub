@@ -309,4 +309,17 @@ from. These are the git config keys used:
 
 [1] http://developer.github.com/v3/pulls/#get-a-single-pull-request
 
+
+VIM SYNTAX HIGHLIGHT
+====================
+
+A VIM ftdetect plugin is provided, to enable it you have to follow some steps
+though. All you need to do is copy (or preferably make a symbolic link) the
+script to `~/.vim/ftdetect/githubmsg.vim`::
+
+  mkdir -p ~/.vim/ftdetect
+  ln -s /usr/share/vim/addons/githubmsg.vim ~/.vim/ftdetect/
+  # or if you are copying from the sources:
+  # ln -s ftdetect.vim ~/.vim/ftdetect/githubmsg.vim
+
 .. vim: set et sw=2 :

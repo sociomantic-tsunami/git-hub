@@ -209,8 +209,8 @@ def check_empty_message(msg):
 
 message_markdown_help = '''\
 # Remember GitHub will parse comments and descriptions as GitHub
-# Flavored Markdown. For details see:
-# http://github.github.com/github-flavored-markdown/
+# Flavored Markdown.
+# For details see: http://github.github.com/github-flavored-markdown/
 #
 # Lines starting with '# ' (note the space after the hash!) will be
 # ignored, and an empty message aborts the command. The space after the
@@ -384,7 +384,9 @@ class IssueUtil (object):
 # Please enter the title and description below.
 #
 # The first line is interpreted as the title. An optional description
-# can follow after and empty line. For example:
+# can follow after and empty line.
+#
+# Example:
 #
 #   Some title
 #
