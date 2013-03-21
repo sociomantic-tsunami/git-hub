@@ -460,8 +460,8 @@ class IssueCmd (CmdGroup):
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issues',
-				nargs='+', metavar=cls.id_var+'S',
-				help="numbers identifying the issues to show")
+				nargs='+', metavar=cls.id_var,
+				help="number identifying the issue to show")
 		@classmethod
 		def run(cls, parser, args):
 			for number in args.issues:
