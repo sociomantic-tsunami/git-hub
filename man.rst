@@ -186,7 +186,7 @@ COMMANDS
 
    The repository to issue the pull request from is taken from the
    `hub.forkrepo` configuration, which defaults to
-   **hub.username/<hub.upstream project part>**.
+   *hub.username/<hub.upstream project part>*.
 
    -m MSG, --message=MSG
      Pull request title (and description). The first line is used as the pull
@@ -284,12 +284,12 @@ from. These are the git config keys used:
   command instead.
 
 `hub.upstream` required
-  Blessed repository used to get the issues from and make the pull requests
-  to. The format is *<owner>/<project>*. This option is not really required for
-  the `clone` command.
+  Blessed repository used to get the issues from and make the pull requests to.
+  The format is *<owner>/<project>*. This option can be automatically set by
+  the `clone` command and is not really required by it or the `setup` command.
 
 `hub.forkrepo`
-  Your blessed repository fork. The format is <owner>/<project>. Used to set
+  Your blessed repository fork. The format is *<owner>/<project>*. Used to set
   the head for your pull requests. [defaul: *<username>/(upstream <project>
   part)*]
 
