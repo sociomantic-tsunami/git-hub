@@ -404,6 +404,7 @@ class IssueUtil (object):
 		infof('[{number}] {title} ({user[login]})\n{}{html_url}',
 				' ' * (len(str(issue['number'])) + 3),
 				**issue)
+		debugf('{}', json.dumps(issue, indent=4, sort_keys=True))
 
 	@classmethod
 	def print_comment(cls, comment):
@@ -412,6 +413,7 @@ class IssueUtil (object):
 				'…' if len(body) > 60 else '',
 				' ' * (len(str(comment['id'])) + 3),
 				**comment)
+		debugf('{}', json.dumps(comment, indent=4, sort_keys=True))
 
 	@classmethod
 	def url(cls, number=None):
