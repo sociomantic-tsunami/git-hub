@@ -452,10 +452,32 @@ class IssueCmd (CmdGroup):
 			parser.add_argument('-c', '--closed',
 				action='store_true', default=False,
 				help="show only closed pull requests")
+			parser.add_argument('-C', '--created-by-me',
+				action='store_true',
+				help=("show only %ss created by me" %
+						IssueUtil.name))
+			parser.add_argument('-A', '--assigned-to-me',
+				action='store_true',
+				help=("show only %ss assigned to me" %
+						IssueUtil.name))
 		@classmethod
 		def run(cls, parser, args):
+			def filter(issue, name):
+				a = issue[name]
+				if a and a['login'] == config.username:
+					return True
 			state = 'closed' if args.closed else 'open'
 			issues = req.get(cls.url(), state=state)
+			if args.created_by_me and args.assigned_to_me:
+				issues = [i for i in issues
+					if filter(i, 'assignee') or
+							filter(i, 'user')]
+			elif args.created_by_me:
+				issues = [i for i in issues
+						if filter(i, 'user')]
+			elif args.assigned_to_me:
+				issues = [i for i in issues
+					if filter(i, 'assignee')]
 			for issue in issues:
 				cls.print_issue(issue)
 

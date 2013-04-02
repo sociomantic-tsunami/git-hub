@@ -90,6 +90,12 @@ COMMANDS
     -c, --closed
       Show closed issues instead.
 
+    -C, --created-by-me
+      Show only issues created by me
+
+    -A, --assigned-to-me
+      Show only issues assigned to me
+
   `show` ISSUE [ISSUE ...]
     Show issues identified by **ISSUE**.
 
