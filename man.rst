@@ -87,7 +87,7 @@ COMMANDS
   `list`
     Show a list of open issues.
 
-    --closed
+    -c, --closed
       Show closed issues instead.
 
   `show` ISSUE [ISSUE ...]
