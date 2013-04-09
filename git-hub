@@ -794,6 +794,7 @@ class PullCmd (IssueCmd):
 				git('fetch', head_url, head_ref)
 				git('checkout', '-b', tmp_ref, 'FETCH_HEAD')
 				try:
+					pull_sha = git('rev-parse HEAD')
 					git('pull', '--rebase', base_url, base_ref)
 					git('push', base_url, 'HEAD:' + base_ref)
 					pushed_sha = git('rev-parse HEAD')
@@ -804,14 +805,17 @@ class PullCmd (IssueCmd):
 			finally:
 				if stashed:
 					git('stash', 'pop')
-			msg = args.message or cls.rebase_msg.format(pushed_sha)
+			msg = args.message
+			if msg is None and pull_sha != pushed_sha:
+				msg = cls.rebase_msg.format(pushed_sha)
 			if args.edit_message:
 				msg = cls.comment_editor(msg)
 			if msg:
 				cls.clean_and_post_comment(args.pull, msg)
 			pull = req.get(cls.url(args.pull))
-			if pull['state'] == 'open':
-				pull = req.patch(cls.url(args.pull), state='closed')
+			if pull['state'] == 'open' and pull_sha != pushed_sha:
+				pull = req.patch(cls.url(args.pull),
+						state='closed')
 			cls.print_issue(pull)
 
 
