@@ -834,7 +834,7 @@ def main():
 
 	parser = argparse.ArgumentParser(
 			description='Git command line interface to GitHub')
-	parser.add_argument('--version', action='version', version='git-hub 0.2')
+	parser.add_argument('--version', action='version', version='git-hub 0.3')
 	parser.add_argument('-v', '--verbose', action='count', default=INFO,
 		help="be more verbose (can be specified multiple times to get "
 		"extra verbosity)")

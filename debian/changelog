@@ -1,3 +1,22 @@
+git-hub (0.3) precise; urgency=low
+
+  * Rewrite the clone subcommand to also fork (90913a1, bc352e1)
+    See the man page for details on the new usage.
+  * Add VIM ftdetect plugin to syntax highlight messages (f4ac52d)
+    To enable it:
+      mkdir -p ~/.vim/ftdetect
+      ln -s /usr/share/vim/addons/ftdetect/githubmsg.vim ~/.vim/ftdetect/
+  * Add issue list --created-by-me and --assgined-to-me (7c8f265)
+  * Don't add a comment in pull rebase if is a fast-forward merge (0a5d27a)
+    and add the old HEAD hash to the comment when one is created (e78f701)
+  * Add missing short option for issue list --closed (ba4dcea)
+  * Improve man page and usage message (60209db, 1754cd7, d40ae9a, 6e0a6f2)
+  * Print full json objects in debug mode (56752eb)
+  * Support headless checkouts for `pull` subcommands (cfcbd6f)
+  * Fix bash-completion install permissions (d45d5a2)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Thu, 11 Apr 2013 12:35:43 +0200
+
 git-hub (0.2) precise; urgency=low
 
   * Fix `pull` subcommand aliases for `issue` (a18c812)
