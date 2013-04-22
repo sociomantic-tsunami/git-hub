@@ -85,7 +85,8 @@ def git_config(name, default=None, prefix=GIT_CONFIG_PREFIX, value=None, opts=()
 		if e.returncode == 1:
 			if default is not NO_DEFAULT:
 				return default
-			die("Can't find '{}' config key in git config",
+			die("Can't find '{}' config key in git config. "
+					"Read the man page for details.",
 					name)
 		raise e
 
@@ -123,7 +124,8 @@ class Config:
 
 	def check(self, name):
 		if getattr(self, name) is None:
-			die("Can't find '{}{}' config key in git config",
+			die("Can't find '{}{}' config key in git config. "
+					"Read the man page for details.",
 					GIT_CONFIG_PREFIX, name)
 
 
