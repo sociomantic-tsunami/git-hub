@@ -71,6 +71,9 @@ def git(*args, **kwargs):
 		args = list(args)
 	return subprocess.check_output(['git'] + args, **kwargs).rstrip('\n')
 
+class NO_DEFAULT:
+	pass
+
 def git_config(name, default=None, prefix=GIT_CONFIG_PREFIX, value=None, opts=()):
 	name = prefix + name
 	cmd = ['config'] + list(opts) + [name]
@@ -80,7 +83,7 @@ def git_config(name, default=None, prefix=GIT_CONFIG_PREFIX, value=None, opts=()
 		return git(*cmd)
 	except subprocess.CalledProcessError as e:
 		if e.returncode == 1:
-			if default is not None:
+			if default is not NO_DEFAULT:
 				return default
 			die("Can't find '{}' config key in git config",
 					name)
@@ -106,11 +109,11 @@ class Config:
 
 	def __init__(self):
 		self.username = git_config('username', getpass.getuser())
-		self.oauthtoken = git_config('oauthtoken', '')
-		self.upstream = git_config('upstream', '')
+		self.oauthtoken = git_config('oauthtoken')
+		self.upstream = git_config('upstream')
 		if self.upstream and '/' not in self.upstream:
 			die("Invalid hub.upstream configuration, '/' not found")
-		self.forkrepo = git_config('forkrepo', '')
+		self.forkrepo = git_config('forkrepo')
 		if not self.forkrepo and self.upstream:
 			upstream = self.upstream.split('/')
 			self.forkrepo = self.username + '/' + upstream[1]
@@ -850,7 +853,7 @@ def main():
 	req = RequestManager()
 
 	# Temporary warning to note the configuration variable changes
-	if git_config('password', ''):
+	if git_config('password') is not None:
 		warnf('It looks like your {0}password configuration '
 			'variable is set.\nThis variable is not used '
 			'anymore, you might want to delete it.\nFor example: '
