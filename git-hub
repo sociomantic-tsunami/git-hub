@@ -657,16 +657,18 @@ class PullUtil (IssueUtil):
 		return ref
 
 	@classmethod
-	def push(cls, head):
-		local = git('rev-parse', head)
-		remote = 'x' # dummy variable that doesn't match any git hash
-		remote_head = '%s/%s' % (config.forkremote, head)
+	def push(cls, head, remote_head=None):
+		local_hash = git('rev-parse', head)
+		remote_hash = 'x' # dummy variable that doesn't match any git hash
+		if remote_head is None:
+			remote_head = head
+		remote_branch = '%s/%s' % (config.forkremote, head)
 		status = subprocess.call('git rev-parse --verify --quiet ' +
-				remote_head + ' > /dev/null', shell=True)
+				remote_branch + ' > /dev/null', shell=True)
 		if status == 0: # remote reference found, get the hash
-			remote = git('rev-parse', remote_head)
-		if local != remote:
-			git('push', config.forkremote, head+':'+head)
+			remote_hash = git('rev-parse', remote_branch)
+		if local_hash != remote_hash:
+			git('push', config.forkremote, head+':'+remote_head)
 
 	@classmethod
 	def get_default_branch_msg(cls, branch_name):
@@ -711,16 +713,22 @@ class PullCmd (IssueCmd):
 				help="branch (or git ref) you want your "
 				"changes pulled into (uses hub.pullbase or "
 				"'master' in hub.upstream by default)")
+			parser.add_argument('-c', '--create-branch',
+				metavar='NAME',
+				help="create a new remote branch with NAME "
+				"as the real head for the pull request instead "
+				"of using the HEAD name passed as 'head'")
 		@classmethod
 		def run(cls, parser, args):
 			head = args.head or cls.head_ref()
+			remote_head = args.create_branch or head
 			base = args.base or config.pullbase
 			msg = args.message
-			gh_head = config.username + ':' + head
+			gh_head = config.username + ':' + remote_head
 			if not msg:
 				msg = cls.editor(cls.get_default_branch_msg(head))
 			(title, body) = split_titled_message(msg)
-			cls.push(head)
+			cls.push(head, remote_head)
 			pull = req.post(cls.url(), head=gh_head, base=base,
 					title=title, body=body)
 			cls.print_issue(pull)
@@ -746,17 +754,23 @@ class PullCmd (IssueCmd):
 				help="branch (or git ref) you want your "
 				"changes pulled into (uses hub.pullbase or "
 				"'master' in hub.upstream by default)")
+			parser.add_argument('-c', '--create-branch',
+				metavar='NAME',
+				help="create a new remote branch with NAME "
+				"as the real head for the pull request instead "
+				"of using the HEAD name passed as 'head'")
 		@classmethod
 		def run(cls, parser, args):
 			head = args.head or cls.head_ref()
+			remote_head = args.create_branch or head
 			base = args.base or config.pullbase
 			msg = args.message
 			if args.edit_message:
 				if not msg:
 					msg = cls.get_default_branch_msg(head)
 				msg = cls.comment_editor(msg)
-			gh_head = config.username + ':' + head
-			cls.push(head)
+			gh_head = config.username + ':' + remote_head
+			cls.push(head, remote_head)
 			pull = req.post(cls.url(), issue=args.issue, base=base,
 					head=gh_head)
 			cls.print_issue(pull)

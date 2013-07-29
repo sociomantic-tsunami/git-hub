@@ -210,6 +210,12 @@ COMMANDS
      either). The repository to use as the base is taken from the
      `hub.upstream` configuration.
 
+   -c NAME, --create-branch=NAME
+     Create a new remote branch with (with name **NAME**) as the real head for
+     the pull request instead of using the HEAD name passed as **HEAD**. This
+     is useful to create a pull request for a hot-fix you committed to your
+     regular HEAD without creating a branch first.
+
  `attach` ISSUE [HEAD]
    Convert the issue identified by **ISSUE** to a pull request by attaching
    commits to it. The branch (or git ref) where your changes are
@@ -232,6 +238,12 @@ COMMANDS
      `hub.pullbase` (or just **master** if that configuration is not present
      either). The repository to use as the base is taken from the
      `hub.upstream` configuration.
+
+   -c NAME, --create-branch=NAME
+     Create a new remote branch with (with name **NAME**) as the real head for
+     the pull request instead of using the HEAD name passed as **HEAD**. This
+     is useful to create a pull request for a hot-fix you committed to your
+     regular HEAD without creating a branch first.
 
  `rebase` PULL
    Close a pull request identified by **PULL** by
