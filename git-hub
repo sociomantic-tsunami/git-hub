@@ -890,5 +890,8 @@ if __name__ == '__main__':
 			errf('{}', error.read())
 			sys.exit(3)
 		sys.exit(4)
+	except urllib2.URLError as error:
+		errf('Network error: {}', error)
+		sys.exit(5)
 
 
