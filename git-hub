@@ -71,6 +71,16 @@ def git(*args, **kwargs):
 		args = list(args)
 	return subprocess.check_output(['git'] + args, **kwargs).rstrip('\n')
 
+# Same as git() but inserts --quiet at quiet_index if verbose is less than DEBUG
+def git_quiet(quiet_index, *args, **kwargs):
+	if len(args) == 1:
+		args = args[0].split()
+	else:
+		args = list(args)
+	if verbose < DEBUG:
+		args.insert(quiet_index, '--quiet')
+	return git(*args, **kwargs)
+
 class NO_DEFAULT:
 	pass
 
@@ -371,7 +381,7 @@ class CloneCmd (object):
 			else:
 				upstream = repo['parent']['full_name']
 		dest = args.dest or repo['name']
-		git('clone', repo[config.urltype], dest)
+		git_quiet(1, 'clone', repo[config.urltype], dest)
 		if upstream:
 			os.chdir(dest)
 			git_config('upstream', value=upstream)
@@ -668,7 +678,8 @@ class PullUtil (IssueUtil):
 		if status == 0: # remote reference found, get the hash
 			remote_hash = git('rev-parse', remote_branch)
 		if local_hash != remote_hash:
-			git('push', config.forkremote, head+':'+remote_head)
+			git_quiet(1, 'push', config.forkremote,
+					head+':'+remote_head)
 
 	@classmethod
 	def get_default_branch_msg(cls, branch_name):
@@ -806,25 +817,29 @@ class PullCmd (IssueCmd):
 			old_ref = cls.head_ref()
 			stashed_before = git('stash list')
 			stashed = False
-			git('stash save --all "Stashed by git hub pull rebase '
-				'to rebase pull request %s"' % args.pull)
+			git_quiet(2, 'stash save --all "Stashed by git hub pull '
+				'rebase to rebase pull request %s"' % args.pull)
 			if stashed_before != git('stash list'):
 				stashed = True
 			try:
-				git('fetch', head_url, head_ref)
-				git('checkout', '-b', tmp_ref, 'FETCH_HEAD')
+				git_quiet(1, 'fetch', head_url, head_ref)
+				git_quiet(1, 'checkout', '-b', tmp_ref,
+						'FETCH_HEAD')
 				try:
 					pull_sha = git('rev-parse HEAD')
-					git('pull', '--rebase', base_url, base_ref)
-					git('push', base_url, 'HEAD:' + base_ref)
+					git_quiet(1, 'pull', '--rebase',
+							base_url, base_ref)
+					git_quiet(1, 'push', base_url,
+							'HEAD:' + base_ref)
 					pushed_sha = git('rev-parse HEAD')
 				finally:
-					git('reset', '--hard') # just in case of errors
-					git('checkout', old_ref)
-					git('branch', '-D', tmp_ref)
+					# just in case of errors
+					git_quiet(1, 'reset', '--hard')
+					git_quiet(1, 'checkout', old_ref)
+					git_quiet(1, 'branch', '-D', tmp_ref)
 			finally:
 				if stashed:
-					git('stash', 'pop')
+					git_quiet(2, 'stash', 'pop')
 			msg = args.message
 			if msg is None and pull_sha != pushed_sha:
 				msg = cls.rebase_msg.format(pull_sha, pushed_sha)
