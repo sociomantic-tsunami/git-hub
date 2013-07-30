@@ -381,6 +381,7 @@ class CloneCmd (object):
 			else:
 				upstream = repo['parent']['full_name']
 		dest = args.dest or repo['name']
+		infof('Cloning {} to {}', repo[config.urltype], dest)
 		git_quiet(1, 'clone', repo[config.urltype], dest)
 		if upstream:
 			os.chdir(dest)
@@ -678,6 +679,8 @@ class PullUtil (IssueUtil):
 		if status == 0: # remote reference found, get the hash
 			remote_hash = git('rev-parse', remote_branch)
 		if local_hash != remote_hash:
+			infof('Pushing {} to {} in {}', head, remote_head,
+					config.forkremote)
 			git_quiet(1, 'push', config.forkremote,
 					head+':'+remote_head)
 
@@ -822,13 +825,18 @@ class PullCmd (IssueCmd):
 			if stashed_before != git('stash list'):
 				stashed = True
 			try:
+				infof('Fetching {} from {}', head_ref, head_url)
 				git_quiet(1, 'fetch', head_url, head_ref)
 				git_quiet(1, 'checkout', '-b', tmp_ref,
 						'FETCH_HEAD')
 				try:
 					pull_sha = git('rev-parse HEAD')
+					infof('Rebasing to {} in {}',
+							base_ref, base_url)
 					git_quiet(1, 'pull', '--rebase',
 							base_url, base_ref)
+					infof('Pushing results to {} in {}',
+							base_ref, base_url)
 					git_quiet(1, 'push', base_url,
 							'HEAD:' + base_ref)
 					pushed_sha = git('rev-parse HEAD')
