@@ -61,6 +61,41 @@ def die(fmt='', *args, **kwargs):
 	errf(fmt, *args, **kwargs)
 	sys.exit(1)
 
+def ask(question, default=None, options=["yes", "no"]):
+	if not sys.stdin.isatty():
+		return None
+
+	if default not in options and default is not None:
+		raise ValueError("invalid default answer: '%s'" % default)
+
+	valid_answers = dict()
+	opts_strings = list()
+	for opt in options:
+		if opt is None:
+			raise ValueError("options can't be None")
+		valid_answers[opt.lower()] = opt
+		valid_answers[opt[0].lower()] = opt
+		opt_str = opt.capitalize()
+		if default == opt:
+			# default in bold
+			opt_str = '\033[1m' + opt.upper() + '\033[21m'
+		opts_strings.append(opt_str)
+
+	# options in dark
+	question += ' \033[2m[' + '/'.join(opts_strings) + '] '
+
+	while True:
+		# question in yellow
+		sys.stderr.write('\033[33m' + question + '\033[0m')
+		choice = raw_input().lower().strip()
+		if default is not None and choice == '':
+			return default
+		elif choice in valid_answers:
+			return valid_answers[choice]
+		else:
+			errf("Invalid answer, valid options: {}",
+				', '.join(options))
+
 
 GIT_CONFIG_PREFIX = 'hub.'
 
@@ -816,7 +851,13 @@ class PullCmd (IssueCmd):
 				infof("Nothing to do, already merged")
 				sys.exit(0)
 			if pull['state'] == 'closed':
-				die("Can't rebase/merge, pull request is closed")
+				answer = ask("The pull request is closed, are "
+					"you sure you want to rebase it?")
+				if answer is None:
+					die("Can't rebase/merge, pull request "
+						"is closed")
+				elif answer == 'no':
+					sys.exit(0)
 			head_url = pull['head']['repo'][config.urltype]
 			head_ref = pull['head']['ref']
 			base_url = pull['base']['repo'][config.urltype]
