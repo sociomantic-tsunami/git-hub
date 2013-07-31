@@ -846,6 +846,9 @@ class PullCmd (IssueCmd):
 		@classmethod
 		def run(cls, parser, args):
 			# TODO: Add rebase --continue --abort --skip
+			if cls.rebasing():
+				die("Can't rebase while another reabsing is "
+						"in progress")
 			pull = req.get(cls.url(args.pull))
 			cls.check_pull(pull)
 			stashed = cls.stash(pull)
@@ -938,6 +941,10 @@ class PullCmd (IssueCmd):
 				pull = req.patch(cls.url(args.pull),
 						state='closed')
 			return pull
+		@classmethod
+		def rebasing(cls):
+			dotgit = git('rev-parse', '--git-dir')
+			return os.path.exists(dotgit+'/rebase-apply/rebasing')
 
 
 class HubCmd (CmdGroup):
