@@ -847,6 +847,25 @@ class PullCmd (IssueCmd):
 		def run(cls, parser, args):
 			# TODO: Add rebase --continue --abort --skip
 			pull = req.get(cls.url(args.pull))
+			cls.check_pull(pull)
+			stashed = cls.stash(pull)
+			try:
+				(pull_sha, pushed_sha) = cls.rebase(pull)
+			finally:
+				if stashed:
+					git_quiet(2, 'stash', 'pop')
+			try:
+				pull = cls.update_github(args, pull, pull_sha,
+					pushed_sha)
+			except:
+				errf("GitHub information couldn't be updated "
+					"correctly, but the pull request was "
+					"successfully rebased. Check GitHub "
+					"for details...")
+			finally:
+				cls.print_issue(pull)
+		@classmethod
+		def check_pull(cls, pull):
 			if pull['merged']:
 				infof("Nothing to do, already merged")
 				sys.exit(0)
@@ -867,42 +886,46 @@ class PullCmd (IssueCmd):
 						"isn't in a mergeable state")
 				elif answer == 'no':
 					sys.exit(0)
+		@classmethod
+		def stash(cls, pull):
+			stashed_before = git('stash list')
+			git_quiet(2, 'stash save --all "Stashed by git hub pull '
+					'rebase to rebase pull request %s"' %
+				pull['number'])
+			if stashed_before != git('stash list'):
+				return True
+			return False
+		@classmethod
+		def rebase(cls, pull):
 			head_url = pull['head']['repo'][config.urltype]
 			head_ref = pull['head']['ref']
 			base_url = pull['base']['repo'][config.urltype]
 			base_ref = pull['base']['ref']
-			tmp_ref = 'git-hub-pull-rebase-%s' % args.pull
+			tmp_ref = 'git-hub-pull-rebase-%s' % pull['number']
 			old_ref = cls.head_ref()
-			stashed_before = git('stash list')
-			stashed = False
-			git_quiet(2, 'stash save --all "Stashed by git hub pull '
-				'rebase to rebase pull request %s"' % args.pull)
-			if stashed_before != git('stash list'):
-				stashed = True
+
+			infof('Fetching {} from {}', head_ref, head_url)
+			git_quiet(1, 'fetch', head_url, head_ref)
+			git_quiet(1, 'checkout', '-b', tmp_ref,
+					'FETCH_HEAD')
 			try:
-				infof('Fetching {} from {}', head_ref, head_url)
-				git_quiet(1, 'fetch', head_url, head_ref)
-				git_quiet(1, 'checkout', '-b', tmp_ref,
-						'FETCH_HEAD')
-				try:
-					pull_sha = git('rev-parse HEAD')
-					infof('Rebasing to {} in {}',
-							base_ref, base_url)
-					git_quiet(1, 'pull', '--rebase',
-							base_url, base_ref)
-					infof('Pushing results to {} in {}',
-							base_ref, base_url)
-					git_quiet(1, 'push', base_url,
-							'HEAD:' + base_ref)
-					pushed_sha = git('rev-parse HEAD')
-				finally:
-					# just in case of errors
-					git_quiet(1, 'reset', '--hard')
-					git_quiet(1, 'checkout', old_ref)
-					git_quiet(1, 'branch', '-D', tmp_ref)
+				pull_sha = git('rev-parse HEAD')
+				infof('Rebasing to {} in {}',
+						base_ref, base_url)
+				git_quiet(1, 'pull', '--rebase',
+						base_url, base_ref)
+				infof('Pushing results to {} in {}',
+						base_ref, base_url)
+				git_quiet(1, 'push', base_url,
+						'HEAD:' + base_ref)
+				return (pull_sha, git('rev-parse HEAD'))
 			finally:
-				if stashed:
-					git_quiet(2, 'stash', 'pop')
+				# just in case of errors
+				git_quiet(1, 'reset', '--hard')
+				git_quiet(1, 'checkout', old_ref)
+				git_quiet(1, 'branch', '-D', tmp_ref)
+		@classmethod
+		def update_github(cls, args, pull, pull_sha, pushed_sha):
 			msg = args.message
 			if msg is None and pull_sha != pushed_sha:
 				msg = cls.rebase_msg.format(pull_sha, pushed_sha)
@@ -914,7 +937,7 @@ class PullCmd (IssueCmd):
 			if pull['state'] == 'open' and pull_sha != pushed_sha:
 				pull = req.patch(cls.url(args.pull),
 						state='closed')
-			cls.print_issue(pull)
+			return pull
 
 
 class HubCmd (CmdGroup):
