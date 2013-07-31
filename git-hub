@@ -858,6 +858,15 @@ class PullCmd (IssueCmd):
 						"is closed")
 				elif answer == 'no':
 					sys.exit(0)
+			if not pull['mergeable']:
+				answer = ask("The pull request is not in a "
+					"mergeable state, do you want to "
+					"continue anyway?")
+				if answer is None:
+					die("Can't continue, the pull request "
+						"isn't in a mergeable state")
+				elif answer == 'no':
+					sys.exit(0)
 			head_url = pull['head']['repo'][config.urltype]
 			head_ref = pull['head']['ref']
 			base_url = pull['base']['repo'][config.urltype]
