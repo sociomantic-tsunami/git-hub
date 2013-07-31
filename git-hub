@@ -812,6 +812,11 @@ class PullCmd (IssueCmd):
 		def run(cls, parser, args):
 			# TODO: Add rebase --continue --abort --skip
 			pull = req.get(cls.url(args.pull))
+			if pull['merged']:
+				infof("Nothing to do, already merged")
+				sys.exit(0)
+			if pull['state'] == 'closed':
+				die("Can't rebase/merge, pull request is closed")
 			head_url = pull['head']['repo'][config.urltype]
 			head_ref = pull['head']['ref']
 			base_url = pull['base']['repo'][config.urltype]
