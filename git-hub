@@ -831,6 +831,8 @@ class PullCmd (IssueCmd):
 class RebaseCmd (PullUtil):
 	cmd_help = "close a pull request by rebasing its base branch"
 
+	stash_msg_base = "stashed by git hub pull rebase"
+
 	in_conflict = False
 
 	saved_old_ref = None
@@ -965,7 +967,7 @@ class RebaseCmd (PullUtil):
 
 	@classmethod
 	def stash_msg(cls, pull):
-		return '"git hub pull rebase %s"' % pull['number']
+		return '"%s %s"' % (cls.stash_msg_base, pull['number'])
 
 	@classmethod
 	def get_tmp_ref(cls, pull_id):
@@ -973,9 +975,19 @@ class RebaseCmd (PullUtil):
 
 	@classmethod
 	def pop_stashed(cls):
-		stash = git('stash', 'list').splitlines()
-		if len(stash) and stash[0].endswith(cls.stash_msg()):
-			git_quiet(2, 'stash', 'pop')
+		stash_msg_re = re.compile(cls.stash_msg_base + r' \d+$')
+		stashs = git('stash', 'list').splitlines()
+		for i, stash in enumerate(stashs):
+			if stash_msg_re.match(stash):
+				if i == 0:
+					git_quiet(2, 'stash', 'pop')
+					return
+				else:
+					break
+		else: # found, but not as the first item
+			warf("Stash produced by this command found "
+				"(stash@{{}}) but not as the last stashed "
+				"changes, leaving the stashed as it is", i)
 
 	@classmethod
 	def fetch_rebase_push(cls, pull):
