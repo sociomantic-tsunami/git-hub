@@ -1015,5 +1015,7 @@ if __name__ == '__main__':
 	except urllib2.URLError as error:
 		errf('Network error: {}', error)
 		sys.exit(5)
+	except KeyboardInterrupt:
+		sys.exit(6)
 
 
