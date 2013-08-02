@@ -246,9 +246,9 @@ COMMANDS
      regular HEAD without creating a branch first.
 
  `rebase` PULL
-   Close a pull request identified by **PULL** by
-   rebasing its base branch (specified in the pull request) instead of merging
-   as GitHub's *Merge Button™* would do.
+   Close a pull request identified by **PULL** by rebasing its base branch
+   (specified in the pull request) instead of merging as GitHub's *Merge
+   Button™* would do.
 
    If the operation is successful, a comment will be posted informing the new
    HEAD commit of the branch that has been rebased and the pull request will
