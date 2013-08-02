@@ -1,3 +1,13 @@
+git-hub (0.4rc1) precise; urgency=low
+
+  * Add --continue, --skip and --abort to pull rebase! (aa74a48)
+  * Add --create-branch option for pull new/attach (57d0db6)
+  * Lots of improvements to usability: better output (ed2345a, 051d904),
+    improve error handling (7112aa8, cdd09df, 1bad245) and several new sanity
+    checks (58481d8, 3206559, bfa89d0, 7171757)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Fri, 02 Aug 2013 13:36:02 +0200
+
 git-hub (0.3) precise; urgency=low
 
   * Rewrite the clone subcommand to also fork (90913a1, bc352e1)
