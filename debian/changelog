@@ -1,3 +1,10 @@
+git-hub (0.4rc2) precise; urgency=low
+
+  * Improve stashed changes detection for pull rebase (a5e556b)
+  * Allow aborting a rebase under more circumstances (84fcb10)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Fri, 02 Aug 2013 18:15:54 +0200
+
 git-hub (0.4rc1) precise; urgency=low
 
   * Add --continue, --skip and --abort to pull rebase! (aa74a48)
