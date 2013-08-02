@@ -966,10 +966,6 @@ class RebaseCmd (PullUtil):
 		return pull
 
 	@classmethod
-	def stash_msg(cls, pull):
-		return '"%s %s"' % (cls.stash_msg_base, pull['number'])
-
-	@classmethod
 	def get_tmp_ref(cls, pull_id):
 		return 'git-hub-pull-rebase-%s' % pull_id
 
@@ -988,6 +984,10 @@ class RebaseCmd (PullUtil):
 			warf("Stash produced by this command found "
 				"(stash@{{}}) but not as the last stashed "
 				"changes, leaving the stashed as it is", i)
+
+	@classmethod
+	def stash_msg(cls, pull):
+		return '"%s %s"' % (cls.stash_msg_base, pull['number'])
 
 	@classmethod
 	def fetch_rebase_push(cls, pull):
