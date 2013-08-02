@@ -973,9 +973,9 @@ class RebaseCmd (PullUtil):
 
 	@classmethod
 	def pop_stashed(cls):
-			stash = git('stash', 'list').splitlines()
-			if len(stash) and stash[0].endswith(cls.stash_msg()):
-				git_quiet(2, 'stash', 'pop')
+		stash = git('stash', 'list').splitlines()
+		if len(stash) and stash[0].endswith(cls.stash_msg()):
+			git_quiet(2, 'stash', 'pop')
 
 	@classmethod
 	def fetch_rebase_push(cls, pull):
