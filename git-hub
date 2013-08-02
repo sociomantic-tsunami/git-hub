@@ -7,6 +7,7 @@ Git command line interface to GitHub.
 Written by Leandro Lucarella <leandro.lucarella@sociomantic.com>.
 """
 
+import re
 import sys
 import json
 import string
@@ -869,7 +870,8 @@ class RebaseCmd (PullUtil):
 		if args.pull is not None and ongoing_rebase_pull_id is not None:
 			die("Another pull rebase is in progress, can't start "
 				"a new one")
-		if args.pull is None and ongoing_rebase_pull_id is None:
+		if (args.pull is None and ongoing_rebase_pull_id is None and
+					args.action != '--abort'):
 			die("Can't {}, no pull rebase is in progress",
 				args.action)
 
@@ -914,10 +916,16 @@ class RebaseCmd (PullUtil):
 
 	@classmethod
 	def abort_rebase(cls, args):
-		cls.force_rebase_abort(args)
-		cls.clean_ongoing_rebase(args.pull, cls.saved_old_ref)
-		cls.remove_rebasing_file()
-		cls.pop_stashed()
+		aborted = cls.force_rebase_abort()
+		if args.pull is not None and cls.saved_old_ref is not None:
+			cls.clean_ongoing_rebase(args.pull, cls.saved_old_ref,
+					warnf)
+			aborted = True
+		aborted = cls.remove_rebasing_file() or aborted
+		aborted = cls.pop_stashed() or aborted
+		if not aborted:
+			die("Nothing done, maybe there isn't an ongoing rebase "
+				"of a pull request?")
 
 	@classmethod
 	def start_rebase(cls, args):
@@ -971,19 +979,27 @@ class RebaseCmd (PullUtil):
 
 	@classmethod
 	def pop_stashed(cls):
+		stashed_state = cls.get_stashed_state()
+		if stashed_state:
+			git_quiet(2, 'stash', 'pop')
+			return True
+		elif stashed_state is False:
+			warf("Stash produced by this command found "
+				"(stash@{{}}) but not as the last stashed "
+				"changes, leaving the stashed as it is", i)
+		return False
+
+	@classmethod
+	def get_stashed_state(cls):
 		stash_msg_re = re.compile(cls.stash_msg_base + r' \d+$')
 		stashs = git('stash', 'list').splitlines()
 		for i, stash in enumerate(stashs):
 			if stash_msg_re.match(stash):
 				if i == 0:
-					git_quiet(2, 'stash', 'pop')
-					return
+					return True
 				else:
-					break
-		else: # found, but not as the first item
-			warf("Stash produced by this command found "
-				"(stash@{{}}) but not as the last stashed "
-				"changes, leaving the stashed as it is", i)
+					return False
+		return None
 
 	@classmethod
 	def stash_msg(cls, pull):
@@ -1023,18 +1039,18 @@ class RebaseCmd (PullUtil):
 				cls.clean_ongoing_rebase(pull['number'], old_ref)
 
 	@classmethod
-	def clean_ongoing_rebase(cls, pull_id, old_ref):
+	def clean_ongoing_rebase(cls, pull_id, old_ref, errfunc=die):
 		tmp_ref = cls.get_tmp_ref(pull_id)
 		git_quiet(1, 'reset', '--hard')
 		try:
 			git_quiet(1, 'checkout', old_ref)
 		except subprocess.CalledProcessError as e:
-			die("Can't checkout '{}', maybe it was removied "
+			errfunc("Can't checkout '{}', maybe it was removed "
 				"during the rebase? {}",  old_ref, e)
 		try:
 			git_quiet(1, 'branch', '-D', tmp_ref)
 		except subprocess.CalledProcessError as e:
-			die("Can't remove temporary branch '{}', maybe it was "
+			errfunc("Can't remove temporary branch '{}', maybe it was "
 				"removed during the rebase? {}",  tmp_ref, e)
 
 	@classmethod
@@ -1065,7 +1081,8 @@ class RebaseCmd (PullUtil):
 		try:
 			git('rebase', '--abort', stderr=subprocess.STDOUT)
 		except subprocess.CalledProcessError:
-			pass
+			return False
+		return True
 
 	@classmethod
 	def update_github(cls, args, pull, pushed_sha):
@@ -1139,12 +1156,13 @@ class RebaseCmd (PullUtil):
 	def remove_rebasing_file(cls):
 		fname = cls.rebasing_file_name()
 		if not os.path.exists(fname):
-			return
+			return False
 		try:
 			os.unlink(fname)
 		except EnvironmentError as e:
 			die("Error removing pull rebase information "
 				"file '{}': {}", fname, e)
+		return True
 
 PullCmd.RebaseCmd = RebaseCmd
 
