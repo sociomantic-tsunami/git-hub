@@ -270,12 +270,29 @@ COMMANDS
    7. git branch -D `tmp`
    8. git pop
 
+   If conflicts are found, the command is interrupted, similarly to how `git
+   rebase` would do. The user should either **--abort** the rebasing,
+   **--skip** the conflicting commit or resolve the conflict and
+   **--continue**. When using one of these actions, you have to omit the
+   **PULL** argument.
+
    -m MSG, --message=MSG
      Use this message for the comment instead of the default. Specify an empty
      message (**-m''**) to completely omit the comment.
 
    -e, --edit-message
      Open the default `GIT_EDITOR` to write the comment.
+
+   Actions:
+
+   --continue
+     Continue an ongoing rebase.
+
+   --abort
+     Abort an ongoing rebase.
+
+   --skip
+     Skip current patch in an ongoing rebase and continue.
 
  `update`
    Alias for `issue update`.

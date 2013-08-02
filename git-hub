@@ -826,125 +826,315 @@ class PullCmd (IssueCmd):
 			if msg:
 				cls.clean_and_post_comment(args.issue, msg)
 
-	class RebaseCmd (PullUtil):
-		cmd_help = "close a pull request by rebasing its base branch"
-		@classmethod
-		def setup_parser(cls, parser):
-			parser.add_argument('pull', metavar=cls.id_var,
-				help="number identifying the pull request "
-				"to rebase")
-			parser.add_argument('-m', '--message', metavar='MSG',
-				help="add a comment to the pull request before "
-				"closing it; if not specified a default "
-				"comment is added (to avoid adding a comment "
-				"at all use -m'')")
-			parser.add_argument('-e', '--edit-message',
-				action='store_true', default=False,
-				help="open the default $GIT_EDITOR to edit "
-				"the comment to be added to the pull request "
-				"before closing it")
-		@classmethod
-		def run(cls, parser, args):
-			# TODO: Add rebase --continue --abort --skip
+# This class is top-level just for convenience, because is too big. Is added to
+# PullCmd after is completely defined!
+class RebaseCmd (PullUtil):
+	cmd_help = "close a pull request by rebasing its base branch"
+
+	in_conflict = False
+
+	saved_old_ref = None
+	saved_message = None
+	saved_edit_msg = None
+
+	@classmethod
+	def setup_parser(cls, parser):
+		group = parser.add_mutually_exclusive_group(required=True)
+		group.add_argument('pull',
+			metavar=cls.id_var, nargs='?',
+			help="number identifying the pull request to rebase")
+		group.add_argument('--continue', dest='action',
+			action='store_const', const='--continue',
+			help="continue an ongoing rebase")
+		group.add_argument('--abort', dest='action',
+			action='store_const', const='--abort',
+			help="abort an ongoing rebase")
+		group.add_argument('--skip', dest='action',
+			action='store_const', const='--skip',
+			help="skip current patch and continue")
+		parser.add_argument('-m', '--message', metavar='MSG',
+			help="add a comment to the pull request before closing "
+			"it; if not specified a default comment is added (to "
+			"avoid adding a comment at all use -m'')")
+		parser.add_argument('-e', '--edit-message',
+			action='store_true', default=False,
+			help="open the default $GIT_EDITOR to edit the comment "
+			"to be added to the pull request before closing it")
+
+	@classmethod
+	def run(cls, parser, args):
+		ongoing_rebase_pull_id = cls.read_rebasing_file()
+		if args.pull is not None and ongoing_rebase_pull_id is not None:
+			die("Another pull rebase is in progress, can't start "
+				"a new one")
+		if args.pull is None and ongoing_rebase_pull_id is None:
+			die("Can't {}, no pull rebase is in progress",
+				args.action)
+
+		if args.pull is not None:
 			if cls.rebasing():
-				die("Can't rebase while another reabsing is "
-						"in progress")
-			pull = req.get(cls.url(args.pull))
-			cls.check_pull(pull)
-			stashed = cls.stash(pull)
-			try:
-				(pull_sha, pushed_sha) = cls.rebase(pull)
-			finally:
-				if stashed:
-					git_quiet(2, 'stash', 'pop')
-			try:
-				pull = cls.update_github(args, pull, pull_sha,
-					pushed_sha)
-			except:
-				errf("GitHub information couldn't be updated "
-					"correctly, but the pull request was "
-					"successfully rebased. Check GitHub "
-					"for details...")
-			finally:
-				cls.print_issue(pull)
-		@classmethod
-		def check_pull(cls, pull):
-			if pull['merged']:
-				infof("Nothing to do, already merged")
+				die("Can't start a pull rebase while a "
+					"regular reabase is in progress")
+			cls.start_rebase(args)
+		else:
+			args.pull = ongoing_rebase_pull_id
+			if args.message is None:
+				args.message = cls.saved_message
+			if not args.edit_message:
+				args.edit_message = cls.saved_edit_msg
+
+			if args.action == '--abort':
+				cls.abort_rebase(args)
+			else:
+				cls.check_continue_rebasing(args)
+				cls.start_rebase(args)
+
+	@classmethod
+	def check_continue_rebasing(cls, args):
+		if cls.rebasing():
+			return
+		answer = ask("No rebase in progress found for this pull "
+			"rebase, do you want to continue as if the rebase was "
+			"successfully finished, abort the rebasing cancelling "
+			"the whole rebase or just quit?", default="quit",
+			options=['continue', 'abort', 'quit'])
+		if answer is None:
+			die("No rebase in progress found for this "
+				"pull rebase, don't know how to proceed")
+		elif answer == 'abort':
+			cls.abort_rebase(args)
+		elif answer == 'continue':
+			pull = cls.get_pull(args.pull, False)
+			push_sha = git('rev-parse HEAD')
+			cls.update_github(args, pull, push_sha)
+			cls.remove_rebasing_file()
+		sys.exit(0)
+
+	@classmethod
+	def abort_rebase(cls, args):
+		cls.force_rebase_abort(args)
+		cls.clean_ongoing_rebase(args.pull, cls.saved_old_ref)
+		cls.remove_rebasing_file()
+		cls.pop_stashed()
+
+	@classmethod
+	def start_rebase(cls, args):
+		starting = args.action is None
+		pull = cls.get_pull(args.pull, starting)
+		if starting:
+			git_quiet(2, 'stash save --all %s' % cls.stash_msg(pull))
+		try:
+			pushed_sha = cls.fetch_rebase_push(pull)
+		finally:
+			if not cls.in_conflict:
+				cls.pop_stashed()
+		try:
+			pull = cls.update_github(args, pull, pushed_sha)
+		except:
+			errf("GitHub information couldn't be updated "
+				"correctly, but the pull request was "
+				"successfully rebased. Check GitHub "
+				"for details...")
+		finally:
+			cls.print_issue(pull)
+
+	@classmethod
+	def get_pull(cls, pull_id, check_all):
+		pull = req.get(cls.url(pull_id))
+		if pull['merged']:
+			infof("Nothing to do, already merged (--abort to get "
+					"back to normal)")
+			sys.exit(0)
+		if check_all and pull['state'] == 'closed':
+			answer = ask("The pull request is closed, are you sure "
+				"you want to rebase it?", default="no")
+			if answer is None:
+				die("Can't rebase/merge, pull request is closed")
+			elif answer == 'no':
 				sys.exit(0)
-			if pull['state'] == 'closed':
-				answer = ask("The pull request is closed, are "
-					"you sure you want to rebase it?")
-				if answer is None:
-					die("Can't rebase/merge, pull request "
-						"is closed")
-				elif answer == 'no':
-					sys.exit(0)
-			if not pull['mergeable']:
-				answer = ask("The pull request is not in a "
-					"mergeable state, do you want to "
-					"continue anyway?")
-				if answer is None:
-					die("Can't continue, the pull request "
-						"isn't in a mergeable state")
-				elif answer == 'no':
-					sys.exit(0)
-		@classmethod
-		def stash(cls, pull):
-			stashed_before = git('stash list')
-			git_quiet(2, 'stash save --all "Stashed by git hub pull '
-					'rebase to rebase pull request %s"' %
-				pull['number'])
-			if stashed_before != git('stash list'):
-				return True
-			return False
-		@classmethod
-		def rebase(cls, pull):
-			head_url = pull['head']['repo'][config.urltype]
-			head_ref = pull['head']['ref']
-			base_url = pull['base']['repo'][config.urltype]
-			base_ref = pull['base']['ref']
-			tmp_ref = 'git-hub-pull-rebase-%s' % pull['number']
+		if check_all and not pull['mergeable']:
+			answer = ask("The pull request is not in a mergeable "
+				"state, do you want to continue anyway?",
+				default="no")
+			if answer is None:
+				die("Can't continue, the pull request isn't "
+					"in a mergeable state")
+			elif answer == 'no':
+				sys.exit(0)
+		return pull
+
+	@classmethod
+	def stash_msg(cls, pull):
+		return '"git hub pull rebase %s"' % pull['number']
+
+	@classmethod
+	def get_tmp_ref(cls, pull_id):
+		return 'git-hub-pull-rebase-%s' % pull_id
+
+	@classmethod
+	def pop_stashed(cls):
+			stash = git('stash', 'list').splitlines()
+			if len(stash) and stash[0].endswith(cls.stash_msg()):
+				git_quiet(2, 'stash', 'pop')
+
+	@classmethod
+	def fetch_rebase_push(cls, pull):
+		starting = args.action is None
+		head_url = pull['head']['repo'][config.urltype]
+		head_ref = pull['head']['ref']
+		base_url = pull['base']['repo'][config.urltype]
+		base_ref = pull['base']['ref']
+		tmp_ref = cls.get_tmp_ref(pull['number'])
+		old_ref = cls.saved_old_ref
+		if old_ref is None:
 			old_ref = cls.head_ref()
 
+		if starting:
 			infof('Fetching {} from {}', head_ref, head_url)
 			git_quiet(1, 'fetch', head_url, head_ref)
 			git_quiet(1, 'checkout', '-b', tmp_ref,
-					'FETCH_HEAD')
-			try:
-				pull_sha = git('rev-parse HEAD')
+				'FETCH_HEAD')
+		try:
+			if starting:
 				infof('Rebasing to {} in {}',
 						base_ref, base_url)
-				git_quiet(1, 'pull', '--rebase',
-						base_url, base_ref)
-				infof('Pushing results to {} in {}',
-						base_ref, base_url)
-				git_quiet(1, 'push', base_url,
-						'HEAD:' + base_ref)
-				return (pull_sha, git('rev-parse HEAD'))
-			finally:
-				# just in case of errors
-				git_quiet(1, 'reset', '--hard')
-				git_quiet(1, 'checkout', old_ref)
-				git_quiet(1, 'branch', '-D', tmp_ref)
-		@classmethod
-		def update_github(cls, args, pull, pull_sha, pushed_sha):
-			msg = args.message
-			if msg is None and pull_sha != pushed_sha:
-				msg = cls.rebase_msg.format(pull_sha, pushed_sha)
-			if args.edit_message:
-				msg = cls.comment_editor(msg)
-			if msg:
-				cls.clean_and_post_comment(args.pull, msg)
-			pull = req.get(cls.url(args.pull))
-			if pull['state'] == 'open' and pull_sha != pushed_sha:
-				pull = req.patch(cls.url(args.pull),
-						state='closed')
-			return pull
-		@classmethod
-		def rebasing(cls):
-			dotgit = git('rev-parse', '--git-dir')
-			return os.path.exists(dotgit+'/rebase-apply/rebasing')
+				git_quiet(1, 'fetch', base_url, base_ref)
+				cls.create_rebasing_file(pull, args, old_ref)
+			cls.rebase(args, pull)
+			infof('Pushing results to {} in {}',
+					base_ref, base_url)
+			git_quiet(1, 'push', base_url,
+					'HEAD:' + base_ref)
+			return git('rev-parse HEAD')
+		finally:
+			if not cls.in_conflict:
+				cls.clean_ongoing_rebase(pull['number'], old_ref)
+
+	@classmethod
+	def clean_ongoing_rebase(cls, pull_id, old_ref):
+		tmp_ref = cls.get_tmp_ref(pull_id)
+		git_quiet(1, 'reset', '--hard')
+		try:
+			git_quiet(1, 'checkout', old_ref)
+		except subprocess.CalledProcessError as e:
+			die("Can't checkout '{}', maybe it was removied "
+				"during the rebase? {}",  old_ref, e)
+		try:
+			git_quiet(1, 'branch', '-D', tmp_ref)
+		except subprocess.CalledProcessError as e:
+			die("Can't remove temporary branch '{}', maybe it was "
+				"removed during the rebase? {}",  tmp_ref, e)
+
+	@classmethod
+	def rebase(cls, args, pull):
+		starting = args.action is None
+		try:
+			if starting:
+				git_quiet(1, 'rebase', 'FETCH_HEAD')
+			else:
+				git('rebase', args.action)
+		except subprocess.CalledProcessError as e:
+			if e.returncode == 1 and cls.rebasing():
+				cls.in_conflict = True
+				die("Conflict detected, resolve "
+					"conflicts and run git hub "
+					"pull rebase --continue to "
+					"proceed")
+			raise e
+		finally:
+			if not cls.in_conflict:
+				# Always try to abort the rebasing, in case
+				# there was an error
+				cls.remove_rebasing_file()
+				cls.force_rebase_abort()
+
+	@classmethod
+	def force_rebase_abort(cls):
+		try:
+			git('rebase', '--abort', stderr=subprocess.STDOUT)
+		except subprocess.CalledProcessError:
+			pass
+
+	@classmethod
+	def update_github(cls, args, pull, pushed_sha):
+		pull_sha = pull['head']['sha']
+		msg = args.message
+		if msg is None and pull_sha != pushed_sha:
+			msg = cls.rebase_msg.format(pull_sha, pushed_sha)
+		if args.edit_message:
+			msg = cls.comment_editor(msg)
+		if msg:
+			cls.clean_and_post_comment(args.pull, msg)
+		pull = req.get(cls.url(args.pull))
+		if pull['state'] == 'open' and pull_sha != pushed_sha:
+			pull = req.patch(cls.url(args.pull),
+					state='closed')
+		return pull
+
+	@classmethod
+	def rebasing(cls):
+		dotgit = git('rev-parse', '--git-dir')
+		return os.path.exists(dotgit+'/rebase-apply/rebasing')
+
+	@classmethod
+	def rebasing_file_name(cls):
+		dotgit = git('rev-parse', '--git-dir')
+		return os.path.join(dotgit, 'HUB_PULL_REBASING')
+
+	@classmethod
+	def read_rebasing_file(cls):
+		fname = cls.rebasing_file_name()
+		if os.path.exists(fname):
+			try:
+				with file(fname) as f:
+					# id read as string
+					pull_id = f.readline()[:-1] # strip \n
+					cls.saved_old_ref = f.readline()[:-1]
+					assert cls.saved_old_ref
+					edit_msg = f.readline()[:-1]
+					cls.saved_edit_msg = edit_msg is "True"
+					msg = f.read()
+					if msg == '\n':
+						msg = ''
+					elif not msg:
+						msg = None
+					cls.saved_message = msg
+					return pull_id
+			except EnvironmentError as e:
+				die("Error reading pull rebase information "
+					"file '{}': {}", fname, e)
+		return None
+
+	@classmethod
+	def create_rebasing_file(cls, pull, args, old_ref):
+		fname = cls.rebasing_file_name()
+		try:
+			fd = os.open(cls.rebasing_file_name(),
+					os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+					0o777)
+			with os.fdopen(fd, 'w') as f:
+				# id written as string
+				f.write(str(pull['number']) + '\n')
+				f.write(old_ref + '\n')
+				f.write(repr(args.edit_message) + '\n')
+				if (args.message is not None):
+					f.write(args.message + '\n')
+		except EnvironmentError as e:
+			die("Error writing pull rebase information "
+				"file '{}': {}", fname, e)
+
+	@classmethod
+	def remove_rebasing_file(cls):
+		fname = cls.rebasing_file_name()
+		if not os.path.exists(fname):
+			return
+		try:
+			os.unlink(fname)
+		except EnvironmentError as e:
+			die("Error removing pull rebase information "
+				"file '{}': {}", fname, e)
+
+PullCmd.RebaseCmd = RebaseCmd
 
 
 class HubCmd (CmdGroup):
