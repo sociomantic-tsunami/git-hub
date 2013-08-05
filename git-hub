@@ -7,7 +7,7 @@ Git command line interface to GitHub.
 Written by Leandro Lucarella <leandro.lucarella@sociomantic.com>.
 """
 
-VERSION = 'git-hub 0.4rc2'
+VERSION = "git-hub v?"
 
 import re
 import sys

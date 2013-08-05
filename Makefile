@@ -23,6 +23,8 @@ bash-completion: generate-bash-completion git-hub
 .PHONY: install
 install: git-hub git-hub.1 ftdetect.vim bash-completion
 	install -m 755 -D git-hub $(DESTDIR)$(prefix)/bin/git-hub
+	sed -i 's/^VERSION = "git-hub v?"$$/VERSION = "git-hub v'`git describe`'"/' \
+			$(DESTDIR)$(prefix)/bin/git-hub
 	install -m 644 -D git-hub.1 $(DESTDIR)$(prefix)/share/man/man1/git-hub.1
 	install -m 644 -D ftdetect.vim \
 		$(DESTDIR)$(prefix)/share/vim/addons/ftdetect/githubmsg.vim
