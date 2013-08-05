@@ -43,18 +43,18 @@ COMMANDS
   password each time (or store it in the config). The username is also stored
   for future use in the `hub.username` variable.
 
-  -u USERNAME, --username=USERNAME
+  \-u USERNAME, --username=USERNAME
     GitHub's username (login name), will be stored in the configuration
     variable `hub.username`.
 
-  -p PASSWORD, --password=PASSWORD
+  \-p PASSWORD, --password=PASSWORD
     GitHub's password (will not be stored).
 
-  --global
+  \--global
     Store settings in the global configuration (see --global option in `git
     config(1)` for details).
 
-  --system
+  \--system
     Store settings in the system configuration (see --system option in `git
     config(1)` for details).
 
@@ -76,7 +76,7 @@ COMMANDS
   in which case is impossible to automatically determine the upstream
   repository.
 
-  -r NAME, --remote=NAME
+  \-r NAME, --remote=NAME
     Use `NAME` as the upstream remote repository name instead of the default.
 
 
@@ -87,13 +87,13 @@ COMMANDS
   `list`
     Show a list of open issues.
 
-    -c, --closed
+    \-c, --closed
       Show closed issues instead.
 
-    -C, --created-by-me
+    \-C, --created-by-me
       Show only issues created by me
 
-    -A, --assigned-to-me
+    \-A, --assigned-to-me
       Show only issues assigned to me
 
   `show` ISSUE [ISSUE ...]
@@ -102,19 +102,19 @@ COMMANDS
   `new`
     Create a new issue.
 
-    -m MSG, --message=MSG
+    \-m MSG, --message=MSG
       Issue title (and description). The first line is used as the issue title
       and any text after an empty line is used as the optional body.  If this
       option is not used, the default `GIT_EDITOR` is opened to write one.
 
-    -l LABEL, --label=LABEL
+    \-l LABEL, --label=LABEL
       Attach `LABEL` to the issue (can be specified multiple times to set
       multiple labels).
 
-    -a USER, --assign=USER`
+    \-a USER, --assign=USER`
       Assign an user to the issue. `USER` must be a valid GitHub login name.
 
-    -M ID, --milestone=ID
+    \-M ID, --milestone=ID
       Assign the milestone identified by the number ID to the issue.
 
   `update` ISSUE
@@ -123,36 +123,36 @@ COMMANDS
     A convenient shortcut to close an issue is provided by the `close`
     subcommand.
 
-    -m MSG, --message=MSG
+    \-m MSG, --message=MSG
       New issue title (and description). The first line is used as the issue
       title and any text after an empty line is used as the optional body.
 
-    -e, --edit-message
+    \-e, --edit-message
       Open the default `GIT_EDITOR` to edit the current title (and description)
       of the issue.
 
-    -o, --open
+    \-o, --open
       Reopen the issue.
 
-    -c, --close
+    \-c, --close
       Close the issue.
 
-    -l LABEL, --label=LABEL
+    \-l LABEL, --label=LABEL
       If one or more labels are specified, they will replace the current issue
       labels. Otherwise the labels are unchanged. If one of the labels is
       empty, the labels will be cleared (so you can use **-l''** to clear the
       labels of an issue.
 
-    -a USER, --assign=USER
+    \-a USER, --assign=USER
       Assign an user to the issue. `USER` must be a valid GitHub login name.
 
-    -M ID, --milestone=ID
+    \-M ID, --milestone=ID
       Assign the milestone identified by the number ID to the issue.
 
   `comment` ISSUE
     Add a new comment to an existing issue identified by **ISSUE**.
 
-    -m MSG, --message=MSG
+    \-m MSG, --message=MSG
       Comment to be added to the issue. If this option is not used, the default
       `GIT_EDITOR` is opened to write the comment.
 
@@ -160,10 +160,10 @@ COMMANDS
     Alias for `update --close`. (+ `comment` if **--message** or
     **--edit-message** is specified). Closes issue identified by **ISSUE**.
 
-    -m MSG, --message=MSG
+    \-m MSG, --message=MSG
       Add a comment to the issue before closing it.
 
-    -e, --edit-message
+    \-e, --edit-message
       Open the default `GIT_EDITOR` to write a comment to be added to the issue
       before closing it.
 
@@ -177,7 +177,7 @@ COMMANDS
   `list`
     Show a list of open pull requests.
 
-    --closed
+    \--closed
       Show closed pull requests instead.
 
   `show` PULL [PULL ...]
@@ -194,7 +194,7 @@ COMMANDS
     `hub.forkrepo` configuration, which defaults to
     *hub.username/<hub.upstream project part>*.
 
-    -m MSG, --message=MSG
+    \-m MSG, --message=MSG
       Pull request title (and description). The first line is used as the pull
       request title and any text after an empty line is used as the optional
       body.  If this option is not used, the default `GIT_EDITOR` is opened.
@@ -203,14 +203,14 @@ COMMANDS
       message in the editor and if not, the message of the last commit will be
       used instead.
 
-    -b BASE, --base=BASE
+    \-b BASE, --base=BASE
       Branch (or git ref) you want your changes pulled into. If this option is
       not present, then the base branch is taken from the configuration
       `hub.pullbase` (or just **master** if that configuration is not present
       either). The repository to use as the base is taken from the
       `hub.upstream` configuration.
 
-    -c NAME, --create-branch=NAME
+    \-c NAME, --create-branch=NAME
       Create a new remote branch with (with name **NAME**) as the real head for
       the pull request instead of using the HEAD name passed as **HEAD**. This
       is useful to create a pull request for a hot-fix you committed to your
@@ -223,23 +223,23 @@ COMMANDS
     current branch is used). This subcommand is very similar to the `new`
     subcommand, please refer to it for more details.
 
-    -m MSG, --message=MSG
+    \-m MSG, --message=MSG
       Add a comment to the issue/new pull request.
 
-    -e, --edit-message
+    \-e, --edit-message
       Open the default `GIT_EDITOR` to write a comment to be added to the
       issue/new pull request. The default message is taken from the
       **--message** option if present, otherwise the branch description or the
       first commit message is used as with the `new` subcommand.
 
-    -b BASE, --base=BASE
+    \-b BASE, --base=BASE
       Base branch to which issue the pull request. If this option is not
       present, then the base branch is taken from the configuration
       `hub.pullbase` (or just **master** if that configuration is not present
       either). The repository to use as the base is taken from the
       `hub.upstream` configuration.
 
-    -c NAME, --create-branch=NAME
+    \-c NAME, --create-branch=NAME
       Create a new remote branch with (with name **NAME**) as the real head for
       the pull request instead of using the HEAD name passed as **HEAD**. This
       is useful to create a pull request for a hot-fix you committed to your
@@ -276,22 +276,22 @@ COMMANDS
     **--continue**. When using one of these actions, you have to omit the
     **PULL** argument.
 
-    -m MSG, --message=MSG
+    \-m MSG, --message=MSG
       Use this message for the comment instead of the default. Specify an empty
       message (**-m''**) to completely omit the comment.
 
-    -e, --edit-message
+    \-e, --edit-message
       Open the default `GIT_EDITOR` to write the comment.
 
     Actions:
 
-    --continue
+    \--continue
       Continue an ongoing rebase.
 
-    --abort
+    \--abort
       Abort an ongoing rebase.
 
-    --skip
+    \--skip
       Skip current patch in an ongoing rebase and continue.
 
   `update`
