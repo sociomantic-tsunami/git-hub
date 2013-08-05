@@ -30,6 +30,13 @@ install: git-hub git-hub.1 ftdetect.vim bash-completion
 		$(DESTDIR)$(prefix)/share/vim/addons/ftdetect/githubmsg.vim
 	install -m 644 -D bash-completion $(DESTDIR)/etc/bash_completion.d/git-hub
 
+.PHONY: release
+release:
+	@read -p "Enter version (e.g. v0.4rc1): " version; \
+	msg=`echo $$version | sed 's/v/Version /;s/rc/ Release Candidate /'`; \
+	set -x; \
+	git tag -a -m "$$msg" $$version
+
 .PHONY: clean
 clean:
 	$(RM) git-hub.1 bash-completion
