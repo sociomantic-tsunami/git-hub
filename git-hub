@@ -110,12 +110,13 @@ class GitError (subprocess.CalledProcessError):
 	def __str__(self):
 		return '%s failed (return code: %s)\n%s' % (' '.join(self.cmd),
 				self.returncode, self.output)
+def args_to_list(args):
+	if len(args) == 1:
+		return args[0].split()
+	return list(args)
 
 def git(*args, **kwargs):
-	if len(args) == 1:
-		args = args[0].split()
-	else:
-		args = list(args)
+	args = args_to_list(args)
 	args.insert(0, 'git')
 	kwargs['stdout'] = subprocess.PIPE
 	kwargs['stderr'] = subprocess.PIPE
@@ -127,10 +128,7 @@ def git(*args, **kwargs):
 
 # Same as git() but inserts --quiet at quiet_index if verbose is less than DEBUG
 def git_quiet(quiet_index, *args, **kwargs):
-	if len(args) == 1:
-		args = args[0].split()
-	else:
-		args = list(args)
+	args = args_to_list(args)
 	if verbose < DEBUG:
 		args.insert(quiet_index, '--quiet')
 	return git(*args, **kwargs)
