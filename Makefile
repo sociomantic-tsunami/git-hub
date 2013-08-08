@@ -32,7 +32,9 @@ install: git-hub git-hub.1 ftdetect.vim bash-completion
 
 .PHONY: release
 release:
-	@read -p "Enter version (e.g. v0.4rc1): " version; \
+	@defaultver=`sed -n '1 s/^git-hub (\(.*\)) .*/\1/p' debian/changelog`; \
+	read -p "Enter version [$$defaultver]: " version; \
+	test -z $$version && version=$$defaultver; \
 	msg=`echo $$version | sed 's/v/Version /;s/rc/ Release Candidate /'`; \
 	set -x; \
 	git tag -a -m "$$msg" $$version
