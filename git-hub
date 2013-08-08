@@ -133,6 +133,14 @@ def git_quiet(quiet_index, *args, **kwargs):
 		args.insert(quiet_index, '--quiet')
 	return git(*args, **kwargs)
 
+def git_push(*args, **kwargs):
+	cmd = ['push']
+	if 'force' in kwargs:
+		cmd.append('--force')
+		del kwargs['force']
+	cmd += args_to_list(args)
+	git_quiet(1, *cmd, **kwargs)
+
 class NO_DEFAULT:
 	pass
 
@@ -720,11 +728,9 @@ class PullUtil (IssueUtil):
 		return ref
 
 	@classmethod
-	def push(cls, head, remote_head=None):
+	def push(cls, head, remote_head, force):
 		local_hash = git('rev-parse', head)
 		remote_hash = 'x' # dummy variable that doesn't match any git hash
-		if remote_head is None:
-			remote_head = head
 		remote_branch = '%s/%s' % (config.forkremote, head)
 		status = subprocess.call('git rev-parse --verify --quiet ' +
 				remote_branch + ' > /dev/null', shell=True)
@@ -733,8 +739,8 @@ class PullUtil (IssueUtil):
 		if local_hash != remote_hash:
 			infof('Pushing {} to {} in {}', head, remote_head,
 					config.forkremote)
-			git_quiet(1, 'push', config.forkremote,
-					head+':'+remote_head)
+			git_push(config.forkremote, head+':'+remote_head,
+					force=force)
 
 	@classmethod
 	def get_default_branch_msg(cls, branch_name):
@@ -784,6 +790,10 @@ class PullCmd (IssueCmd):
 				help="create a new remote branch with NAME "
 				"as the real head for the pull request instead "
 				"of using the HEAD name passed as 'head'")
+			parser.add_argument('-f', '--force',
+				action='store_true', default=False,
+				help="force some Git operations (for example "
+				"'push')")
 		@classmethod
 		def run(cls, parser, args):
 			head = args.head or cls.head_ref()
@@ -794,7 +804,7 @@ class PullCmd (IssueCmd):
 			if not msg:
 				msg = cls.editor(cls.get_default_branch_msg(head))
 			(title, body) = split_titled_message(msg)
-			cls.push(head, remote_head)
+			cls.push(head, remote_head, force=args.force)
 			pull = req.post(cls.url(), head=gh_head, base=base,
 					title=title, body=body)
 			cls.print_issue(pull)
@@ -825,6 +835,10 @@ class PullCmd (IssueCmd):
 				help="create a new remote branch with NAME "
 				"as the real head for the pull request instead "
 				"of using the HEAD name passed as 'head'")
+			parser.add_argument('-f', '--force',
+				action='store_true', default=False,
+				help="force some Git operations (for example "
+				"'push')")
 		@classmethod
 		def run(cls, parser, args):
 			head = args.head or cls.head_ref()
@@ -836,7 +850,7 @@ class PullCmd (IssueCmd):
 					msg = cls.get_default_branch_msg(head)
 				msg = cls.comment_editor(msg)
 			gh_head = config.username + ':' + remote_head
-			cls.push(head, remote_head)
+			cls.push(head, remote_head, force=args.force)
 			pull = req.post(cls.url(), issue=args.issue, base=base,
 					head=gh_head)
 			cls.print_issue(pull)
@@ -879,6 +893,9 @@ class RebaseCmd (PullUtil):
 			action='store_true', default=False,
 			help="open the default $GIT_EDITOR to edit the comment "
 			"to be added to the pull request before closing it")
+		parser.add_argument('-f', '--force',
+			action='store_true', default=False,
+			help="force some Git operations (for example 'push')")
 
 	@classmethod
 	def run(cls, parser, args):
@@ -950,7 +967,7 @@ class RebaseCmd (PullUtil):
 		if starting:
 			git_quiet(2, 'stash save --all %s' % cls.stash_msg(pull))
 		try:
-			pushed_sha = cls.fetch_rebase_push(pull)
+			pushed_sha = cls.fetch_rebase_push(args, pull)
 		finally:
 			if not cls.in_conflict:
 				cls.pop_stashed()
@@ -1022,7 +1039,7 @@ class RebaseCmd (PullUtil):
 		return '"%s %s"' % (cls.stash_msg_base, pull['number'])
 
 	@classmethod
-	def fetch_rebase_push(cls, pull):
+	def fetch_rebase_push(cls, args, pull):
 		starting = args.action is None
 		head_url = pull['head']['repo'][config.urltype]
 		head_ref = pull['head']['ref']
@@ -1047,8 +1064,7 @@ class RebaseCmd (PullUtil):
 			cls.rebase(args, pull)
 			infof('Pushing results to {} in {}',
 					base_ref, base_url)
-			git_quiet(1, 'push', base_url,
-					'HEAD:' + base_ref)
+			git_push(base_url, 'HEAD:' + base_ref, force=args.force)
 			return git('rev-parse HEAD')
 		finally:
 			if not cls.in_conflict:
