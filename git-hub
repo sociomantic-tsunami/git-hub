@@ -102,12 +102,28 @@ def ask(question, default=None, options=["yes", "no"]):
 
 GIT_CONFIG_PREFIX = 'hub.'
 
+class GitError (subprocess.CalledProcessError):
+
+	def __init__(self, returncode, cmd, output):
+		super(GitError, self).__init__(returncode, cmd, output)
+
+	def __str__(self):
+		return '%s failed (return code: %s)\n%s' % (' '.join(self.cmd),
+				self.returncode, self.output)
+
 def git(*args, **kwargs):
 	if len(args) == 1:
 		args = args[0].split()
 	else:
 		args = list(args)
-	return subprocess.check_output(['git'] + args, **kwargs).rstrip('\n')
+	args.insert(0, 'git')
+	kwargs['stdout'] = subprocess.PIPE
+	kwargs['stderr'] = subprocess.PIPE
+	proc = subprocess.Popen(args, **kwargs)
+	(stdout, stderr) = proc.communicate()
+	if proc.returncode != 0 or stderr:
+		raise GitError(proc.returncode, args, stderr.rstrip('\n'))
+	return stdout.rstrip('\n')
 
 # Same as git() but inserts --quiet at quiet_index if verbose is less than DEBUG
 def git_quiet(quiet_index, *args, **kwargs):
@@ -1239,5 +1255,11 @@ if __name__ == '__main__':
 		sys.exit(5)
 	except KeyboardInterrupt:
 		sys.exit(6)
+	except GitError as error:
+		errf('{} failed (return code: {})',
+			' '.join(error.cmd), error.returncode)
+		if verbose >= ERR:
+			sys.stderr.write(error.output + '\n')
+		sys.exit(7)
 
 
