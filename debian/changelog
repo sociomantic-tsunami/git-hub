@@ -1,3 +1,11 @@
+git-hub (0.4rc3) precise; urgency=low
+
+  * Fix some man page formatting (faa0b3c, ad70540)
+  * Improve git error reporting (cd2c1b9)
+  * Add --force options for pull new, attach and rebase (37db13f)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Thu, 08 Aug 2013 12:18:17 +0200
+
 git-hub (0.4rc2) precise; urgency=low
 
   * Improve stashed changes detection for pull rebase (a5e556b)
