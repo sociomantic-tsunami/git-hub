@@ -8,6 +8,7 @@ Git command line interface to GitHub
 
 :Author: Leandro Lucarella <leandro.lucarella@sociomantic.com>
 :Copyright: 2013 Sociomantic Labs GmbH
+:Version: devel
 :Date: |date|
 :Manual section: 1
 :Manual group: Git Manual
