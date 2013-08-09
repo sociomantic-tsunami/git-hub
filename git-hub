@@ -609,7 +609,7 @@ class IssueUtil (object):
 	# Since this class is reused by the CmdPull subcommands, we use several
 	# variables to customize the out and help message to adjust to both
 	# issues and pull requests.
-	name = 'pull request'
+	name = 'issue'
 	gh_path = 'issues'
 	id_var = 'ISSUE'
 	help_msg = '''
