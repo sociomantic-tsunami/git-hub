@@ -1,0 +1,14 @@
+Source: git-hub
+Maintainer: Leandro Lucarella <leandro.lucarella@sociomantic.com>
+Section: vcs
+Priority: optional
+Standards-Version: 3.9.3
+Build-Depends: debhelper (>=8), python-docutils
+
+Package: git-hub
+Architecture: all
+Depends: ${python:Depends}, ${misc:Depends}, python (>=2.7), git (>=1.7.7)
+Description: Git command line interface to GitHub
+ git-hub is a simple command line interface to github, enabling most useful
+ GitHub tasks (like creating and listing pull request or issues) to be accessed
+ directly through the git command line.
