@@ -204,7 +204,7 @@ def git_push(*args, **kwargs):
 class NO_DEFAULT:
 	pass
 
-# Specialized version of git() to call get/set git config variables.
+# Specialized version of git() to get/set git config variables.
 #
 # `name` is the name of the git variable to get/set. `default` is the value
 # that should be returned if variable is not defined (None will return None in
@@ -289,7 +289,7 @@ class Config:
 #
 # All these methods take an URL (relative to the base_url) and optionally an
 # arbitrarily number of positional or keyword arguments (but not both at the
-# same type). The extra arguments, if present, are serialized as json and sent
+# same time). The extra arguments, if present, are serialized as json and sent
 # as the request body.
 # All these methods return None if the response is empty, or the deserialized
 # json data received in the body of the response.
