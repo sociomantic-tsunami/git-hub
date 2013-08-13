@@ -206,11 +206,11 @@ COMMANDS
       used instead.
 
     \-b BASE, --base=BASE
-      Branch (or git ref) you want your changes pulled into. If this option is
-      not present, then the base branch is taken from the configuration
-      `hub.pullbase` (or just **master** if that configuration is not present
-      either). The repository to use as the base is taken from the
-      `hub.upstream` configuration.
+      Branch (or git ref) you want your changes pulled into. By default the
+      tracking branch (`branch.<ref>.merge` configuration variable) is used or
+      the configuration `hub.pullbase` if not tracking a remote branch. If none
+      is present, it defaults to **master**. The repository to use as the base
+      is taken from the `hub.upstream` configuration.
 
     \-c NAME, --create-branch=NAME
       Create a new remote branch with (with name **NAME**) as the real head for

@@ -886,6 +886,16 @@ class PullUtil (IssueUtil):
 			ref = git('rev-list -1 HEAD')
 		return ref
 
+	@classmethod
+	def tracking_branch(cls, head):
+		ref = git_config('branch.%s.merge' % head, prefix='')
+		if ref is None:
+			return None
+		# the format is usually a full reference specification, like
+		# "refs/heads/<branch>", we just assume the user is always
+		# using a branch
+		return ref.split('/')[-1]
+
 	# push head to remote_head only if is necessary
 	@classmethod
 	def push(cls, head, remote_head, force):
@@ -963,7 +973,8 @@ class PullCmd (IssueCmd):
 		def run(cls, parser, args):
 			head = args.head or cls.head_ref()
 			remote_head = args.create_branch or head
-			base = args.base or config.pullbase
+			base = args.base or cls.tracking_branch(head) or \
+					config.pullbase
 			msg = args.message
 			gh_head = config.username + ':' + remote_head
 			if not msg:
@@ -1008,7 +1019,8 @@ class PullCmd (IssueCmd):
 		def run(cls, parser, args):
 			head = args.head or cls.head_ref()
 			remote_head = args.create_branch or head
-			base = args.base or config.pullbase
+			base = args.base or cls.tracking_branch(head) or \
+					config.pullbase
 			msg = args.message
 			if args.edit_message:
 				if not msg:
