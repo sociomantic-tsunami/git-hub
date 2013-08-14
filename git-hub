@@ -772,11 +772,12 @@ class IssueCmd (CmdGroup):
 				action='store_true', default=False,
 				help="open the default $GIT_EDITOR to edit the "
 				"current title (and description) of the issue")
-			parser.add_argument('-o', '--open',
-				action='store_true', default=False,
+			group = parser.add_mutually_exclusive_group()
+			group.add_argument('-o', '--open', dest='state',
+				action='store_const', const='open',
 				help="reopen the issue")
-			parser.add_argument('-c', '--close',
-				action='store_true', default=False,
+			group.add_argument('-c', '--close', dest='state',
+				action='store_const', const='closed',
 				help="close the issue")
 			parser.add_argument('-l', '--label', dest='labels',
 				metavar='LABEL', action='append',
@@ -808,10 +809,8 @@ class IssueCmd (CmdGroup):
 				params['labels'] = []
 			elif args.labels:
 				params['labels'] = args.labels
-			if args.open:
-				params['state'] = 'open'
-			if args.close:
-				params['state'] = 'closed'
+			if args.state:
+				params['state'] = args.state
 			if args.assignee is not None:
 				params['assignee'] = args.assignee
 			if args.milestone is not None:
