@@ -736,12 +736,13 @@ class IssueCmd (CmdGroup):
 				"first line is used as the issue title and "
 				"any text after an empty line is used as "
 				"the optional body")
-			parser.add_argument('-l', '--label',
+			parser.add_argument('-l', '--label', dest='labels',
 				metavar='LABEL', action='append',
 				help="attach LABEL to the issue (can be "
 				"specified multiple times to set multiple "
 				"labels)")
-			parser.add_argument('-a', '--assign', metavar='USER',
+			parser.add_argument('-a', '--assign', dest='assignee',
+				metavar='USER',
 				help="assign an user to the issue; must be a "
 				"valid GitHub login name")
 			parser.add_argument('-M', '--milestone', metavar='ID',
@@ -777,7 +778,7 @@ class IssueCmd (CmdGroup):
 			parser.add_argument('-c', '--close',
 				action='store_true', default=False,
 				help="close the issue")
-			parser.add_argument('-l', '--label',
+			parser.add_argument('-l', '--label', dest='labels',
 				metavar='LABEL', action='append',
 				help="if one or more labels are specified, "
 				"they will replace the current issue labels; "
@@ -785,7 +786,8 @@ class IssueCmd (CmdGroup):
 				"the labels is empty, the labels will be "
 				"cleared (so you can use -l'' to clear the "
 				"labels of an issue)")
-			parser.add_argument('-a', '--assign', metavar='USER',
+			parser.add_argument('-a', '--assign', dest='assignee',
+				metavar='USER',
 				help="assign an user to the issue; must be a "
 				"valid GitHub login name")
 			parser.add_argument('-M', '--milestone', metavar='ID',
@@ -810,8 +812,8 @@ class IssueCmd (CmdGroup):
 				params['state'] = 'open'
 			if args.close:
 				params['state'] = 'closed'
-			if args.assign is not None:
-				params['assignee'] = args.assign
+			if args.assignee is not None:
+				params['assignee'] = args.assignee
 			if args.milestone is not None:
 				params['milestone'] = args.milestone
 			msg = args.message
