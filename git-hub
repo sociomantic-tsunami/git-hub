@@ -1277,6 +1277,9 @@ class RebaseCmd (PullUtil):
 	# Returns the new HEAD hash after the rebase is completed.
 	@classmethod
 	def fetch_rebase_push(cls, args, pull):
+		if pull['head']['repo'] is None:
+			die("It seems like the repository referenced by "
+				"this pull request has been deleted")
 		starting = args.action is None
 		head_url = pull['head']['repo'][config.urltype]
 		head_ref = pull['head']['ref']
