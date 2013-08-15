@@ -825,6 +825,7 @@ class IssueCmd (CmdGroup):
 					if issue['body']:
 						msg += '\n\n' + issue['body']
 				msg = cls.editor(msg)
+			if msg:
 				(title, body) = split_titled_message(msg)
 				params['title'] = title
 				params['body'] = body
