@@ -1,0 +1,7 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: git-hub
+Upstream-Contact: Leandro Lucarella <leandro.lucarella@sociomantic.com>
+Source: https://github.com/sociomantic/git-hub
+Copyright: Copyright 2013 Sociomantic Labs GmbH
+License: GPL-3
+ /usr/share/common-licenses/GPL-3
