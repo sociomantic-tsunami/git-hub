@@ -577,9 +577,9 @@ class CloneCmd (object):
 				if repo['name'] == proj and repo['fork']:
 					break
 			else: # Fork not found
-				infof('Forking {} ...', upstream)
+				infof('Forking {} to {}/{}', upstream,
+					config.username, proj)
 				repo = req.post('/repos/' + upstream + '/forks')
-				infof('\tforked to {}', repo['full_name'])
 			repo = req.get('/repos/' + repo['full_name'])
 		else: # no '/' in upstream
 			repo = req.get('/repos/%s/%s' % (config.username,
@@ -597,8 +597,10 @@ class CloneCmd (object):
 		if upstream:
 			os.chdir(dest)
 			git_config('upstream', value=upstream)
-			git('remote', 'add', '-f', remote,
-					repo['parent'][config.urltype])
+			repo_url = repo['parent'][config.urltype]
+			git('remote', 'add', remote, repo_url)
+			infof('Fetching from {} ({})', remote, repo_url)
+			git_quiet(1, 'fetch', remote)
 
 
 # Utility class that group common functionality used by the multiple `git hub
