@@ -25,7 +25,7 @@ bash-completion: generate-bash-completion git-hub
 	./$^ > $@ || ($(RM) $@ && false)
 
 .PHONY: install
-install: git-hub git-hub.1 ftdetect.vim bash-completion
+install: git-hub git-hub.1 ftdetect.vim bash-completion README.rst
 	install -m 755 -D git-hub $(DESTDIR)$(prefix)/bin/git-hub
 	sed -i 's/^VERSION = "git-hub devel"$$/VERSION = "git-hub v'`git describe`'"/' \
 			$(DESTDIR)$(prefix)/bin/git-hub
@@ -33,6 +33,7 @@ install: git-hub git-hub.1 ftdetect.vim bash-completion
 	install -m 644 -D ftdetect.vim \
 		$(DESTDIR)$(prefix)/share/vim/addons/ftdetect/githubmsg.vim
 	install -m 644 -D bash-completion $(DESTDIR)/etc/bash_completion.d/git-hub
+	install -m 644 -D README.rst $(DESTDIR)$(prefix)/share/doc/git-hub/README.rst
 
 .PHONY: release
 release:
