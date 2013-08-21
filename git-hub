@@ -906,15 +906,20 @@ class PullUtil (IssueUtil):
 		local_hash = git('rev-parse', head)
 		remote_hash = 'x' # dummy variable that doesn't match any git hash
 		remote_branch = '%s/%s' % (config.forkremote, head)
-		status = subprocess.call('git rev-parse --verify --quiet ' +
-				remote_branch + ' > /dev/null', shell=True)
-		if status == 0: # remote reference found, get the hash
+		if cls.branch_exists(remote_branch):
 			remote_hash = git('rev-parse', remote_branch)
 		if local_hash != remote_hash:
 			infof('Pushing {} to {} in {}', head, remote_head,
 					config.forkremote)
 			git_push(config.forkremote, head+':'+remote_head,
 					force=force)
+
+	@classmethod
+	def branch_exists(cls, branch):
+		status = subprocess.call('git rev-parse --verify --quiet ' +
+				'refs/heads/' + branch + ' > /dev/null',
+				shell=True)
+		return status == 0
 
 	@classmethod
 	def get_default_branch_msg(cls, branch_name):
@@ -1320,11 +1325,8 @@ class RebaseCmd (PullUtil):
 		except subprocess.CalledProcessError as e:
 			errfunc("Can't checkout '{}', maybe it was removed "
 				"during the rebase? {}",  old_ref, e)
-		try:
+		if cls.branch_exists(tmp_ref):
 			git_quiet(1, 'branch', '-D', tmp_ref)
-		except subprocess.CalledProcessError as e:
-			errfunc("Can't remove temporary branch '{}', maybe it was "
-				"removed during the rebase? {}",  tmp_ref, e)
 
 	# Performs the rebasing itself. Sets the `in_conflict` flag if
 	# a conflict is detected.
