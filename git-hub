@@ -911,7 +911,8 @@ class PullUtil (IssueUtil):
 		if local_hash != remote_hash:
 			infof('Pushing {} to {} in {}', head, remote_head,
 					config.forkremote)
-			git_push(config.forkremote, head+':'+remote_head,
+			git_push(config.forkremote,
+					head+':refs/heads/'+remote_head,
 					force=force)
 
 	@classmethod
