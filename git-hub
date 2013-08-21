@@ -1138,6 +1138,9 @@ class RebaseCmd (PullUtil):
 	def check_continue_rebasing(cls, args):
 		if cls.rebasing():
 			return
+		if args.action == '--continue' and \
+				cls.get_tmp_ref(args.pull) == cls.head_ref():
+			return
 		answer = ask("No rebase in progress found for this pull "
 			"rebase, do you want to continue as if the rebase was "
 			"successfully finished, abort the rebasing cancelling "
@@ -1146,14 +1149,9 @@ class RebaseCmd (PullUtil):
 		if answer is None:
 			die("No rebase in progress found for this "
 				"pull rebase, don't know how to proceed")
-		elif answer == 'abort':
+		if answer == 'abort':
 			cls.abort_rebase(args)
-		elif answer == 'continue':
-			pull = cls.get_pull(args.pull, False)
-			push_sha = git('rev-parse HEAD')
-			cls.update_github(args, pull, push_sha)
-			cls.remove_rebasing_file()
-		sys.exit(0)
+			sys.exit(0)
 
 	# Abort an ongoing rebase by trying to return to the state the repo was
 	# before the rebasing started (reset to the previous head, remove
@@ -1307,7 +1305,11 @@ class RebaseCmd (PullUtil):
 						base_ref, base_url)
 				git_quiet(1, 'fetch', base_url, base_ref)
 				cls.create_rebasing_file(pull, args, old_ref)
-			cls.rebase(args, pull)
+			# Only run the rebase if we are not continuing with
+			# a pull rebase that the user finished rebasing using
+			# a plain git rebase --continue
+			if starting or cls.rebasing():
+				cls.rebase(args, pull)
 			infof('Pushing results to {} in {}',
 					base_ref, base_url)
 			git_push(base_url, 'HEAD:' + base_ref, force=args.force)
