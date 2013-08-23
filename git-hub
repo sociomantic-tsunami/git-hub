@@ -160,6 +160,12 @@ class GitError (subprocess.CalledProcessError):
 	def __str__(self):
 		return '%s failed (return code: %s)\n%s' % (' '.join(self.cmd),
 				self.returncode, self.output)
+
+# Convert a variable arguments tuple to an argument list
+#
+# If args as only one element, the element is expected to be a string and the
+# new argument list is populated by splitting the string using spaces as
+# separator. If it has multiple arguments, is just converted to a list.
 def args_to_list(args):
 	if len(args) == 1:
 		return args[0].split()
