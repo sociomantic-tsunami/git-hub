@@ -528,6 +528,7 @@ class SetupCmd (object):
 			help="store settings in the system configuration "
 			"(see git config --system for details)")
 		parser.set_defaults(opts=[])
+
 	@classmethod
 	def setup(cls, username=None, password=None, opts=()):
 		if (username is None or password is None) and \
@@ -550,6 +551,7 @@ class SetupCmd (object):
 				scopes=['user', 'repo'])
 		git_config('username', value=username, opts=opts)
 		git_config('oauthtoken', value=auth['token'], opts=opts)
+
 	@classmethod
 	def run(cls, parser, args):
 		cls.setup(args.username, args.password, args.opts)
@@ -573,6 +575,7 @@ class CloneCmd (object):
 		parser.add_argument('-r', '--remote', metavar='NAME',
 			help="use NAME as the upstream remote repository name "
 			"instead of the default 'upstream'")
+
 	@classmethod
 	def run(cls, parser, args):
 		upstream = args.repository
