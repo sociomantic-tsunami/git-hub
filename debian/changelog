@@ -1,3 +1,16 @@
+git-hub (0.4) precise; urgency=low
+
+  * Use the tracking branch as default base branch for hub pull
+    new/attach (#7)
+  * Improve pull rebase error recovery and usability (#4, #5, #6)
+  * Other minor bug fixes and usability improvements
+    (#8, #9, #12, #13, #14)
+  * Debian package improvements (#10, #11)
+  * Add a README file providing a better introduction than the man
+    page (#15)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Tue, 03 Sep 2013 16:56:01 +0200
+
 git-hub (0.4rc3) precise; urgency=low
 
   * Fix some man page formatting (faa0b3c, ad70540)
