@@ -160,6 +160,12 @@ class GitError (subprocess.CalledProcessError):
 	def __str__(self):
 		return '%s failed (return code: %s)\n%s' % (' '.join(self.cmd),
 				self.returncode, self.output)
+
+# Convert a variable arguments tuple to an argument list
+#
+# If args as only one element, the element is expected to be a string and the
+# new argument list is populated by splitting the string using spaces as
+# separator. If it has multiple arguments, is just converted to a list.
 def args_to_list(args):
 	if len(args) == 1:
 		return args[0].split()
@@ -522,6 +528,7 @@ class SetupCmd (object):
 			help="store settings in the system configuration "
 			"(see git config --system for details)")
 		parser.set_defaults(opts=[])
+
 	@classmethod
 	def setup(cls, username=None, password=None, opts=()):
 		if (username is None or password is None) and \
@@ -544,6 +551,7 @@ class SetupCmd (object):
 				scopes=['user', 'repo'])
 		git_config('username', value=username, opts=opts)
 		git_config('oauthtoken', value=auth['token'], opts=opts)
+
 	@classmethod
 	def run(cls, parser, args):
 		cls.setup(args.username, args.password, args.opts)
@@ -567,6 +575,7 @@ class CloneCmd (object):
 		parser.add_argument('-r', '--remote', metavar='NAME',
 			help="use NAME as the upstream remote repository name "
 			"instead of the default 'upstream'")
+
 	@classmethod
 	def run(cls, parser, args):
 		upstream = args.repository
@@ -577,9 +586,9 @@ class CloneCmd (object):
 				if repo['name'] == proj and repo['fork']:
 					break
 			else: # Fork not found
-				infof('Forking {} ...', upstream)
+				infof('Forking {} to {}/{}', upstream,
+					config.username, proj)
 				repo = req.post('/repos/' + upstream + '/forks')
-				infof('\tforked to {}', repo['full_name'])
 			repo = req.get('/repos/' + repo['full_name'])
 		else: # no '/' in upstream
 			repo = req.get('/repos/%s/%s' % (config.username,
@@ -597,8 +606,10 @@ class CloneCmd (object):
 		if upstream:
 			os.chdir(dest)
 			git_config('upstream', value=upstream)
-			git('remote', 'add', '-f', remote,
-					repo['parent'][config.urltype])
+			repo_url = repo['parent'][config.urltype]
+			git('remote', 'add', remote, repo_url)
+			infof('Fetching from {} ({})', remote, repo_url)
+			git_quiet(1, 'fetch', remote)
 
 
 # Utility class that group common functionality used by the multiple `git hub
@@ -736,12 +747,13 @@ class IssueCmd (CmdGroup):
 				"first line is used as the issue title and "
 				"any text after an empty line is used as "
 				"the optional body")
-			parser.add_argument('-l', '--label',
+			parser.add_argument('-l', '--label', dest='labels',
 				metavar='LABEL', action='append',
 				help="attach LABEL to the issue (can be "
 				"specified multiple times to set multiple "
 				"labels)")
-			parser.add_argument('-a', '--assign', metavar='USER',
+			parser.add_argument('-a', '--assign', dest='assignee',
+				metavar='USER',
 				help="assign an user to the issue; must be a "
 				"valid GitHub login name")
 			parser.add_argument('-M', '--milestone', metavar='ID',
@@ -771,13 +783,14 @@ class IssueCmd (CmdGroup):
 				action='store_true', default=False,
 				help="open the default $GIT_EDITOR to edit the "
 				"current title (and description) of the issue")
-			parser.add_argument('-o', '--open',
-				action='store_true', default=False,
+			group = parser.add_mutually_exclusive_group()
+			group.add_argument('-o', '--open', dest='state',
+				action='store_const', const='open',
 				help="reopen the issue")
-			parser.add_argument('-c', '--close',
-				action='store_true', default=False,
+			group.add_argument('-c', '--close', dest='state',
+				action='store_const', const='closed',
 				help="close the issue")
-			parser.add_argument('-l', '--label',
+			parser.add_argument('-l', '--label', dest='labels',
 				metavar='LABEL', action='append',
 				help="if one or more labels are specified, "
 				"they will replace the current issue labels; "
@@ -785,7 +798,8 @@ class IssueCmd (CmdGroup):
 				"the labels is empty, the labels will be "
 				"cleared (so you can use -l'' to clear the "
 				"labels of an issue)")
-			parser.add_argument('-a', '--assign', metavar='USER',
+			parser.add_argument('-a', '--assign', dest='assignee',
+				metavar='USER',
 				help="assign an user to the issue; must be a "
 				"valid GitHub login name")
 			parser.add_argument('-M', '--milestone', metavar='ID',
@@ -806,12 +820,10 @@ class IssueCmd (CmdGroup):
 				params['labels'] = []
 			elif args.labels:
 				params['labels'] = args.labels
-			if args.open:
-				params['state'] = 'open'
-			if args.close:
-				params['state'] = 'closed'
-			if args.assign is not None:
-				params['assignee'] = args.assign
+			if args.state:
+				params['state'] = args.state
+			if args.assignee is not None:
+				params['assignee'] = args.assignee
 			if args.milestone is not None:
 				params['milestone'] = args.milestone
 			msg = args.message
@@ -822,6 +834,7 @@ class IssueCmd (CmdGroup):
 					if issue['body']:
 						msg += '\n\n' + issue['body']
 				msg = cls.editor(msg)
+			if msg:
 				(title, body) = split_titled_message(msg)
 				params['title'] = title
 				params['body'] = body
@@ -886,21 +899,37 @@ class PullUtil (IssueUtil):
 			ref = git('rev-list -1 HEAD')
 		return ref
 
+	@classmethod
+	def tracking_branch(cls, head):
+		ref = git_config('branch.%s.merge' % head, prefix='')
+		if ref is None:
+			return None
+		# the format is usually a full reference specification, like
+		# "refs/heads/<branch>", we just assume the user is always
+		# using a branch
+		return ref.split('/')[-1]
+
 	# push head to remote_head only if is necessary
 	@classmethod
 	def push(cls, head, remote_head, force):
 		local_hash = git('rev-parse', head)
 		remote_hash = 'x' # dummy variable that doesn't match any git hash
 		remote_branch = '%s/%s' % (config.forkremote, head)
-		status = subprocess.call('git rev-parse --verify --quiet ' +
-				remote_branch + ' > /dev/null', shell=True)
-		if status == 0: # remote reference found, get the hash
+		if cls.branch_exists(remote_branch):
 			remote_hash = git('rev-parse', remote_branch)
 		if local_hash != remote_hash:
 			infof('Pushing {} to {} in {}', head, remote_head,
 					config.forkremote)
-			git_push(config.forkremote, head+':'+remote_head,
+			git_push(config.forkremote,
+					head+':refs/heads/'+remote_head,
 					force=force)
+
+	@classmethod
+	def branch_exists(cls, branch):
+		status = subprocess.call('git rev-parse --verify --quiet ' +
+				'refs/heads/' + branch + ' > /dev/null',
+				shell=True)
+		return status == 0
 
 	@classmethod
 	def get_default_branch_msg(cls, branch_name):
@@ -963,7 +992,8 @@ class PullCmd (IssueCmd):
 		def run(cls, parser, args):
 			head = args.head or cls.head_ref()
 			remote_head = args.create_branch or head
-			base = args.base or config.pullbase
+			base = args.base or cls.tracking_branch(head) or \
+					config.pullbase
 			msg = args.message
 			gh_head = config.username + ':' + remote_head
 			if not msg:
@@ -1008,7 +1038,8 @@ class PullCmd (IssueCmd):
 		def run(cls, parser, args):
 			head = args.head or cls.head_ref()
 			remote_head = args.create_branch or head
-			base = args.base or config.pullbase
+			base = args.base or cls.tracking_branch(head) or \
+					config.pullbase
 			msg = args.message
 			if args.edit_message:
 				if not msg:
@@ -1116,6 +1147,9 @@ class RebaseCmd (PullUtil):
 	def check_continue_rebasing(cls, args):
 		if cls.rebasing():
 			return
+		if args.action == '--continue' and \
+				cls.get_tmp_ref(args.pull) == cls.head_ref():
+			return
 		answer = ask("No rebase in progress found for this pull "
 			"rebase, do you want to continue as if the rebase was "
 			"successfully finished, abort the rebasing cancelling "
@@ -1124,14 +1158,9 @@ class RebaseCmd (PullUtil):
 		if answer is None:
 			die("No rebase in progress found for this "
 				"pull rebase, don't know how to proceed")
-		elif answer == 'abort':
+		if answer == 'abort':
 			cls.abort_rebase(args)
-		elif answer == 'continue':
-			pull = cls.get_pull(args.pull, False)
-			push_sha = git('rev-parse HEAD')
-			cls.update_github(args, pull, push_sha)
-			cls.remove_rebasing_file()
-		sys.exit(0)
+			sys.exit(0)
 
 	# Abort an ongoing rebase by trying to return to the state the repo was
 	# before the rebasing started (reset to the previous head, remove
@@ -1261,6 +1290,9 @@ class RebaseCmd (PullUtil):
 	# Returns the new HEAD hash after the rebase is completed.
 	@classmethod
 	def fetch_rebase_push(cls, args, pull):
+		if pull['head']['repo'] is None:
+			die("It seems like the repository referenced by "
+				"this pull request has been deleted")
 		starting = args.action is None
 		head_url = pull['head']['repo'][config.urltype]
 		head_ref = pull['head']['ref']
@@ -1282,7 +1314,11 @@ class RebaseCmd (PullUtil):
 						base_ref, base_url)
 				git_quiet(1, 'fetch', base_url, base_ref)
 				cls.create_rebasing_file(pull, args, old_ref)
-			cls.rebase(args, pull)
+			# Only run the rebase if we are not continuing with
+			# a pull rebase that the user finished rebasing using
+			# a plain git rebase --continue
+			if starting or cls.rebasing():
+				cls.rebase(args, pull)
 			infof('Pushing results to {} in {}',
 					base_ref, base_url)
 			git_push(base_url, 'HEAD:' + base_ref, force=args.force)
@@ -1301,11 +1337,8 @@ class RebaseCmd (PullUtil):
 		except subprocess.CalledProcessError as e:
 			errfunc("Can't checkout '{}', maybe it was removed "
 				"during the rebase? {}",  old_ref, e)
-		try:
+		if cls.branch_exists(tmp_ref):
 			git_quiet(1, 'branch', '-D', tmp_ref)
-		except subprocess.CalledProcessError as e:
-			errfunc("Can't remove temporary branch '{}', maybe it was "
-				"removed during the rebase? {}",  tmp_ref, e)
 
 	# Performs the rebasing itself. Sets the `in_conflict` flag if
 	# a conflict is detected.
