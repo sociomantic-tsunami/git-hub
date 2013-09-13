@@ -56,7 +56,7 @@ Clone (and fork) a project
 ::
 
   $ git hub clone sociomantic/git-hub
-  Forking sociomantic/playground to octocat/git-hub
+  Forking sociomantic/git-hub to octocat/git-hub
   Cloning git@github.com:octocat/git-hub.git to git-hub
   Fetching from upstream (git@github.com:sociomantic/git-hub.git)
 
