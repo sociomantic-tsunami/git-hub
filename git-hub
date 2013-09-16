@@ -183,6 +183,7 @@ def git(*args, **kwargs):
 	args.insert(0, 'git')
 	kwargs['stdout'] = subprocess.PIPE
 	kwargs['stderr'] = subprocess.PIPE
+	debugf('git command: {} {}', args, kwargs)
 	proc = subprocess.Popen(args, **kwargs)
 	(stdout, stderr) = proc.communicate()
 	if proc.returncode != 0 or stderr:
