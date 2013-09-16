@@ -186,7 +186,7 @@ def git(*args, **kwargs):
 	debugf('git command: {} {}', args, kwargs)
 	proc = subprocess.Popen(args, **kwargs)
 	(stdout, stderr) = proc.communicate()
-	if proc.returncode != 0 or stderr:
+	if proc.returncode != 0:
 		raise GitError(proc.returncode, args, stderr.rstrip('\n'))
 	return stdout.rstrip('\n')
 
