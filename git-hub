@@ -1187,7 +1187,8 @@ class RebaseCmd (PullUtil):
 		starting = args.action is None
 		pull = cls.get_pull(args.pull, starting)
 		if starting:
-			git_quiet(2, 'stash save --all %s' % cls.stash_msg(pull))
+			git_quiet(2, 'stash', 'save', '--all',
+					cls.stash_msg(pull))
 		try:
 			pushed_sha = cls.fetch_rebase_push(args, pull)
 		finally:
@@ -1277,7 +1278,7 @@ class RebaseCmd (PullUtil):
 	# Returns a string with the message to use when stashing local changes.
 	@classmethod
 	def stash_msg(cls, pull):
-		return '"%s %s"' % (cls.stash_msg_base, pull['number'])
+		return '%s %s' % (cls.stash_msg_base, pull['number'])
 
 	# Performs the whole rebasing procedure, including fetching the branch
 	# to be rebased, creating a temporary branch for it, fetching the base
