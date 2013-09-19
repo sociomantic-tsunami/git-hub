@@ -1271,7 +1271,7 @@ class RebaseCmd (PullUtil):
 	# and None if is not present at all.
 	@classmethod
 	def get_stashed_state(cls):
-		stash_msg_re = re.compile(cls.stash_msg_base + r' \d+$')
+		stash_msg_re = re.compile(r'.*' + cls.stash_msg_base + r' \d+')
 		stashs = git('stash', 'list').splitlines()
 		for i, stash in enumerate(stashs):
 			if stash_msg_re.match(stash):
