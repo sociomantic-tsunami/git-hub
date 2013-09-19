@@ -1,3 +1,12 @@
+git-hub (0.4.1) precise; urgency=low
+
+  * Documentation fixes (#18, #28)
+  * Improve debug output and remove sensitive information from it (#20, #26)
+  * Fix git compatibility issue (#21, #27)
+  * Correctly remove temporary stash (#24)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Thu, 19 Sep 2013 19:57:33 +0200
+
 git-hub (0.4) precise; urgency=low
 
   * Use the tracking branch as default base branch for hub pull
