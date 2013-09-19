@@ -1340,7 +1340,7 @@ class RebaseCmd (PullUtil):
 			errfunc("Can't checkout '{}', maybe it was removed "
 				"during the rebase? {}",  old_ref, e)
 		if cls.branch_exists(tmp_ref):
-			git(1, 'branch', '-D', tmp_ref)
+			git('branch', '-D', tmp_ref)
 
 	# Performs the rebasing itself. Sets the `in_conflict` flag if
 	# a conflict is detected.
