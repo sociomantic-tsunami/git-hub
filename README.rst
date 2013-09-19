@@ -195,6 +195,27 @@ activate the *ftdetect* plugin by copying or symbolic-linking it to
   # or if you are copying from the sources:
   # ln -s ftdetect.vim ~/.vim/ftdetect/githubmsg.vim
 
+
+Contact
+=======
+
+If you want to contact us, either because you are an user and have questions, or
+because you want to contribute to the project, you can subscribe to the mailing
+list.
+
+Subscription happens automatically (after confirmation) the first time you write
+to: git.hub@librelist.com (this first e-mail will be dropped).
+
+You can always visit the `mailing list archives`__ to check if your questions
+were already answered in the past :)
+
+__ http://librelist.com/browser/git.hub/
+
+If you want to report a bug, just `create an issue`__ please (if you use this
+tool I'm sure you already have a GitHub_ account ;).
+
+
+
 .. _Python: http://www.python.org/
 .. _Docutils: http://docutils.sourceforge.net/
 .. _Git: http://www.git-scm.com/
