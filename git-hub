@@ -336,7 +336,13 @@ class RequestManager:
 		req.add_header("Content-Length", str(len(body) if body else 0))
 		req.get_method = lambda: method
 		debugf('{}', req.get_full_url())
-		debugf('{}', req.header_items())
+		# Hide sensitive information from DEBUG output
+		if verbose >= DEBUG:
+			for h in req.header_items():
+				if h[0].lower() == 'authorization':
+					debugf('{}: {}', h[0], '<hidden>')
+				else:
+					debugf('{}: {}', *h)
 		debugf('{}', req.get_data())
 		return urllib2.urlopen(req)
 
