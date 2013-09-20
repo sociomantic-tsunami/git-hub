@@ -567,6 +567,7 @@ class SetupCmd (object):
 # `git hub clone` command implementation
 class CloneCmd (object):
 
+	cmd_required_config = ['username', 'urltype', 'upstream', 'oauthtoken']
 	cmd_help = 'clone a GitHub repository (and fork as needed)'
 
 	@classmethod
