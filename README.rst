@@ -211,6 +211,15 @@ were already answered in the past :)
 
 __ http://librelist.com/browser/git.hub/
 
+You can also use GMANE__ to get a `better list archive`__ (both threaded__ and
+`blog-like`__ interfaces available) or to `read the list using NNTP`__.
+
+__ http://www.gmane.org/
+__ http://dir.gmane.org/gmane.comp.version-control.git.git-hub
+__ http://news.gmane.org/gmane.comp.version-control.git.git-hub
+__ http://blog.gmane.org/gmane.comp.version-control.git.git-hub
+__ nntp://news.gmane.org/gmane.comp.version-control.git.git-hub
+
 If you want to report a bug, just `create an issue`__ please (if you use this
 tool I'm sure you already have a GitHub_ account ;).
 
