@@ -96,6 +96,17 @@ def die(fmt='', *args, **kwargs):
 	errf(fmt, *args, **kwargs)
 	sys.exit(1)
 
+# This is very similar to die() but used to exit the program normally having
+# full stack unwinding. The message is printed with infof() and the exit status
+# is 0 (normal termination). The exception is handled by the regular exception
+# handling code after calling main()
+def interrupt(fmt='', *args, **kwargs):
+	raise InterruptException(fmt.format(*args, **kwargs))
+class InterruptException (Exception):
+	def __init__(self, msg):
+		super(InterruptException, self).__init__(msg)
+
+
 # Ask the user a question
 #
 # `question` is the text to display (information with the available options
@@ -1091,6 +1102,11 @@ class RebaseCmd (PullUtil):
 	saved_old_ref = None
 	saved_message = None
 	saved_edit_msg = None
+	saved_pause = None
+	# this variable is a bit different, as is read/write by
+	# read_rebasing_file()/create_rebasing_file() directly. This is not
+	# ideal and should be addressed when #35 is fixed.
+	in_pause = False
 
 	@classmethod
 	def setup_parser(cls, parser):
@@ -1118,6 +1134,10 @@ class RebaseCmd (PullUtil):
 		parser.add_argument('-f', '--force',
 			action='store_true', default=False,
 			help="force some Git operations (for example 'push')")
+		parser.add_argument('-p', '--pause',
+			action='store_true', default=False,
+			help="pause the rebase just before the results are "
+			"pushed (useful for testing)")
 
 	@classmethod
 	def run(cls, parser, args):
@@ -1141,6 +1161,8 @@ class RebaseCmd (PullUtil):
 				args.message = cls.saved_message
 			if not args.edit_message:
 				args.edit_message = cls.saved_edit_msg
+			if not args.pause:
+				args.pause = cls.saved_pause
 
 			if args.action == '--abort':
 				cls.abort_rebase(args)
@@ -1199,7 +1221,7 @@ class RebaseCmd (PullUtil):
 		try:
 			pushed_sha = cls.fetch_rebase_push(args, pull)
 		finally:
-			if not cls.in_conflict:
+			if not cls.in_conflict and not cls.in_pause:
 				cls.pop_stashed()
 		try:
 			pull = cls.update_github(args, pull, pushed_sha)
@@ -1236,7 +1258,8 @@ class RebaseCmd (PullUtil):
 				sys.exit(0)
 		if check_all and not pull['mergeable']:
 			answer = ask("The pull request is not in a mergeable "
-				"state, do you want to continue anyway?",
+				"state (there are probably conflicts to "
+				"resolve), do you want to continue anyway?",
 				default="no")
 			if answer is None:
 				die("Can't continue, the pull request isn't "
@@ -1328,12 +1351,17 @@ class RebaseCmd (PullUtil):
 			# a plain git rebase --continue
 			if starting or cls.rebasing():
 				cls.rebase(args, pull)
+			if args.pause and not cls.in_pause:
+				cls.in_pause = True
+				cls.create_rebasing_file(pull, args, old_ref)
+				interrupt('Rebase done, now pausing. '
+						'Use --continue when done.')
 			infof('Pushing results to {} in {}',
 					base_ref, base_url)
 			git_push(base_url, 'HEAD:' + base_ref, force=args.force)
 			return git('rev-parse HEAD')
 		finally:
-			if not cls.in_conflict:
+			if not cls.in_conflict and not cls.in_pause:
 				cls.clean_ongoing_rebase(pull['number'], old_ref)
 
 	# Reverts the operations done by fetch_rebase_push().
@@ -1433,6 +1461,10 @@ class RebaseCmd (PullUtil):
 					pull_id = f.readline()[:-1] # strip \n
 					cls.saved_old_ref = f.readline()[:-1]
 					assert cls.saved_old_ref
+					pause = f.readline()[:-1]
+					cls.saved_pause = (pause == "True")
+					in_pause = f.readline()[:-1]
+					cls.in_pause = (in_pause == "True")
 					edit_msg = f.readline()[:-1]
 					cls.saved_edit_msg = (edit_msg == "True")
 					msg = f.read()
@@ -1462,6 +1494,8 @@ class RebaseCmd (PullUtil):
 				# id written as string
 				f.write(str(pull['number']) + '\n')
 				f.write(old_ref + '\n')
+				f.write(repr(args.pause) + '\n')
+				f.write(repr(cls.in_pause) + '\n')
 				f.write(repr(args.edit_message) + '\n')
 				if (args.message is not None):
 					f.write(args.message + '\n')
@@ -1566,5 +1600,8 @@ if __name__ == '__main__':
 		if verbose >= ERR:
 			sys.stderr.write(error.output + '\n')
 		sys.exit(7)
+	except InterruptException as error:
+		infof('{}', error)
+		sys.exit(0)
 
 

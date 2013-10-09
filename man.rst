@@ -289,6 +289,12 @@ COMMANDS
       Force some Git operations that will normally fail (for example 'push').
       Use with care!
 
+    \-p, --pause
+      Pause the rebase just before the results are pushed and the issue is
+      merged. To resume the pull request rebasing (push the changes upstream
+      and close the issue), just use the **--continue** action.  This is
+      particularly useful for testing.
+
     Actions:
 
     \--continue
