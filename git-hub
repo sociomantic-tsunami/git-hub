@@ -1236,7 +1236,8 @@ class RebaseCmd (PullUtil):
 				sys.exit(0)
 		if check_all and not pull['mergeable']:
 			answer = ask("The pull request is not in a mergeable "
-				"state, do you want to continue anyway?",
+				"state (there are probably conflicts to "
+				"resolve), do you want to continue anyway?",
 				default="no")
 			if answer is None:
 				die("Can't continue, the pull request isn't "
