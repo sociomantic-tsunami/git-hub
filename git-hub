@@ -1434,7 +1434,7 @@ class RebaseCmd (PullUtil):
 					cls.saved_old_ref = f.readline()[:-1]
 					assert cls.saved_old_ref
 					edit_msg = f.readline()[:-1]
-					cls.saved_edit_msg = edit_msg is "True"
+					cls.saved_edit_msg = (edit_msg == "True")
 					msg = f.read()
 					if msg == '\n':
 						msg = ''
