@@ -285,6 +285,10 @@ COMMANDS
     \-e, --edit-message
       Open the default `GIT_EDITOR` to write the comment.
 
+    \-f, --force
+      Force some Git operations that will normally fail (for example 'push').
+      Use with care!
+
     Actions:
 
     \--continue
