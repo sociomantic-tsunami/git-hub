@@ -1356,6 +1356,7 @@ class RebaseCmd (PullUtil):
 				cls.create_rebasing_file(pull, args, old_ref)
 				interrupt('Rebase done, now pausing. '
 						'Use --continue when done.')
+			cls.in_pause = False
 			infof('Pushing results to {} in {}',
 					base_ref, base_url)
 			git_push(base_url, 'HEAD:' + base_ref, force=args.force)
