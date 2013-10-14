@@ -1061,6 +1061,30 @@ class PullCmd (IssueCmd):
 			if msg:
 				cls.clean_and_post_comment(args.issue, msg)
 
+	class CheckoutCmd (PullUtil):
+		cmd_help = "checkout the remote branch (head) of the pull request"
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('pull',
+				help="number identifying the pull request to checkout")
+			parser.add_argument("args",
+				nargs=argparse.REMAINDER,
+				help="any extra arguments to pass to `git checkout`")
+		@classmethod
+		def run(cls, parser, args):
+			pull = req.get(cls.url(args.pull))
+
+			if pull['state'] == 'closed':
+				warnf('Checking out a closed pull request (#{})!', pull)
+
+			remote_url = pull['head']['repo'][config.urltype]
+			remote_branch = pull['head']['ref']
+
+			infof('Fetching {} from {}', remote_branch, remote_url)
+
+			git_quiet(1, 'fetch', remote_url, remote_branch)
+			git_quiet(1, 'checkout', 'FETCH_HEAD', *args.arg)
+
 # This class is top-level just for convenience, because is too big. Is added to
 # PullCmd after is completely defined!
 #
