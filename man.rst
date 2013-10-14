@@ -185,6 +185,15 @@ COMMANDS
   `show` PULL [PULL ...]
     Alias for `issue show`.
 
+  `checkout` PULL ...
+    Checkout the remote branch (head) of the pull request. This command first
+    fetches the *head* reference from the pull request and then calls the
+    standard `git checkout` command and any extra argument will be passed
+    to `git checkout` as-is, after the reference that was just fetched.
+    Remember this creates a detached checkout by default, use `-b` if you
+    want to create a new branch based on the pull request. Please take a
+    look at `git checkout` help for more details.
+
   `new` [HEAD]
     Create a new pull request. If **HEAD** is specified, it will be used as the
     branch (or git ref) where your changes are implemented.  Otherwise the
