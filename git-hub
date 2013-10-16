@@ -1378,8 +1378,9 @@ class RebaseCmd (PullUtil):
 			if args.pause and not cls.in_pause:
 				cls.in_pause = True
 				cls.create_rebasing_file(pull, args, old_ref)
-				interrupt('Rebase done, now pausing. '
-						'Use --continue when done.')
+				interrupt("Rebase done, now --pause'ing. "
+					'Use --continue {}when done.',
+					'' if starting else 'once more ')
 			cls.in_pause = False
 			infof('Pushing results to {} in {}',
 					base_ref, base_url)
