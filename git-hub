@@ -912,14 +912,17 @@ class PullUtil (IssueUtil):
 			'was {}, new (rebased) HEAD is {}'
 
 	@classmethod
-	def head_ref(cls):
-		ref = git('rev-parse --abbrev-ref HEAD')
-		if ref == 'HEAD':
-			ref = git('rev-list -1 HEAD')
-		return ref
+	def get_ref(cls, ref='HEAD'):
+		ref_hash = git('rev-parse ' + ref)
+		ref_name = git('rev-parse --abbrev-ref ' + ref)
+		if not ref_name or ref_name == 'HEAD' or ref_hash == ref_name:
+			ref_name = None
+		return ref_hash, ref_name
 
 	@classmethod
 	def tracking_branch(cls, head):
+		if head is None:
+			return None
 		ref = git_config('branch.%s.merge' % head, prefix='')
 		if ref is None:
 			return None
@@ -951,11 +954,25 @@ class PullUtil (IssueUtil):
 		return status == 0
 
 	@classmethod
-	def get_default_branch_msg(cls, branch_name):
-		msg = git_config('branch.%s.description' % branch_name, '', '')
-		if msg:
-			return msg
-		return git('log -1 --pretty=format:%s%n%n%b ' + branch_name)
+	def get_default_branch_msg(cls, branch_ref, branch_name):
+		if branch_name is not None:
+			msg = git_config('branch.%s.description' % branch_name,
+					'', '')
+			if msg:
+				return msg
+		return git('log -1 --pretty=format:%s%n%n%b ' + branch_ref)
+
+	@classmethod
+	def get_local_remote_heads(cls, parser, args):
+		head_ref, head_name = cls.get_ref(args.head or 'HEAD')
+		remote_head = args.create_branch or head_name
+		if not remote_head:
+			die("Can't guess remote branch name, please "
+				"use --create-branch to specify one")
+		base = args.base or cls.tracking_branch(head_name) or \
+				config.pullbase
+		gh_head = config.username + ':' + remote_head
+		return head_ref, head_name, remote_head, base, gh_head
 
 # `git hub pull` command implementation
 class PullCmd (IssueCmd):
@@ -1009,16 +1026,15 @@ class PullCmd (IssueCmd):
 				"'push')")
 		@classmethod
 		def run(cls, parser, args):
-			head = args.head or cls.head_ref()
-			remote_head = args.create_branch or head
-			base = args.base or cls.tracking_branch(head) or \
-					config.pullbase
+			head_ref, head_name, remote_head, base, gh_head = \
+					cls.get_local_remote_heads(parser, args)
 			msg = args.message
-			gh_head = config.username + ':' + remote_head
 			if not msg:
-				msg = cls.editor(cls.get_default_branch_msg(head))
+				msg = cls.editor(cls.get_default_branch_msg(
+						head_ref, head_name))
 			(title, body) = split_titled_message(msg)
-			cls.push(head, remote_head, force=args.force)
+			cls.push(head_name or head_ref, remote_head,
+					force=args.force)
 			pull = req.post(cls.url(), head=gh_head, base=base,
 					title=title, body=body)
 			cls.print_issue(pull)
@@ -1055,17 +1071,16 @@ class PullCmd (IssueCmd):
 				"'push')")
 		@classmethod
 		def run(cls, parser, args):
-			head = args.head or cls.head_ref()
-			remote_head = args.create_branch or head
-			base = args.base or cls.tracking_branch(head) or \
-					config.pullbase
+			head_ref, head_name, remote_head, base, gh_head = \
+					cls.get_local_remote_heads(parser, args)
 			msg = args.message
 			if args.edit_message:
 				if not msg:
-					msg = cls.get_default_branch_msg(head)
+					msg = cls.get_default_branch_msg(
+							head_ref, head_name)
 				msg = cls.comment_editor(msg)
-			gh_head = config.username + ':' + remote_head
-			cls.push(head, remote_head, force=args.force)
+			cls.push(head_name or head_ref, remote_head,
+					force=args.force)
 			pull = req.post(cls.url(), issue=args.issue, base=base,
 					head=gh_head)
 			cls.print_issue(pull)
@@ -1201,8 +1216,9 @@ class RebaseCmd (PullUtil):
 	def check_continue_rebasing(cls, args):
 		if cls.rebasing():
 			return
+		head_ref, head_name = cls.get_ref()
 		if args.action == '--continue' and \
-				cls.get_tmp_ref(args.pull) == cls.head_ref():
+				cls.get_tmp_ref(args.pull) == head_name:
 			return
 		answer = ask("No rebase in progress found for this pull "
 			"rebase, do you want to continue as if the rebase was "
@@ -1357,7 +1373,8 @@ class RebaseCmd (PullUtil):
 		tmp_ref = cls.get_tmp_ref(pull['number'])
 		old_ref = cls.saved_old_ref
 		if old_ref is None:
-			old_ref = cls.head_ref()
+			old_ref_ref, old_ref_name = cls.get_ref()
+			old_ref = old_ref_name or old_ref_ref
 
 		if starting:
 			infof('Fetching {} from {}', head_ref, head_url)
