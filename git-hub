@@ -58,38 +58,43 @@ ERR   = 0
 # Output functions, all use the str.format() function for formatting
 ########################################################################
 
+def localeprintf(stream, fmt='', *args, **kwargs):
+	encoding = sys.getfilesystemencoding()
+	msg = fmt.decode(encoding, 'replace').format(*args, **kwargs) + '\n'
+	stream.write(msg.encode(encoding, 'replace'))
+
 def debugf(fmt='', *args, **kwargs):
 	if verbose < DEBUG:
 		return
-	sys.stdout.write(fmt.format(*args, **kwargs) + '\n')
+	localeprintf(sys.stdout, fmt, *args, **kwargs)
 
 def infof(fmt='', *args, **kwargs):
 	if verbose < INFO:
 		return
-	sys.stdout.write(fmt.format(*args, **kwargs) + '\n')
+	localeprintf(sys.stdout, fmt, *args, **kwargs)
 
 def warnf(fmt='', *args, **kwargs):
 	if verbose < WARN:
 		return
+	msg = ''
 	if sys.stderr.isatty():
-		sys.stderr.write('\033[33m')
-	sys.stderr.write('Warning: ')
-	sys.stderr.write(fmt.format(*args, **kwargs))
+		msg += '\033[33m'
+	msg += 'Warning: ' + fmt.format(*args, **kwargs)
 	if sys.stderr.isatty():
-		sys.stderr.write('\033[0m')
-	sys.stderr.write('\n')
+		msg += '\033[0m'
+	localeprintf(sys.stderr, '{}', msg)
 	sys.stderr.flush()
 
 def errf(fmt='', *args, **kwargs):
 	if verbose < ERR:
 		return
+	msg = ''
 	if sys.stderr.isatty():
-		sys.stderr.write('\033[31m')
-	sys.stderr.write('Error: ')
-	sys.stderr.write(fmt.format(*args, **kwargs))
+		msg += '\033[31m'
+	msg += 'Error: ' + fmt.format(*args, **kwargs)
 	if sys.stderr.isatty():
-		sys.stderr.write('\033[0m')
-	sys.stderr.write('\n')
+		msg += '\033[0m'
+	localeprintf(sys.stderr, '{}', msg)
 	sys.stderr.flush()
 
 def die(fmt='', *args, **kwargs):
