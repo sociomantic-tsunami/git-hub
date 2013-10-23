@@ -1,3 +1,28 @@
+git-hub (0.5rc1) precise; urgency=low
+
+  * Add a new `pull checkout` command to easily checkout a pull request. This
+    is just a wrapper to the standard checkout command, but fetches and
+    automatically adds the head reference of the selected pull request (#29)
+  * Add a `--pause` option to `pull rebase` command. This makes a pause just
+    before pushing the rebased result back to the repository and updating the
+    issue. This is similar to `pull checkout` very useful for testing the
+    exact result of the rebase (#39, #44, 0fe1615)
+  * Allow creating pull requests from a headless checkout as long as
+    `--create-branch` is specified (#33)
+  * Plus some minor bug fixes and improvements:
+    * Fix some unicode-related problems when unicode is present in commit
+      messages. Bare in mind branch names with unicode characters are still
+      problematic, see #46 for details (#45)
+    * Improve warning message in `pull rebase` when not the pull request is not
+      in a mergeable state (495f87e)
+    * Fix a problem with interrupted `pull rebase` while `--edit-msg` is used
+      (#38)
+    * Add missing documentation for `pull rebase --force` (#40)
+    * Don't requite `hub.upstream` configuration variable to be set for
+      `clone`, but require authentication (#36, #32)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Wed, 23 Oct 2013 16:33:37 +0200
+
 git-hub (0.4.1) precise; urgency=low
 
   * Documentation fixes (#18, #28)
