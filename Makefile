@@ -17,7 +17,7 @@ deb:
 man: git-hub.1
 
 git-hub.1: man.rst git-hub
-	sed 's/^:Version: devel$$/:Version: $(version)/' $< | \
+	sed 's/^:Version: devel$$/:Version: '"`git describe`"'/' $< | \
 		rst2man --exit-status=1 > $@ || ($(RM) $@ && false)
 
 bash-completion: generate-bash-completion git-hub
