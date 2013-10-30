@@ -1,8 +1,7 @@
 
 prefix ?= /usr/local
 
-version = $(shell echo -n v; sed -n '1 s/^git-hub (\(.*\)) .*/\1/p' \
-		debian/changelog)
+version = $(shell sed -n '1 s/^git-hub (\(.*\)) .*/v\1/p' debian/changelog)
 
 .PHONY: default
 default: all
