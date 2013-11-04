@@ -1617,16 +1617,23 @@ if __name__ == '__main__':
 		main()
 	except urllib2.HTTPError as error:
 		try:
-			err = json.loads(error.read())
+			body = error.read()
+			err = json.loads(body)
 			prefix = 'GitHub error: '
+			error_printed = False
 			if 'message' in err:
 				errf('{}{message}', prefix, **err)
+				error_printed = True
 			if 'errors' in err:
 				for e in err['errors']:
 					if 'message' in err:
 						errf('{}{message}',
 							' ' * len(prefix), **e)
-			debugf('{}', error)
+						error_printed = True
+			if not error_printed:
+				errf('{} for {}: {}', error, error.geturl(), body)
+			else:
+				debugf('{}', error)
 			debugf('{}', error.geturl())
 			debugf('{}', error.headers)
 			debugf('{}', error.read())
@@ -1634,7 +1641,7 @@ if __name__ == '__main__':
 			errf('{}', error)
 			errf('{}', error.geturl())
 			errf('{}', error.headers)
-			errf('{}', error.read())
+			errf('{}', body)
 			sys.exit(3)
 		sys.exit(4)
 	except urllib2.URLError as error:
