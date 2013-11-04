@@ -1,3 +1,11 @@
+git-hub (0.5rc2) precise; urgency=low
+
+  * Fix double "v" reported by --version (#47)
+  * Improve error reporting for unexpected HTTP errors (#50)
+  * Other minor improvements to the Makefile (c1e33e7, 56ca7be)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Mon, 04 Nov 2013 17:56:13 +0100
+
 git-hub (0.5rc1) precise; urgency=low
 
   * Add a new `pull checkout` command to easily checkout a pull request. This
