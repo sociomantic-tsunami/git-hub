@@ -1,7 +1,9 @@
 
 prefix ?= /usr/local
 
-version = $(shell sed -n '1 s/^git-hub (\(.*\)) .*/v\1/p' debian/changelog)
+deb_version := $(shell sed -n '1 s/^git-hub (\(.*\)) .*/v\1/p' debian/changelog)
+git_version := $(shell git describe 2> /dev/null)
+version := $(if $(git_version),$(git_version),$(deb_version))
 
 .PHONY: default
 default: all
@@ -17,7 +19,7 @@ deb:
 man: git-hub.1
 
 git-hub.1: man.rst git-hub
-	sed 's/^:Version: devel$$/:Version: '"`git describe`"'/' $< | \
+	sed 's/^:Version: devel$$/:Version: $(version)/' $< | \
 		rst2man --exit-status=1 > $@ || ($(RM) $@ && false)
 
 bash-completion: generate-bash-completion git-hub
@@ -26,7 +28,7 @@ bash-completion: generate-bash-completion git-hub
 .PHONY: install
 install: git-hub git-hub.1 ftdetect.vim bash-completion README.rst
 	install -m 755 -D git-hub $(DESTDIR)$(prefix)/bin/git-hub
-	sed -i 's/^VERSION = "git-hub devel"$$/VERSION = "git-hub '`git describe`'"/' \
+	sed -i 's/^VERSION = "git-hub devel"$$/VERSION = "git-hub $(version)"/' \
 			$(DESTDIR)$(prefix)/bin/git-hub
 	install -m 644 -D git-hub.1 $(DESTDIR)$(prefix)/share/man/man1/git-hub.1
 	install -m 644 -D ftdetect.vim \
@@ -36,8 +38,8 @@ install: git-hub git-hub.1 ftdetect.vim bash-completion README.rst
 
 .PHONY: release
 release:
-	@read -p "Enter version [$(version)]: " version; \
-	test -z $$version && version=$(version); \
+	@read -p "Enter version [$(deb_version)]: " version; \
+	test -z $$version && version=$(deb_version); \
 	msg=`echo $$version | sed 's/v/Version /;s/rc/ Release Candidate /'`; \
 	set -x; \
 	git tag -a -m "$$msg" $$version
