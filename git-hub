@@ -1114,7 +1114,7 @@ class PullCmd (IssueCmd):
 			infof('Fetching {} from {}', remote_branch, remote_url)
 
 			git_quiet(1, 'fetch', remote_url, remote_branch)
-			git_quiet(1, 'checkout', 'FETCH_HEAD', *args.arg)
+			git_quiet(1, 'checkout', 'FETCH_HEAD', *args.args)
 
 # This class is top-level just for convenience, because is too big. Is added to
 # PullCmd after is completely defined!
