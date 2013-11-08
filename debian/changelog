@@ -1,3 +1,11 @@
+git-hub (0.5) precise; urgency=low
+
+  * Remove .git/HUB_PULL_REBASING after rebase -p (#54)
+  * Fix 'git hub pull checkout' typo (836752e)
+  * Use debian version when not in a git repo (#52)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Fri, 08 Nov 2013 19:08:28 +0100
+
 git-hub (0.5rc2) precise; urgency=low
 
   * Fix double "v" reported by --version (#47)
