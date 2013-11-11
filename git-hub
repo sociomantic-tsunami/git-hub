@@ -1294,11 +1294,11 @@ class RebaseCmd (PullUtil):
 				cls.pop_stashed()
 		try:
 			pull = cls.update_github(args, pull, pushed_sha)
-		except:
+		except (OSError, IOError) as e:
 			errf("GitHub information couldn't be updated "
 				"correctly, but the pull request was "
-				"successfully rebased. Check GitHub "
-				"for details...")
+				"successfully rebased ({}).", e)
+			raise e
 		finally:
 			cls.print_issue(pull)
 
