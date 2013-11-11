@@ -553,7 +553,9 @@ class SetupCmd (object):
 		parser.set_defaults(opts=[])
 
 	@classmethod
-	def setup(cls, username=None, password=None, opts=()):
+	def run(cls, parser, args):
+		username = args.username
+		password = args.password
 		if (username is None or password is None) and \
 				not sys.stdin.isatty():
 			die("Can't perform an interactive setup outside a tty")
@@ -572,12 +574,8 @@ class SetupCmd (object):
 			note += ' (%s)' % proj
 		auth = req.post('/authorizations', note=note,
 				scopes=['user', 'repo'])
-		git_config('username', value=username, opts=opts)
-		git_config('oauthtoken', value=auth['token'], opts=opts)
-
-	@classmethod
-	def run(cls, parser, args):
-		cls.setup(args.username, args.password, args.opts)
+		git_config('username', value=username, opts=args.opts)
+		git_config('oauthtoken', value=auth['token'], opts=args.opts)
 
 
 # `git hub clone` command implementation
