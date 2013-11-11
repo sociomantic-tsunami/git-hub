@@ -574,8 +574,9 @@ class SetupCmd (object):
 			note += ' (%s)' % proj
 		auth = req.post('/authorizations', note=note,
 				scopes=['user', 'repo'])
-		git_config('username', value=username, opts=args.opts)
-		git_config('oauthtoken', value=auth['token'], opts=args.opts)
+		set_config = lambda k, v: git_config(k, value=v, opts=args.opts)
+		set_config('username', username)
+		set_config('oauthtoken', auth['token'])
 
 
 # `git hub clone` command implementation
