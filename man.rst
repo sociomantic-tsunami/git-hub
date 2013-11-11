@@ -43,7 +43,8 @@ COMMANDS
   asks GitHub for an authorization token and stores it in the configuration
   variable `hub.oauthtoken` for future use so you don't need to type your
   password each time (or store it in the config). The username is also stored
-  for future use in the `hub.username` variable.
+  for future use in the `hub.username` variable. If the base URL is specified,
+  it is stored in `hub.baseurl` too.
 
   \-u USERNAME, --username=USERNAME
     GitHub's username (login name), will be stored in the configuration
@@ -51,6 +52,11 @@ COMMANDS
 
   \-p PASSWORD, --password=PASSWORD
     GitHub's password (will not be stored).
+
+  \-b URL, --baseurl=URL
+    GitHub's base URL to use to access the API. Set this when you GitHub API is
+    in another location other than the default (Enterprise servers usually use
+    https://host/api/v3).
 
   \--global
     Store settings in the global configuration (see --global option in `git
@@ -362,6 +368,12 @@ from. These are the git config keys used:
   when 'pull rebase' is used). At the time of writing it could be *ssh_url*
   or *clone_url* for HTTP). See GitHub's API documentation[1] for more
   details or options. [default: *ssh_url*]
+
+`hub.baseurl`
+  GitHub's base URL to use to access the API. Set this when you GitHub API is
+  in another location other than the default (Enterprise servers usually use
+  https://host/api/v3). This will be prepended to all GitHub API calls and it
+  has to be a full URL, not just something like "www.example.com/api/v3/".
 
 [1] http://developer.github.com/v3/pulls/#get-a-single-pull-request
 
