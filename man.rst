@@ -233,6 +233,9 @@ COMMANDS
       is useful to create a pull request for a hot-fix you committed to your
       regular HEAD without creating a branch first.
 
+    \-f, --force-push
+      Force the push operations. Use with care!
+
   `attach` ISSUE [HEAD]
     Convert the issue identified by **ISSUE** to a pull request by attaching
     commits to it. The branch (or git ref) where your changes are
@@ -261,6 +264,9 @@ COMMANDS
       the pull request instead of using the HEAD name passed as **HEAD**. This
       is useful to create a pull request for a hot-fix you committed to your
       regular HEAD without creating a branch first.
+
+    \-f, --force-push
+      Force the push operations. Use with care!
 
   `rebase` PULL
     Close a pull request identified by **PULL** by rebasing its base branch
