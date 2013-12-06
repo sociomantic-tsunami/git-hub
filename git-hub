@@ -692,17 +692,17 @@ class IssueUtil (object):
 
 	@classmethod
 	def print_issue(cls, issue):
-		infof('[{number}] {title} ({user[login]})\n{}{html_url}',
-				' ' * (len(str(issue['number'])) + 3),
+		infof(u'[{number}] {title} ({user[login]})\n{}{html_url}',
+				u' ' * (len(str(issue['number'])) + 3),
 				**issue)
 		debugf('{}', json.dumps(issue, indent=4, sort_keys=True))
 
 	@classmethod
 	def print_comment(cls, comment):
-		body = comment['body']
-		infof('[{id}] {}{} ({user[login]})', body[:60],
-				'…' if len(body) > 60 else '',
-				' ' * (len(str(comment['id'])) + 3),
+		body = comment['body'].decode('UTF8')
+		infof(u'[{id}] {}{} ({user[login]})', body[:60],
+				u'…' if len(body) > 60 else u'',
+				u' ' * (len(str(comment['id'])) + 3),
 				**comment)
 		debugf('{}', json.dumps(comment, indent=4, sort_keys=True))
 
