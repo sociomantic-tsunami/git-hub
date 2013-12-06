@@ -1199,7 +1199,7 @@ class RebaseCmd (PullUtil):
 			action='store_true', default=False,
 			help="open the default $GIT_EDITOR to edit the comment "
 			"to be added to the pull request before closing it")
-		parser.add_argument('-f', '--force-push',
+		parser.add_argument('--force-push',
 			action='store_true', default=False,
 			help="force the push git operation (use with care!)")
 		parser.add_argument('-p', '--pause',

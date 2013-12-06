@@ -300,7 +300,7 @@ COMMANDS
     \-e, --edit-message
       Open the default `GIT_EDITOR` to write the comment.
 
-    \-f, --force-push
+    \--force-push
       Force the push operations. Use with care!
 
     \-p, --pause
