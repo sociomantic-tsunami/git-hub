@@ -299,6 +299,8 @@ class Config:
 		self.urltype = git_config('urltype', 'ssh_url')
 		self.baseurl = self.sanitize_url('baseurl',
 			git_config('baseurl', 'https://api.github.com'))
+		self.forcerebase = git_config('forcerebase', "false",
+				opts=['--bool']) == "true"
 
 	def sanitize_url(self, name, url):
 		from urlparse import urlsplit, urlunsplit
@@ -1463,7 +1465,11 @@ class RebaseCmd (PullUtil):
 		starting = args.action is None
 		try:
 			if starting:
-				git_quiet(1, 'rebase', 'FETCH_HEAD')
+				a = []
+				if config.forcerebase:
+					a.append('--force')
+				a.append('FETCH_HEAD')
+				git_quiet(1, 'rebase', *a)
 			else:
 				git('rebase', args.action)
 		except subprocess.CalledProcessError as e:
