@@ -300,9 +300,8 @@ COMMANDS
     \-e, --edit-message
       Open the default `GIT_EDITOR` to write the comment.
 
-    \-f, --force
-      Force some Git operations that will normally fail (for example 'push').
-      Use with care!
+    \-f, --force-push
+      Force the push operations. Use with care!
 
     \-p, --pause
       Pause the rebase just before the results are pushed and the issue is
