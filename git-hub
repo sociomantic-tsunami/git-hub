@@ -299,6 +299,8 @@ class Config:
 		self.urltype = git_config('urltype', 'ssh_url')
 		self.baseurl = self.sanitize_url('baseurl',
 			git_config('baseurl', 'https://api.github.com'))
+		self.forcerebase = git_config('forcerebase', "false",
+				opts=['--bool']) == "true"
 
 	def sanitize_url(self, name, url):
 		from urlparse import urlsplit, urlunsplit
@@ -1049,10 +1051,10 @@ class PullCmd (IssueCmd):
 				help="create a new remote branch with NAME "
 				"as the real head for the pull request instead "
 				"of using the HEAD name passed as 'head'")
-			parser.add_argument('-f', '--force',
+			parser.add_argument('-f', '--force-push',
 				action='store_true', default=False,
-				help="force some Git operations (for example "
-				"'push')")
+				help="force the push git operation (use with "
+				"care!)")
 		@classmethod
 		def run(cls, parser, args):
 			head_ref, head_name, remote_head, base, gh_head = \
@@ -1063,7 +1065,7 @@ class PullCmd (IssueCmd):
 						head_ref, head_name))
 			(title, body) = split_titled_message(msg)
 			cls.push(head_name or head_ref, remote_head,
-					force=args.force)
+					force=args.force_push)
 			pull = req.post(cls.url(), head=gh_head, base=base,
 					title=title, body=body)
 			cls.print_issue(pull)
@@ -1094,10 +1096,10 @@ class PullCmd (IssueCmd):
 				help="create a new remote branch with NAME "
 				"as the real head for the pull request instead "
 				"of using the HEAD name passed as 'head'")
-			parser.add_argument('-f', '--force',
+			parser.add_argument('-f', '--force-push',
 				action='store_true', default=False,
-				help="force some Git operations (for example "
-				"'push')")
+				help="force the push git operation (use with "
+				"care!)")
 		@classmethod
 		def run(cls, parser, args):
 			head_ref, head_name, remote_head, base, gh_head = \
@@ -1109,7 +1111,7 @@ class PullCmd (IssueCmd):
 							head_ref, head_name)
 				msg = cls.comment_editor(msg)
 			cls.push(head_name or head_ref, remote_head,
-					force=args.force)
+					force=args.force_push)
 			pull = req.post(cls.url(), issue=args.issue, base=base,
 					head=gh_head)
 			cls.print_issue(pull)
@@ -1199,9 +1201,9 @@ class RebaseCmd (PullUtil):
 			action='store_true', default=False,
 			help="open the default $GIT_EDITOR to edit the comment "
 			"to be added to the pull request before closing it")
-		parser.add_argument('-f', '--force',
+		parser.add_argument('--force-push',
 			action='store_true', default=False,
-			help="force some Git operations (for example 'push')")
+			help="force the push git operation (use with care!)")
 		parser.add_argument('-p', '--pause',
 			action='store_true', default=False,
 			help="pause the rebase just before the results are "
@@ -1436,7 +1438,8 @@ class RebaseCmd (PullUtil):
 				cls.remove_rebasing_file()
 			infof('Pushing results to {} in {}',
 					base_ref, base_url)
-			git_push(base_url, 'HEAD:' + base_ref, force=args.force)
+			git_push(base_url, 'HEAD:' + base_ref,
+					force=args.force_push)
 			return git('rev-parse HEAD')
 		finally:
 			if not cls.in_conflict and not cls.in_pause:
@@ -1462,7 +1465,11 @@ class RebaseCmd (PullUtil):
 		starting = args.action is None
 		try:
 			if starting:
-				git_quiet(1, 'rebase', 'FETCH_HEAD')
+				a = []
+				if config.forcerebase:
+					a.append('--force')
+				a.append('FETCH_HEAD')
+				git_quiet(1, 'rebase', *a)
 			else:
 				git('rebase', args.action)
 		except subprocess.CalledProcessError as e:

@@ -233,6 +233,9 @@ COMMANDS
       is useful to create a pull request for a hot-fix you committed to your
       regular HEAD without creating a branch first.
 
+    \-f, --force-push
+      Force the push operations. Use with care!
+
   `attach` ISSUE [HEAD]
     Convert the issue identified by **ISSUE** to a pull request by attaching
     commits to it. The branch (or git ref) where your changes are
@@ -262,6 +265,9 @@ COMMANDS
       is useful to create a pull request for a hot-fix you committed to your
       regular HEAD without creating a branch first.
 
+    \-f, --force-push
+      Force the push operations. Use with care!
+
   `rebase` PULL
     Close a pull request identified by **PULL** by rebasing its base branch
     (specified in the pull request) instead of merging as GitHub's *Merge
@@ -287,6 +293,15 @@ COMMANDS
     7. git branch -D `tmp`
     8. git pop
 
+    If `hub.forcerebase` is set to "yes" (the default), ``--force`` will be
+    passed to rebase (not to be confused with this command option
+    ``--force-push`` which will force the push), otherwise a regular rebase is
+    performed. When the rebase is forced, all the commits in the pull request
+    are re-committed, so the Committer and CommitterDate metadata is updated in
+    the commits, showing the person that performed the rebase and the time of
+    the rebase instead of the original values, so providing more useful
+    information. As a side effect, the hashes of the commits will change.
+
     If conflicts are found, the command is interrupted, similarly to how `git
     rebase` would do. The user should either **--abort** the rebasing,
     **--skip** the conflicting commit or resolve the conflict and
@@ -300,9 +315,8 @@ COMMANDS
     \-e, --edit-message
       Open the default `GIT_EDITOR` to write the comment.
 
-    \-f, --force
-      Force some Git operations that will normally fail (for example 'push').
-      Use with care!
+    \--force-push
+      Force the push operations. Use with care!
 
     \-p, --pause
       Pause the rebase just before the results are pushed and the issue is
@@ -374,6 +388,11 @@ from. These are the git config keys used:
   in another location other than the default (Enterprise servers usually use
   https://host/api/v3). This will be prepended to all GitHub API calls and it
   has to be a full URL, not just something like "www.example.com/api/v3/".
+
+`hub.forcerebase`
+  If is set to "yes", ``--force`` will be passed to rebase. If is set to "no"
+  a regular rebase is performed. See the `pull` `rebase` command for detils.
+  [default: yes]
 
 [1] http://developer.github.com/v3/pulls/#get-a-single-pull-request
 
