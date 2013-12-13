@@ -372,7 +372,7 @@ class RequestManager:
 		req.add_header("Content-Type", "application/json")
 		req.add_header("Accept", "application/json")
 		req.add_header("Content-Length", str(len(body) if body else 0))
-		req.get_method = lambda: method
+		req.get_method = lambda: method.upper()
 		debugf('{}', req.get_full_url())
 		# Hide sensitive information from DEBUG output
 		if verbose >= DEBUG:
@@ -403,7 +403,7 @@ class RequestManager:
 	# as a json list and kwargs as a json dictionary/object).
 	def json_req(self, url, method, *args, **kwargs):
 		url = config.baseurl + url
-		if method.lower() in ('post', 'patch', 'put'):
+		if method.upper() in ('POST', 'PATCH', 'PUT'):
 			body = self.dump(*args, **kwargs)
 		else:
 			body = None
@@ -423,9 +423,9 @@ class RequestManager:
 # is not only what we want, is also very dangerous.
 def make_method(method):
 	return lambda self, url, *args, **kwargs: \
-		self.json_req(url, method.upper(), *args, **kwargs)
-for method in ('head', 'get', 'post', 'patch', 'put', 'delete'):
-	setattr(RequestManager, method, make_method(method))
+		self.json_req(url, method, *args, **kwargs)
+for method in ('HEAD', 'GET', 'POST', 'PATCH', 'PUT', 'DELETE'):
+	setattr(RequestManager, method.lower(), make_method(method))
 
 
 # Message cleaning and parsing functions
