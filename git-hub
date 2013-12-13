@@ -353,6 +353,7 @@ class RequestManager:
 
 	basic_auth = None
 	oauthtoken = None
+	links_re = re.compile(r'<([^>]+)>;.*rel=[\'"]?([^"]+)[\'"]?', re.M)
 
 	def __init__(self, base_url, oauthtoken=None,
 			username=None, password=None):
@@ -403,6 +404,14 @@ class RequestManager:
 			return json.dumps(kwargs)
 		return None
 
+	# Get the next URL from the Link: header, if any
+	def get_next_url(self, response):
+		links = list()
+		for l in response.headers.get("Link", "").split(','):
+			links.extend(self.links_re.findall(l))
+		links = dict((rel, url) for url, rel in links)
+		return links.get("next", None)
+
 	# This is the real method used to do the work of the head(), get() and
 	# other high-level methods. `url` should be a relative URL for the
 	# GitHub API, `method` is the HTTP method to be used (must be in
@@ -416,13 +425,24 @@ class RequestManager:
 		else:
 			body = None
 			url += '?' + urllib.urlencode(kwargs)
-		debugf("Request: {} {}\n{}", method, url, body)
-		res = self.auth_urlopen(url, method, body)
-		data = res.read()
-		debugf("Response:\n{}", data)
-		if data:
-			return json.loads(data)
-		return None
+		data = None
+		prev_data = []
+		while url:
+			debugf("Request: {} {}\n%s", method, url, body)
+			res = self.auth_urlopen(url, method, body)
+			data = res.read()
+			debugf("Response:\n{}", data)
+			if data:
+				data = json.loads(data)
+				if isinstance(data, list):
+					prev_data.extend(data)
+					data = None
+			url = self.get_next_url(res)
+		assert not (prev_data and data)
+		if prev_data:
+			data = prev_data
+		debugf("Parsed data:\n{}", data)
+		return data
 
 # Create RequestManager.head(), get(), ... methods
 # We need the make_method() function to make Python bind the method variable
