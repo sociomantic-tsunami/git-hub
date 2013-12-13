@@ -424,7 +424,7 @@ class RequestManager:
 def make_method(method):
 	return lambda self, url, *args, **kwargs: \
 		self.json_req(url, method, *args, **kwargs)
-for method in ('HEAD', 'GET', 'POST', 'PATCH', 'PUT', 'DELETE'):
+for method in ('OPTIONS', 'HEAD', 'GET', 'POST', 'PATCH', 'PUT', 'DELETE'):
 	setattr(RequestManager, method.lower(), make_method(method))
 
 
