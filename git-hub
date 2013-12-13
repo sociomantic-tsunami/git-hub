@@ -363,7 +363,7 @@ class RequestManager:
 	# method. It also add other convenience headers, like Content-Type,
 	# Accept (both to json) and Content-Length).
 	def auth_urlopen(self, url, method, body):
-		req = urllib2.Request(config.baseurl + url, body)
+		req = urllib2.Request(url, body)
 		if self.basic_auth:
 			req.add_header("Authorization", self.basic_auth)
 		elif config.oauthtoken:
@@ -402,6 +402,7 @@ class RequestManager:
 	# one can be specified at a time and they are serialized as json (args
 	# as a json list and kwargs as a json dictionary/object).
 	def json_req(self, url, method, *args, **kwargs):
+		url = config.baseurl + url
 		if method.lower() in ('post', 'patch', 'put'):
 			body = self.dump(*args, **kwargs)
 		else:
