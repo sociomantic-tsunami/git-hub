@@ -344,15 +344,24 @@ class Config:
 #
 #    r = req.post('/repos/sociomantic/test/labels/', name=name, color=color)
 #
-# The config is checked and if the oauthtoken variable is set, OAuth
-# authorization is used. Otherwise, the `basic_auth` is expected to be set if
-# you want to use privileged access to GitHub. To fill the `basic_auth` member,
-# the `set_basic_auth()` convenient method is provided).
+# The basic auth has priority over oauthtoken for authentication. If you want
+# to use OAuth just leave `basic_auth` and set `oauthtoken`. To fill the
+# `basic_auth` member, the `set_basic_auth()` convenient method is provided).
 #
 # See http://developer.github.com/ for more details on the GitHub API
 class RequestManager:
 
 	basic_auth = None
+	oauthtoken = None
+	links_re = re.compile(r'<([^>]+)>;.*rel=[\'"]?([^"]+)[\'"]?', re.M)
+
+	def __init__(self, base_url, oauthtoken=None,
+			username=None, password=None):
+		self.base_url = base_url
+		if oauthtoken is not None:
+			self.oauthtoken = oauthtoken
+		elif username is not None:
+			self.set_basic_auth(username, password)
 
 	# Configure the class to use basic authentication instead of OAuth
 	def set_basic_auth(self, username, password):
@@ -363,16 +372,16 @@ class RequestManager:
 	# method. It also add other convenience headers, like Content-Type,
 	# Accept (both to json) and Content-Length).
 	def auth_urlopen(self, url, method, body):
-		req = urllib2.Request(config.baseurl + url, body)
+		req = urllib2.Request(url, body)
 		if self.basic_auth:
 			req.add_header("Authorization", self.basic_auth)
-		elif config.oauthtoken:
+		elif self.oauthtoken:
 			req.add_header("Authorization", "bearer " +
-					config.oauthtoken)
+					self.oauthtoken)
 		req.add_header("Content-Type", "application/json")
 		req.add_header("Accept", "application/json")
 		req.add_header("Content-Length", str(len(body) if body else 0))
-		req.get_method = lambda: method
+		req.get_method = lambda: method.upper()
 		debugf('{}', req.get_full_url())
 		# Hide sensitive information from DEBUG output
 		if verbose >= DEBUG:
@@ -395,6 +404,14 @@ class RequestManager:
 			return json.dumps(kwargs)
 		return None
 
+	# Get the next URL from the Link: header, if any
+	def get_next_url(self, response):
+		links = list()
+		for l in response.headers.get("Link", "").split(','):
+			links.extend(self.links_re.findall(l))
+		links = dict((rel, url) for url, rel in links)
+		return links.get("next", None)
+
 	# This is the real method used to do the work of the head(), get() and
 	# other high-level methods. `url` should be a relative URL for the
 	# GitHub API, `method` is the HTTP method to be used (must be in
@@ -402,18 +419,30 @@ class RequestManager:
 	# one can be specified at a time and they are serialized as json (args
 	# as a json list and kwargs as a json dictionary/object).
 	def json_req(self, url, method, *args, **kwargs):
-		if method.lower() in ('post', 'patch', 'put'):
+		url = self.base_url + url
+		if method.upper() in ('POST', 'PATCH', 'PUT'):
 			body = self.dump(*args, **kwargs)
 		else:
 			body = None
 			url += '?' + urllib.urlencode(kwargs)
-		debugf("Request: {} {}\n{}", method, url, body)
-		res = self.auth_urlopen(url, method, body)
-		data = res.read()
-		debugf("Response:\n{}", data)
-		if data:
-			return json.loads(data)
-		return None
+		data = None
+		prev_data = []
+		while url:
+			debugf("Request: {} {}\n%s", method, url, body)
+			res = self.auth_urlopen(url, method, body)
+			data = res.read()
+			debugf("Response:\n{}", data)
+			if data:
+				data = json.loads(data)
+				if isinstance(data, list):
+					prev_data.extend(data)
+					data = None
+			url = self.get_next_url(res)
+		assert not (prev_data and data)
+		if prev_data:
+			data = prev_data
+		debugf("Parsed data:\n{}", data)
+		return data
 
 # Create RequestManager.head(), get(), ... methods
 # We need the make_method() function to make Python bind the method variable
@@ -422,9 +451,9 @@ class RequestManager:
 # is not only what we want, is also very dangerous.
 def make_method(method):
 	return lambda self, url, *args, **kwargs: \
-		self.json_req(url, method.upper(), *args, **kwargs)
-for method in ('head', 'get', 'post', 'patch', 'put', 'delete'):
-	setattr(RequestManager, method, make_method(method))
+		self.json_req(url, method, *args, **kwargs)
+for method in ('OPTIONS', 'HEAD', 'GET', 'POST', 'PATCH', 'PUT', 'DELETE'):
+	setattr(RequestManager, method.lower(), make_method(method))
 
 
 # Message cleaning and parsing functions
@@ -1635,7 +1664,7 @@ def main():
 
 	config = Config()
 
-	req = RequestManager()
+	req = RequestManager(config.baseurl, config.oauthtoken)
 
 	# Temporary warning to note the configuration variable changes
 	if git_config('password') is not None:
