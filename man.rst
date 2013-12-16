@@ -293,14 +293,15 @@ COMMANDS
     7. git branch -D `tmp`
     8. git pop
 
-    If `hub.forcerebase` is set to "yes" (the default), ``--force`` will be
+    If `hub.forcerebase` is set to "true" (the default), ``--force`` will be
     passed to rebase (not to be confused with this command option
-    ``--force-push`` which will force the push), otherwise a regular rebase is
-    performed. When the rebase is forced, all the commits in the pull request
-    are re-committed, so the Committer and CommitterDate metadata is updated in
-    the commits, showing the person that performed the rebase and the time of
-    the rebase instead of the original values, so providing more useful
-    information. As a side effect, the hashes of the commits will change.
+    ``--force-push`` which will force the push), otherwise (if is "false")
+    a regular rebase is performed. When the rebase is forced, all the commits
+    in the pull request are re-committed, so the Committer and CommitterDate
+    metadata is updated in the commits, showing the person that performed the
+    rebase and the time of the rebase instead of the original values, so
+    providing more useful information. As a side effect, the hashes of the
+    commits will change.
 
     If conflicts are found, the command is interrupted, similarly to how `git
     rebase` would do. The user should either **--abort** the rebasing,
@@ -390,9 +391,9 @@ from. These are the git config keys used:
   has to be a full URL, not just something like "www.example.com/api/v3/".
 
 `hub.forcerebase`
-  If is set to "yes", ``--force`` will be passed to rebase. If is set to "no"
-  a regular rebase is performed. See the `pull` `rebase` command for detils.
-  [default: yes]
+  If is set to "true", ``--force`` will be passed to rebase. If is set to
+  "false" a regular rebase is performed. See the `pull` `rebase` command for
+  detils. [default: *true*]
 
 [1] http://developer.github.com/v3/pulls/#get-a-single-pull-request
 
