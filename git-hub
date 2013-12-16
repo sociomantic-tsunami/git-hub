@@ -344,15 +344,23 @@ class Config:
 #
 #    r = req.post('/repos/sociomantic/test/labels/', name=name, color=color)
 #
-# The config is checked and if the oauthtoken variable is set, OAuth
-# authorization is used. Otherwise, the `basic_auth` is expected to be set if
-# you want to use privileged access to GitHub. To fill the `basic_auth` member,
-# the `set_basic_auth()` convenient method is provided).
+# The basic auth has priority over oauthtoken for authentication. If you want
+# to use OAuth just leave `basic_auth` and set `oauthtoken`. To fill the
+# `basic_auth` member, the `set_basic_auth()` convenient method is provided).
 #
 # See http://developer.github.com/ for more details on the GitHub API
 class RequestManager:
 
 	basic_auth = None
+	oauthtoken = None
+
+	def __init__(self, base_url, oauthtoken=None,
+			username=None, password=None):
+		self.base_url = base_url
+		if oauthtoken is not None:
+			self.oauthtoken = oauthtoken
+		elif username is not None:
+			self.set_basic_auth(username, password)
 
 	# Configure the class to use basic authentication instead of OAuth
 	def set_basic_auth(self, username, password):
@@ -366,9 +374,9 @@ class RequestManager:
 		req = urllib2.Request(url, body)
 		if self.basic_auth:
 			req.add_header("Authorization", self.basic_auth)
-		elif config.oauthtoken:
+		elif self.oauthtoken:
 			req.add_header("Authorization", "bearer " +
-					config.oauthtoken)
+					self.oauthtoken)
 		req.add_header("Content-Type", "application/json")
 		req.add_header("Accept", "application/json")
 		req.add_header("Content-Length", str(len(body) if body else 0))
@@ -402,7 +410,7 @@ class RequestManager:
 	# one can be specified at a time and they are serialized as json (args
 	# as a json list and kwargs as a json dictionary/object).
 	def json_req(self, url, method, *args, **kwargs):
-		url = config.baseurl + url
+		url = self.base_url + url
 		if method.upper() in ('POST', 'PATCH', 'PUT'):
 			body = self.dump(*args, **kwargs)
 		else:
@@ -1636,7 +1644,7 @@ def main():
 
 	config = Config()
 
-	req = RequestManager()
+	req = RequestManager(config.baseurl, config.oauthtoken)
 
 	# Temporary warning to note the configuration variable changes
 	if git_config('password') is not None:
