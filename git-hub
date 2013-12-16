@@ -299,7 +299,7 @@ class Config:
 		self.urltype = git_config('urltype', 'ssh_url')
 		self.baseurl = self.sanitize_url('baseurl',
 			git_config('baseurl', 'https://api.github.com'))
-		self.forcerebase = git_config('forcerebase', "false",
+		self.forcerebase = git_config('forcerebase', "true",
 				opts=['--bool']) == "true"
 
 	def sanitize_url(self, name, url):
