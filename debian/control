@@ -3,7 +3,7 @@ Maintainer: Leandro Lucarella <leandro.lucarella@sociomantic.com>
 Section: vcs
 Priority: optional
 Standards-Version: 3.9.3
-Build-Depends: debhelper (>=8), python-docutils
+Build-Depends: debhelper (>=8), python-support, python-docutils
 
 Package: git-hub
 Architecture: all
