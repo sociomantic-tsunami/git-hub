@@ -2,8 +2,9 @@
 prefix ?= /usr/local
 
 deb_version := $(shell sed -n '1 s/^git-hub (\(.*\)) .*/v\1/p' debian/changelog)
+sem_version := $(shell echo $(deb_version) | tr '~' '-')
 git_version := $(shell git describe 2> /dev/null)
-version := $(if $(git_version),$(git_version),$(deb_version))
+version := $(if $(git_version),$(git_version),$(sem_version))
 
 .PHONY: default
 default: all
@@ -38,9 +39,9 @@ install: git-hub git-hub.1 ftdetect.vim bash-completion README.rst
 
 .PHONY: release
 release:
-	@read -p "Enter version [$(deb_version)]: " version; \
-	test -z $$version && version=$(deb_version); \
-	msg=`echo $$version | sed 's/v/Version /;s/rc/ Release Candidate /'`; \
+	@read -p "Enter version [$(sem_version)]: " version; \
+	test -z $$version && version=$(sem_version); \
+	msg=`echo $$version | sed 's/v/Version /;s/-rc/ Release Candidate /'`; \
 	set -x; \
 	git tag -a -m "$$msg" $$version
 
