@@ -1,3 +1,29 @@
+git-hub (0.6.0~rc1) precise; urgency=low
+
+  * GitHub Enterprise and other non-standard GitHub locations are now
+    supported by making the GitHub API base URL configurable via `git config
+    hub.baseurl` (#51)
+  * `pull rebase` now forces the rebasing by default. This means the Committer
+    and CommitDate metadata is updated in all the rebased commits (even if the
+    rebase could be just a fast-forward merge). This way the information about
+    who, what and when stuff got "merged" doesn't get lost.
+    If you want to go back to the previous default, set the `git config
+    hub.forcerebase` to `false`.  Also, to avoid confusion, the option
+    `--force` was renamed to `--force-push` and the short alias `-f` was
+    removed, as it shouldn't be a common operation in a rebase (#59)
+  * `pull new` and `pull attach` got the option `--force` renamed to
+    `--force-push` to match the new name in `pull rebase` (#59)
+  * GitHub results are now fully  retrieved (before if there were too many
+    results from a query, the query was only partially retrieved) (#61)
+  * A serious encoding problem was fixed. This only manifested when the title
+    of an issue was longer than 60 characters (#60)
+  * If there are GitHub errors while rebasing, now more information is printed
+    to ease the debugging (#57)
+  * Several code cleanups and minor fixes (ef94d4b, d711c65, d39bbb9, 6f63324,
+    bb83bd5, 7f027bb, 6cfc205)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Fri, 27 Dec 2013 16:57:48 +0100
+
 git-hub (0.5) precise; urgency=low
 
   * Remove .git/HUB_PULL_REBASING after rebase -p (#54)
