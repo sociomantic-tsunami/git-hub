@@ -243,6 +243,9 @@ COMMANDS
     current branch is used). This subcommand is very similar to the `new`
     subcommand, please refer to it for more details.
 
+    Please note you can only attach commits to issues if you have commit access
+    to the repository or if you are assigned to the issue.
+
     \-m MSG, --message=MSG
       Add a comment to the issue/new pull request.
 
