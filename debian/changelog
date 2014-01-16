@@ -1,3 +1,11 @@
+git-hub (0.6.0) precise; urgency=low
+
+  * Add a small comment on pull attach permissions in the man page (it can
+    only be used if you are assigned to the issue or you have write access to
+    the repo) (#66)
+
+ -- Leandro Lucarella <leandro.lucarella@sociomantic.com>  Thu, 16 Jan 2014 17:05:27 +0100
+
 git-hub (0.6.0~rc1) precise; urgency=low
 
   * GitHub Enterprise and other non-standard GitHub locations are now
