@@ -3,10 +3,8 @@ prefix ?= /usr/local
 
 export PYTHON := python
 
-deb_version := $(shell sed -n '1 s/^git-hub (\(.*\)) .*/v\1/p' debian/changelog)
-sem_version := $(shell echo $(deb_version) | tr '~' '-')
-git_version := $(shell git describe 2> /dev/null)
-version := $(if $(git_version),$(git_version),$(sem_version))
+version ?= $(shell git describe --dirty 2> /dev/null | cut -b2-)
+version := $(if $(version),$(version),devel)
 
 .PHONY: default
 default: all
@@ -16,7 +14,8 @@ all: man bash-completion
 
 .PHONY: deb
 deb:
-	debuild -uc -us -tc
+	$(MAKE) DESTDIR=deb/install install
+	deb/build
 
 .PHONY: man
 man: git-hub.1
@@ -43,13 +42,13 @@ install: git-hub git-hub.1 ftdetect.vim bash-completion README.rst
 
 .PHONY: release
 release:
-	@read -p "Enter version [$(sem_version)]: " version; \
-	test -z $$version && version=$(sem_version); \
+	@read -p "Enter version (previous: $$(git describe --abbrev=0)): " version; \
+	test -z $$version && exit 1; \
 	msg=`echo $$version | sed 's/v/Version /;s/-rc/ Release Candidate /'`; \
 	set -x; \
 	git tag -a -m "$$msg" $$version
 
 .PHONY: clean
 clean:
-	$(RM) git-hub.1 bash-completion
+	$(RM) -r git-hub.1 bash-completion deb/*.deb deb/install
 
