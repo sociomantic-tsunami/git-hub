@@ -1,6 +1,8 @@
 
 prefix ?= /usr/local
 
+export PYTHON := python
+
 deb_version := $(shell sed -n '1 s/^git-hub (\(.*\)) .*/v\1/p' debian/changelog)
 sem_version := $(shell echo $(deb_version) | tr '~' '-')
 git_version := $(shell git describe 2> /dev/null)
@@ -30,6 +32,8 @@ bash-completion: generate-bash-completion git-hub
 install: git-hub git-hub.1 ftdetect.vim bash-completion README.rst
 	install -m 755 -D git-hub $(DESTDIR)$(prefix)/bin/git-hub
 	sed -i 's/^VERSION = "git-hub devel"$$/VERSION = "git-hub $(version)"/' \
+			$(DESTDIR)$(prefix)/bin/git-hub
+	sed -i 's|^#!/usr/bin/env python$$|#!/usr/bin/env $(PYTHON)|' \
 			$(DESTDIR)$(prefix)/bin/git-hub
 	install -m 644 -D git-hub.1 $(DESTDIR)$(prefix)/share/man/man1/git-hub.1
 	install -m 644 -D ftdetect.vim \
