@@ -6,24 +6,26 @@ set -e
 # Based on the _git_svn completion function in git distribution's bash
 # completion.
 
+PYTHON=${PYTHON:-python}
+
 issue_arg_cmds="issue-show issue-update issue-comment issue-close pull-attach"
 pull_arg_cmds="pull-show pull-update pull-comment pull-close"
 
 get_opts()
 {
-	./git-hub "$@" -h > /dev/null || exit 1
-	./git-hub "$@" -h |
+	$PYTHON git-hub "$@" -h > /dev/null || exit 1
+	$PYTHON git-hub "$@" -h |
 		sed -n 's/^  \(-., \)\?\(--[^ ]\+\) .*$/\2/p' |
 		tr '\n' ' '
-	./git-hub "$@" -h |
+	$PYTHON git-hub "$@" -h |
 		sed -n 's/^  \(-. \([A-Z]\+\), \)\?\(--[^ ]\+\) \2\( .*\)\?$/\3=/p' |
 		tr '\n' ' '
 }
 
 get_cmds()
 {
-	./git-hub "$@" -h > /dev/null || exit 1
-	./git-hub "$@" -h | sed -n 's/,/ /g;s/^  {\(.*\)}$/\1/p'
+	$PYTHON git-hub "$@" -h > /dev/null || exit 1
+	$PYTHON git-hub "$@" -h | sed -n 's/,/ /g;s/^  {\(.*\)}$/\1/p'
 }
 
 cmds=$(get_cmds)

@@ -3,7 +3,9 @@
 %:
 	dh $@
 
+override_dh_auto_build:
+	$(MAKE) PYTHON=python2.7 DESTDIR=$$(pwd)/debian/git-hub prefix=/usr
+
 override_dh_auto_install:
-	$(MAKE) DESTDIR=$$(pwd)/debian/git-hub prefix=/usr install
-	sed -i '1 s/ python$$/ python2.7/' $$(pwd)/debian/git-hub/usr/bin/git-hub
+	$(MAKE) PYTHON=python2.7 DESTDIR=$$(pwd)/debian/git-hub prefix=/usr install
 
