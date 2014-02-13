@@ -1,6 +1,4 @@
 git-hub.1
 bash-completion
-debian/files
-debian/git-hub/*
-debian/git-hub.substvars
-debian/git-hub.debhelper.log
+deb/*.deb
+deb/install/
