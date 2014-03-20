@@ -31,8 +31,7 @@ directly through the git command line.
 
 To use this command you'll probably need to make an initial configuration to
 get authorization from GitHub. To do this you can use the `setup` command.
-need to configure at least two git configuration. See the CONFIGURATION_
-section for more configuration options.
+See the CONFIGURATION_ section for more configuration options.
 
 
 COMMANDS
