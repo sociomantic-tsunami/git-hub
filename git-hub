@@ -797,14 +797,14 @@ class IssueUtil (object):
 ''' + message_markdown_help
 
 	@classmethod
-	def print_issue(cls, issue):
+	def print_issue_summary(cls, issue):
 		infof(u'[{number}] {title} ({user[login]})\n{}{html_url}',
 				u' ' * (len(str(issue['number'])) + 3),
 				**issue)
 		debugf('{}', json.dumps(issue, indent=4, sort_keys=True))
 
 	@classmethod
-	def print_issue_completely(cls, issue):
+	def print_issue(cls, issue):
 		infof(
 				(u"""
 Issue {number}
@@ -900,7 +900,7 @@ class IssueCmd (CmdGroup):
 				issues = [i for i in issues
 					if filter(i, 'assignee')]
 			for issue in issues:
-				cls.print_issue(issue)
+				cls.print_issue_summary(issue)
 
 	class ShowCmd (IssueUtil):
 		cmd_help = "show details for existing issues"
@@ -918,9 +918,9 @@ class IssueCmd (CmdGroup):
 			for number in args.issues:
 				issue = req.get(cls.url(number))
 				if args.full:
-					cls.print_issue_completely(issue)
+					cls.print_issue(issue)
 				else:
-					printer = cls.print_issue(issue)
+					printer = cls.print_issue_summary(issue)
 
 
 	class NewCmd (IssueUtil):
@@ -951,7 +951,7 @@ class IssueCmd (CmdGroup):
 			issue = req.post(cls.url(), title=title, body=body,
 				assignee=args.assignee, labels=args.labels,
 				milestone=args.milestone)
-			cls.print_issue(issue)
+			cls.print_issue_summary(issue)
 
 	class UpdateCmd (IssueUtil):
 		cmd_help = "update an existing issue"
@@ -1026,7 +1026,7 @@ class IssueCmd (CmdGroup):
 				params['title'] = title
 				params['body'] = body
 			issue = req.patch(url, **params)
-			cls.print_issue(issue)
+			cls.print_issue_summary(issue)
 
 	class CommentCmd (IssueUtil):
 		cmd_help = "add a comment to an existing issue"
@@ -1068,7 +1068,7 @@ class IssueCmd (CmdGroup):
 			if msg:
 				cls.clean_and_post_comment(args.issue, msg)
 			issue = req.patch(cls.url(args.issue), state='closed')
-			cls.print_issue(issue)
+			cls.print_issue_summary(issue)
 
 
 # Utility class that group common functionality used by the multiple `git hub
@@ -1213,7 +1213,7 @@ class PullCmd (IssueCmd):
 					force=args.force_push)
 			pull = req.post(cls.url(), head=gh_head, base=base,
 					title=title, body=body)
-			cls.print_issue(pull)
+			cls.print_issue_summary(pull)
 
 	class AttachCmd (PullUtil):
 		cmd_help = "attach code to an existing issue (convert it " \
@@ -1259,7 +1259,7 @@ class PullCmd (IssueCmd):
 					force=args.force_push)
 			pull = req.post(cls.url(), issue=args.issue, base=base,
 					head=gh_head)
-			cls.print_issue(pull)
+			cls.print_issue_summary(pull)
 			if msg:
 				cls.clean_and_post_comment(args.issue, msg)
 
@@ -1454,7 +1454,7 @@ class RebaseCmd (PullUtil):
 				"successfully rebased ({}).", e)
 			raise e
 		finally:
-			cls.print_issue(pull)
+			cls.print_issue_summary(pull)
 
 	# Get the pull request object from GitHub performing some sanity checks
 	# (if it's already merged, or closed or in a mergeable state). If
