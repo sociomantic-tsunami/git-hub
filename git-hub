@@ -805,6 +805,7 @@ class IssueUtil (object):
 
 	@classmethod
 	def print_issue(cls, issue):
+		issue['labels'] = ', '.join([l['name'] for l in issue['labels']])
 		infof(
 				(u"""
 Issue {number}
@@ -815,13 +816,13 @@ User    : {user[login]}
 State   : {state}
 Comments: {comments}
 URL     : {html_url}
-Labels:
+Labels  : {labels}
+
+Contents
+========
+{body}
 """
 				), **issue)
-		for label in issue['labels']:
-			infof(u'\t{name}\n', **label)
-		infof(u'Contents\n========\n')
-		infof(u'{body}', **issue)
 		debugf('{}', json.dumps(issue, indent=4, sort_keys=True))
 
 	@classmethod
