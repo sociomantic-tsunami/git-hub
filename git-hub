@@ -805,6 +805,7 @@ class IssueUtil (object):
 
 	@classmethod
 	def print_issue(cls, issue):
+		issue = dict(issue)
 		issue['labels'] = ', '.join([l['name'] for l in issue['labels']])
 		infof(
 				(u"""
