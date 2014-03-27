@@ -916,16 +916,13 @@ class IssueCmd (CmdGroup):
 						% cls.name)
 			parser.add_argument('-f', '--full',
 				default=False, action='store_true',
-				help="number identifying the issue to show fully")
+				help="number identifying the issue to show")
 		@classmethod
 		def run(cls, parser, args):
 			for number in args.issues:
 				issue = req.get(cls.url(number))
-				if args.full:
-					issue['comment_texts'] = req.get(cls.url(number + "/comments"))
-					cls.print_issue(issue)
-				else:
-					printer = cls.print_issue_summary(issue)
+				issue['comment_texts'] = req.get(cls.url(number + "/comments"))
+				cls.print_issue(issue)
 
 
 	class NewCmd (IssueUtil):
