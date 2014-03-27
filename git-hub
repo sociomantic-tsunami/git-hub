@@ -804,7 +804,7 @@ class IssueUtil (object):
 		debugf('{}', json.dumps(issue, indent=4, sort_keys=True))
 
 	@classmethod
-	def print_issue(cls, issue):
+	def print_issue(cls, issue, comments):
 		issue = dict(issue)
 		issue['labels'] = ', '.join([l['name'] for l in issue['labels']])
 		infof(
@@ -825,7 +825,7 @@ Contents
 
 """
 				), **issue)
-		for comment in issue['comment_texts']:
+		for comment in comments:
 			infof(u'[{created_at}][{user[login]}]:\n{body}\n', **comment)
 		debugf('{}', json.dumps(issue, indent=4, sort_keys=True))
 
@@ -922,8 +922,8 @@ class IssueCmd (CmdGroup):
 		def run(cls, parser, args):
 			for number in args.issues:
 				issue = req.get(cls.url(number))
-				issue['comment_texts'] = req.get(cls.url(number + "/comments"))
-				cls.print_issue(issue)
+				comments = req.get(cls.url(number + "/comments"))
+				cls.print_issue(issue, comments)
 
 
 	class NewCmd (IssueUtil):
