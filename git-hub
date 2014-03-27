@@ -821,8 +821,11 @@ Labels  : {labels}
 Contents
 ========
 {body}
+
 """
 				), **issue)
+		for comment in issue['comment_texts']:
+			infof(u'[{created_at}][{user[login]}]:\n{body}\n', **comment)
 		debugf('{}', json.dumps(issue, indent=4, sort_keys=True))
 
 	@classmethod
@@ -919,6 +922,7 @@ class IssueCmd (CmdGroup):
 			for number in args.issues:
 				issue = req.get(cls.url(number))
 				if args.full:
+					issue['comment_texts'] = req.get(cls.url(number + "/comments"))
 					cls.print_issue(issue)
 				else:
 					printer = cls.print_issue_summary(issue)
