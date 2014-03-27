@@ -925,7 +925,7 @@ class IssueCmd (CmdGroup):
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issue', metavar=cls.id_var,
-				help="number identifying the issue to close")
+				help="number identifying the issue to comment on")
 			parser.add_argument('-m', '--message', metavar='MSG',
 				help="comment to be added to the issue; if "
 				"this option is not used, the default "
