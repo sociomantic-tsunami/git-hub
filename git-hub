@@ -254,6 +254,10 @@ def git_config(name, default=None, prefix=GIT_CONFIG_PREFIX, value=None, opts=()
 					name)
 		raise e
 
+# Returns the .git directory location
+def git_dir():
+	return git('rev-parse', '--git-dir')
+
 
 # Invokes the editor defined by git var GIT_EDITOR.
 #
@@ -266,8 +270,7 @@ def git_config(name, default=None, prefix=GIT_CONFIG_PREFIX, value=None, opts=()
 # user left the `help_msg`, it will be part of the returned string too.
 def editor(help_msg, msg=None):
 	prog = git('var', 'GIT_EDITOR')
-	dotgit = git('rev-parse', '--git-dir')
-	fname = os.path.join(dotgit, 'HUB_EDITMSG')
+	fname = os.path.join(git_dir(), 'HUB_EDITMSG')
 	with file(fname, 'w') as f:
 		f.write(msg or '')
 		f.write(help_msg)
@@ -1558,16 +1561,14 @@ class RebaseCmd (PullUtil):
 	# necessarily a `git hub pull rebase`).
 	@classmethod
 	def rebasing(cls):
-		dotgit = git('rev-parse', '--git-dir')
-		return os.path.exists(dotgit+'/rebase-apply/rebasing')
+		return os.path.exists(git_dir()+'/rebase-apply/rebasing')
 
 	# Returns the file name used to store `git hub pull rebase` metadata
 	# (the sole presence of this file indicates there is a `git hub pull
 	# rebase` going on).
 	@classmethod
 	def rebasing_file_name(cls):
-		dotgit = git('rev-parse', '--git-dir')
-		return os.path.join(dotgit, 'HUB_PULL_REBASING')
+		return os.path.join(git_dir(), 'HUB_PULL_REBASING')
 
 	# Reads and parses the contents of the `rebasing_file`, returning them
 	# as variables, if the file exists.
