@@ -769,7 +769,7 @@ class IssueCmd (CmdGroup):
 	cmd_help = 'manage issues'
 
 	class ListCmd (IssueUtil):
-		cmd_help = "show a list of open %ss" % IssueUtil.name
+		cmd_help = "show a list of open issues"
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('-c', '--closed',
@@ -778,11 +778,11 @@ class IssueCmd (CmdGroup):
 			parser.add_argument('-C', '--created-by-me',
 				action='store_true',
 				help=("show only %ss created by me" %
-						IssueUtil.name))
+						cls.name))
 			parser.add_argument('-A', '--assigned-to-me',
 				action='store_true',
 				help=("show only %ss assigned to me" %
-						IssueUtil.name))
+						cls.name))
 		@classmethod
 		def run(cls, parser, args):
 			def filter(issue, name):
@@ -805,12 +805,13 @@ class IssueCmd (CmdGroup):
 				cls.print_issue(issue)
 
 	class ShowCmd (IssueUtil):
-		cmd_help = "show details for existing %ss" % IssueUtil.name
+		cmd_help = "show details for existing issues"
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issues',
 				nargs='+', metavar=cls.id_var,
-				help="number identifying the issue to show")
+				help="number identifying the %s to show"
+						% cls.name)
 		@classmethod
 		def run(cls, parser, args):
 			for number in args.issues:
@@ -818,26 +819,26 @@ class IssueCmd (CmdGroup):
 				cls.print_issue(issue)
 
 	class NewCmd (IssueUtil):
-		cmd_help = "create a new %s" % IssueUtil.name
+		cmd_help = "create a new issue"
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('-m', '--message', metavar='MSG',
-				help="issue's title (and description); the "
-				"first line is used as the issue title and "
+				help="%s's title (and description); the "
+				"first line is used as the title and "
 				"any text after an empty line is used as "
-				"the optional body")
+				"the optional body" % cls.name)
 			parser.add_argument('-l', '--label', dest='labels',
 				metavar='LABEL', action='append',
-				help="attach LABEL to the issue (can be "
+				help="attach LABEL to the %s (can be "
 				"specified multiple times to set multiple "
-				"labels)")
+				"labels)" % cls.name)
 			parser.add_argument('-a', '--assign', dest='assignee',
 				metavar='USER',
-				help="assign an user to the issue; must be a "
-				"valid GitHub login name")
+				help="assign an user to the %s; must be a "
+				"valid GitHub login name" % cls.name)
 			parser.add_argument('-M', '--milestone', metavar='ID',
 				help="assign the milestone identified by the "
-				"number ID to the issue")
+				"number ID to the %s" % cls.name)
 		@classmethod
 		def run(cls, parser, args):
 			msg = args.message or cls.editor()
@@ -848,42 +849,44 @@ class IssueCmd (CmdGroup):
 			cls.print_issue(issue)
 
 	class UpdateCmd (IssueUtil):
-		cmd_help = "update an existing %s" % IssueUtil.name
+		cmd_help = "update an existing issue"
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issue', metavar=cls.id_var,
-				help="number identifying the issue to update")
+				help="number identifying the %s to update"
+						% cls.name)
 			parser.add_argument('-m', '--message', metavar='MSG',
-				help="new issue title (and description); the "
-				"first line is used as the issue title and "
-				"any text after " "an empty line is used as "
-				"the optional body")
+				help="new %s title (and description); the "
+				"first line is used as the title and "
+				"any text after an empty line is used as "
+				"the optional body" % cls.name)
 			parser.add_argument('-e', '--edit-message',
 				action='store_true', default=False,
 				help="open the default $GIT_EDITOR to edit the "
-				"current title (and description) of the issue")
+				"current title (and description) of the %s"
+						% cls.name)
 			group = parser.add_mutually_exclusive_group()
 			group.add_argument('-o', '--open', dest='state',
 				action='store_const', const='open',
-				help="reopen the issue")
+				help="reopen the %s" % cls.name)
 			group.add_argument('-c', '--close', dest='state',
 				action='store_const', const='closed',
-				help="close the issue")
+				help="close the %s" % cls.name)
 			parser.add_argument('-l', '--label', dest='labels',
 				metavar='LABEL', action='append',
 				help="if one or more labels are specified, "
-				"they will replace the current issue labels; "
+				"they will replace the current %s labels; "
 				"otherwise the labels are unchanged. If one of "
 				"the labels is empty, the labels will be "
 				"cleared (so you can use -l'' to clear the "
-				"labels of an issue)")
+				"labels)" % cls.name)
 			parser.add_argument('-a', '--assign', dest='assignee',
 				metavar='USER',
-				help="assign an user to the issue; must be a "
-				"valid GitHub login name")
+				help="assign an user to the %s; must be a "
+				"valid GitHub login name" % cls.name)
 			parser.add_argument('-M', '--milestone', metavar='ID',
 				help="assign the milestone identified by the "
-				"number ID to the issue")
+				"number ID to the %s" % cls.name)
 		@classmethod
 		def run(cls, parser, args):
 			# URL fixed to issues, pull requests updates are made
@@ -921,34 +924,37 @@ class IssueCmd (CmdGroup):
 			cls.print_issue(issue)
 
 	class CommentCmd (IssueUtil):
-		cmd_help = "add a comment to an existing %s" % IssueUtil.name
+		cmd_help = "add a comment to an existing issue"
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issue', metavar=cls.id_var,
-				help="number identifying the issue to close")
+				help="number identifying the %s to comment on"
+						% cls.name)
 			parser.add_argument('-m', '--message', metavar='MSG',
-				help="comment to be added to the issue; if "
+				help="comment to be added to the %s; if "
 				"this option is not used, the default "
-				"$GIT_EDITOR is opened to write the comment")
+				"$GIT_EDITOR is opened to write the comment"
+						% cls.name)
 		@classmethod
 		def run(cls, parser, args):
 			body = args.message or cls.comment_editor()
 			cls.clean_and_post_comment(args.issue, body)
 
 	class CloseCmd (IssueUtil):
-		cmd_help = "close an opened %s" % IssueUtil.name
+		cmd_help = "close an opened issue"
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issue', metavar=cls.id_var,
-				help="number identifying the issue to close")
+				help="number identifying the %s to close"
+						% cls.name)
 			parser.add_argument('-m', '--message', metavar='MSG',
-				help="add a comment to the issue before "
-				"closing it")
+				help="add a comment to the %s before "
+				"closing it" % cls.name)
 			parser.add_argument('-e', '--edit-message',
 				action='store_true', default=False,
 				help="open the default $GIT_EDITOR to write "
-				"a comment to be added to the issue before "
-				"closing it")
+				"a comment to be added to the %s before "
+				"closing it" % cls.name)
 		@classmethod
 		def run(cls, parser, args):
 			msg = args.message
@@ -1045,22 +1051,27 @@ class PullCmd (IssueCmd):
 	# (name, gh_path, id_var) with higher priority than the ones in the
 	# IssueCmd subcommands.
 	class ListCmd (PullUtil, IssueCmd.ListCmd):
+		cmd_help = "show a list of open pull requests"
 		pass
 
 	class ShowCmd (PullUtil, IssueCmd.ShowCmd):
+		cmd_help = "show details for existing pull requests"
 		pass
 
 	class UpdateCmd (PullUtil, IssueCmd.UpdateCmd):
+		cmd_help = "update an existing pull request"
 		pass
 
 	class CommentCmd (PullUtil, IssueCmd.CommentCmd):
+		cmd_help = "add a comment to an existing pull request"
 		pass
 
 	class CloseCmd (PullUtil, IssueCmd.CloseCmd):
+		cmd_help = "close an opened pull request"
 		pass
 
 	class NewCmd (PullUtil):
-		cmd_help = "create a new %s" % PullUtil.name
+		cmd_help = "create a new pull request"
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('head', metavar='HEAD', nargs='?',
@@ -1100,22 +1111,22 @@ class PullCmd (IssueCmd):
 			cls.print_issue(pull)
 
 	class AttachCmd (PullUtil):
-		cmd_help = "attach code to an existing issue"
+		cmd_help = "attach code to an existing issue (convert it " \
+				"to a pull request)"
 		@classmethod
 		def setup_parser(cls, parser):
 			parser.add_argument('issue', metavar='ISSUE',
-				help="issue ID to attach code to")
+				help="pull request ID to attach code to")
 			parser.add_argument('head', metavar='HEAD', nargs='?',
 				help="branch (or git ref) where your changes "
 				"are implemented")
 			parser.add_argument('-m', '--message', metavar='MSG',
-				help="add a comment to the issue/new pull "
-				"request")
+				help="add a comment to the new pull request")
 			parser.add_argument('-e', '--edit-message',
 				action='store_true', default=False,
 				help="open the default $GIT_EDITOR to write "
-				"a comment to be added to the issue after "
-				"attaching the code to it")
+				"a comment to be added to the pull request "
+				"after attaching the code to it")
 			parser.add_argument('-b', '--base', metavar='BASE',
 				help="branch (or git ref) you want your "
 				"changes pulled into (uses hub.pullbase or "
