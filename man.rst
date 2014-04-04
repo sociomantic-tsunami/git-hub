@@ -327,6 +327,18 @@ COMMANDS
       and close the issue), just use the **--continue** action.  This is
       particularly useful for testing.
 
+    \-u, --stash-include-untracked
+      Passes the **--include-untracked** option to stash. If used all untracked
+      files are also stashed and then cleaned up with git clean, leaving the
+      working directory in a very clean state, which avoid conflicts when
+      checking out the pull request to rebase.
+
+   \-a, --stash-all
+     Passes the **--all** option to stash. Is like
+     **--stash-include-untracked** but the ignored files are stashed and
+     cleaned in addition to the untracked files, which completely removes the
+     possibility of conflicts when checking out the pull request to reabase.
+
     Actions:
 
     \--continue
