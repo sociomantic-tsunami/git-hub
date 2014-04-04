@@ -1251,6 +1251,14 @@ class RebaseCmd (PullUtil):
 			action='store_true', default=False,
 			help="pause the rebase just before the results are "
 			"pushed (useful for testing)")
+		parser.add_argument('-u', '--stash-include-untracked',
+			action='store_true', default=False,
+			help="uses git stash save --include-untracked when "
+			"stashing local changes")
+		parser.add_argument('-a', '--stash-all',
+			action='store_true', default=False,
+			help="uses git stash save --all when stashing local "
+			"changes")
 
 	@classmethod
 	def run(cls, parser, args):
@@ -1330,8 +1338,7 @@ class RebaseCmd (PullUtil):
 		starting = args.action is None
 		pull = cls.get_pull(args.pull, starting)
 		if starting:
-			git_quiet(2, 'stash', 'save', '--all',
-					cls.stash_msg(pull))
+			cls.stash(pull, args)
 		try:
 			pushed_sha = cls.fetch_rebase_push(args, pull)
 		finally:
@@ -1423,6 +1430,23 @@ class RebaseCmd (PullUtil):
 	@classmethod
 	def stash_msg(cls, pull):
 		return '%s %s' % (cls.stash_msg_base, pull['number'])
+
+	# Do a git stash using the required options
+	@classmethod
+	def stash(cls, pull, args):
+		git_args = [2, 'stash', 'save']
+		if args.stash_include_untracked:
+			git_args.append('--include-untracked')
+		if args.stash_all:
+			git_args.append('--all')
+		git_args.append(cls.stash_msg(pull))
+		try:
+			git_quiet(*git_args)
+		except GitError as e:
+			errf("Couldn't stash current changes, try with "
+				"--stash-include-untracked or --stash-all "
+				"if you had conflicts")
+			raise e
 
 	# Performs the whole rebasing procedure, including fetching the branch
 	# to be rebased, creating a temporary branch for it, fetching the base
