@@ -543,6 +543,11 @@ def split_titled_message(msg):
 #   A string describing what this command is for (shown in the help text when
 #   listing subcommands). If not present, the class __doc__ will be used.
 #
+# `cmd_usage`
+#   A usage string to be passed to the parser. If it's not defined, is
+#   genreated from the options as usual. %(prog)s can be used to name the
+#   current program (and subcommand).
+#
 # `cmd_required_config`
 #   An optional list of configuration variables that this command needs to work
 #   (if any of the configuration variables in this list is not defined, the
@@ -572,7 +577,10 @@ class CmdGroup (object):
 			help = cmd.__doc__
 			if hasattr(cmd, 'cmd_help'):
 				help = cmd.cmd_help
-			p = subparsers.add_parser(name, help=help)
+			kwargs = dict(help=help)
+			if hasattr(cmd, 'cmd_usage'):
+				kwargs['usage'] = cmd.cmd_usage
+			p = subparsers.add_parser(name, **kwargs)
 			partial = cmd.setup_parser(p) or partial
 			if not hasattr(cmd, 'run'):
 				continue
