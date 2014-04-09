@@ -655,6 +655,7 @@ class CloneCmd (object):
 
 	cmd_required_config = ['username', 'urltype', 'oauthtoken']
 	cmd_help = 'clone a GitHub repository (and fork as needed)'
+	cmd_usage = '%(prog)s [OPTIONS] [GIT CLONE OPTIONS] REPO [DEST]'
 
 	@classmethod
 	def setup_parser(cls, parser):
@@ -669,6 +670,7 @@ class CloneCmd (object):
 		parser.add_argument('-r', '--remote', metavar='NAME',
 			help="use NAME as the upstream remote repository name "
 			"instead of the default 'upstream'")
+		return True # we need to get unknown arguments
 
 	@classmethod
 	def run(cls, parser, args):
@@ -696,7 +698,8 @@ class CloneCmd (object):
 				upstream = repo['parent']['full_name']
 		dest = args.dest or repo['name']
 		infof('Cloning {} to {}', repo[config.urltype], dest)
-		git_quiet(1, 'clone', repo[config.urltype], dest)
+		clone_args = args.unknown_args + [repo[config.urltype], dest]
+		git_quiet(1, 'clone', *clone_args)
 		if upstream:
 			os.chdir(dest)
 			git_config('upstream', value=upstream)

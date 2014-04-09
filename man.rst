@@ -86,6 +86,10 @@ COMMANDS
   \-r NAME, --remote=NAME
     Use `NAME` as the upstream remote repository name instead of the default.
 
+  GIT CLONE OPTIONS
+    Any standard **git clone** option can be passed. Not all of them might make
+    sense when cloning a GitHub repo to be used with this tool though.
+
 
 `issue`
   This command is used to manage GitHub issues through a set of subcommands.
