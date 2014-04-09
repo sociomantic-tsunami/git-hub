@@ -527,7 +527,9 @@ def split_titled_message(msg):
 #
 # `setup_parser(parser)`
 #   Will be called to setup the command-line parser. This is where new
-#   subcommands or specific options can be added to the parser.
+#   subcommands or specific options can be added to the parser. If it returns
+#   True, then parse_known_args() will be used instead, so you can collect
+#   unknown arguments (stored in args.unknown_args).
 #
 # `cmd_name`
 #   Command name, if not present the name of the class (with the
@@ -553,6 +555,7 @@ class CmdGroup (object):
 
 	@classmethod
 	def setup_parser(cls, parser):
+		partial = False
 		suffix = cls.subcommand_suffix
 		subcommands = [getattr(cls, a) for a in dir(cls)
 				if a.endswith(suffix)]
@@ -570,7 +573,7 @@ class CmdGroup (object):
 			if hasattr(cmd, 'cmd_help'):
 				help = cmd.cmd_help
 			p = subparsers.add_parser(name, help=help)
-			cmd.setup_parser(p)
+			partial = cmd.setup_parser(p) or partial
 			if not hasattr(cmd, 'run'):
 				continue
 			if hasattr(cmd, 'cmd_required_config'):
@@ -583,6 +586,7 @@ class CmdGroup (object):
 				p.set_defaults(run=make_closure(cmd))
 			else:
 				p.set_defaults(run=cmd.run)
+		return partial
 
 # `git hub setup` command implementation
 class SetupCmd (object):
@@ -1694,8 +1698,12 @@ def main():
 	parser.add_argument('-s', '--silent', action='count', default=0,
 		help="be less verbose (can be specified multiple times to get "
 		"less verbosity)")
-	HubCmd.setup_parser(parser)
-	args = parser.parse_args()
+	partial = HubCmd.setup_parser(parser)
+	if partial:
+		args, unknown_args = parser.parse_known_args()
+		args.unknown_args = unknown_args
+	else:
+		args = parser.parse_args()
 	verbose = args.verbose - args.silent
 
 	config = Config()
