@@ -794,6 +794,8 @@ class IssueCmd (CmdGroup):
 					return True
 			state = 'closed' if args.closed else 'open'
 			issues = req.get(cls.url(), state=state)
+			if not issues:
+				return
 			if args.created_by_me and args.assigned_to_me:
 				issues = [i for i in issues
 					if filter(i, 'assignee') or
