@@ -382,7 +382,7 @@ class RequestManager:
 			req.add_header("Authorization", "bearer " +
 					self.oauthtoken)
 		req.add_header("Content-Type", "application/json")
-		req.add_header("Accept", "application/json")
+		req.add_header("Accept", "application/vnd.github.beta+json")
 		req.add_header("Content-Length", str(len(body) if body else 0))
 		req.get_method = lambda: method.upper()
 		debugf('{}', req.get_full_url())
