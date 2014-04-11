@@ -527,7 +527,9 @@ def split_titled_message(msg):
 #
 # `setup_parser(parser)`
 #   Will be called to setup the command-line parser. This is where new
-#   subcommands or specific options can be added to the parser.
+#   subcommands or specific options can be added to the parser. If it returns
+#   True, then parse_known_args() will be used instead, so you can collect
+#   unknown arguments (stored in args.unknown_args).
 #
 # `cmd_name`
 #   Command name, if not present the name of the class (with the
@@ -541,6 +543,11 @@ def split_titled_message(msg):
 #   A string describing what this command is for (shown in the help text when
 #   listing subcommands). If not present, the class __doc__ will be used.
 #
+# `cmd_usage`
+#   A usage string to be passed to the parser. If it's not defined, is
+#   genreated from the options as usual. %(prog)s can be used to name the
+#   current program (and subcommand).
+#
 # `cmd_required_config`
 #   An optional list of configuration variables that this command needs to work
 #   (if any of the configuration variables in this list is not defined, the
@@ -553,6 +560,7 @@ class CmdGroup (object):
 
 	@classmethod
 	def setup_parser(cls, parser):
+		partial = False
 		suffix = cls.subcommand_suffix
 		subcommands = [getattr(cls, a) for a in dir(cls)
 				if a.endswith(suffix)]
@@ -569,8 +577,11 @@ class CmdGroup (object):
 			help = cmd.__doc__
 			if hasattr(cmd, 'cmd_help'):
 				help = cmd.cmd_help
-			p = subparsers.add_parser(name, help=help)
-			cmd.setup_parser(p)
+			kwargs = dict(help=help)
+			if hasattr(cmd, 'cmd_usage'):
+				kwargs['usage'] = cmd.cmd_usage
+			p = subparsers.add_parser(name, **kwargs)
+			partial = cmd.setup_parser(p) or partial
 			if not hasattr(cmd, 'run'):
 				continue
 			if hasattr(cmd, 'cmd_required_config'):
@@ -583,6 +594,7 @@ class CmdGroup (object):
 				p.set_defaults(run=make_closure(cmd))
 			else:
 				p.set_defaults(run=cmd.run)
+		return partial
 
 # `git hub setup` command implementation
 class SetupCmd (object):
@@ -643,6 +655,7 @@ class CloneCmd (object):
 
 	cmd_required_config = ['username', 'urltype', 'oauthtoken']
 	cmd_help = 'clone a GitHub repository (and fork as needed)'
+	cmd_usage = '%(prog)s [OPTIONS] [GIT CLONE OPTIONS] REPO [DEST]'
 
 	@classmethod
 	def setup_parser(cls, parser):
@@ -657,6 +670,7 @@ class CloneCmd (object):
 		parser.add_argument('-r', '--remote', metavar='NAME',
 			help="use NAME as the upstream remote repository name "
 			"instead of the default 'upstream'")
+		return True # we need to get unknown arguments
 
 	@classmethod
 	def run(cls, parser, args):
@@ -684,7 +698,8 @@ class CloneCmd (object):
 				upstream = repo['parent']['full_name']
 		dest = args.dest or repo['name']
 		infof('Cloning {} to {}', repo[config.urltype], dest)
-		git_quiet(1, 'clone', repo[config.urltype], dest)
+		clone_args = args.unknown_args + [repo[config.urltype], dest]
+		git_quiet(1, 'clone', *clone_args)
 		if upstream:
 			os.chdir(dest)
 			git_config('upstream', value=upstream)
@@ -1696,8 +1711,12 @@ def main():
 	parser.add_argument('-s', '--silent', action='count', default=0,
 		help="be less verbose (can be specified multiple times to get "
 		"less verbosity)")
-	HubCmd.setup_parser(parser)
-	args = parser.parse_args()
+	partial = HubCmd.setup_parser(parser)
+	if partial:
+		args, unknown_args = parser.parse_known_args()
+		args.unknown_args = unknown_args
+	else:
+		args = parser.parse_args()
 	verbose = args.verbose - args.silent
 
 	config = Config()
