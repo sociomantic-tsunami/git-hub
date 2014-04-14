@@ -158,6 +158,9 @@ Dependencies
 * Docutils_ (>= 0.8, although it might work with older versions too, only needed
   to build the man page)
 
+* FPM_ (>= 1.0.1, although it might work with older versions too, only needed to
+  build the Debian package)
+
 __ https://launchpad.net/~git-core/+archive/ppa
 
 Building
@@ -233,5 +236,6 @@ __ https://github.com/sociomantic/git-hub/issues/new
 .. _Ubuntu: http://www.ubuntu.com/
 .. _Debian: http://www.debian.org/
 .. _VIM: http://www.vim.org/
+.. _FPM: https://github.com/jordansissel/fpm
 
 .. vim: set et sw=2 tw=80 :
