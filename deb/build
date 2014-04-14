@@ -28,6 +28,7 @@ trap "rm -f '$changelog'; exit 1" INT TERM QUIT
 pkgname=git-hub
 genchangelog "$pkgname" "$pkgversion" "$pkgmaint" > "$changelog"
 fpm -s dir -t deb -n "$pkgname" -v "$pkgversion" \
+	--architecture all \
 	--maintainer "$pkgmaint" \
 	--description "Git command line interface to GitHub" \
 	--url 'https://github.com/sociomantic/git-hub' \
