@@ -77,14 +77,32 @@ COMMANDS
   `hub.username` is used as *<owner>*, and the parent repository is looked up
   at GitHub to determine the real upstream repository.
 
-  The upstream repository is also added as a remote by the name `upstream` and
-  the `hub.upstream` configuration variable is set (see CONFIGURATION_), unless
-  only *<project>* was used and the resulting repository is not really a fork,
-  in which case is impossible to automatically determine the upstream
-  repository.
+  The upstream repository is also added as a remote by the name `upstream`
+  (unless **--triangular** is used, in which case the remote is called `fork`
+  by default) and the `hub.upstream` configuration variable is set (see
+  CONFIGURATION_), unless only *<project>* was used and the resulting
+  repository is not really a fork, in which case is impossible to automatically
+  determine the upstream repository.
 
   \-r NAME, --remote=NAME
-    Use `NAME` as the upstream remote repository name instead of the default.
+    Use `NAME` as the upstream remote repository name instead of the default
+    ('fork' if **--triangular** is used, 'upstream' otherwise).
+
+  \-t, --triangular
+    Use Git's *triangular workflow* configuration. This option clones from the
+    parent/upstream repository instead of cloning the fork, and adds the fork
+    as a remote repository. Then sets the `remote.pushdefault` Git option to
+    the fork.
+
+    The effect of this having the upstream repository used by default
+    when you pull but using your fork when you push, which is typically what
+    you want when using GitHub's pull requests.
+
+    Git version 1.8.3 or newer is needed to use this option (and 1.8.4 or newer
+    is recommended due to some issues in 1.8.3 related to this).
+
+    This option might become the default in the future. To make it the default
+    you can set the option `hub.triangular`. See CONFIGURATION_ for details.
 
   GIT CLONE OPTIONS
     Any standard **git clone** option can be passed. Not all of them might make
@@ -412,6 +430,10 @@ from. These are the git config keys used:
   If is set to "true", ``--force`` will be passed to rebase. If is set to
   "false" a regular rebase is performed. See the `pull` `rebase` command for
   detils. [default: *true*]
+
+`hub.triangular`
+  Makes **--triangular** for `clone` if set to "true" (boolean value). See
+  `clone` documentation for details.
 
 [1] http://developer.github.com/v3/pulls/#get-a-single-pull-request
 
