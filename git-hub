@@ -206,6 +206,20 @@ def git(*args, **kwargs):
 		raise GitError(proc.returncode, args, stderr.rstrip('\n'))
 	return stdout.rstrip('\n')
 
+# Check if the git version is at least min_version
+# Returns a tuple with the current version and True/False depending on how the
+# check went (True if it passed, False otherwise)
+def git_check_version(min_version):
+	cur_ver_str = git('--version').split()[2]
+	cur_ver = cur_ver_str.split('.')
+	min_ver = min_version.split('.')
+	for i in range(len(min_ver)):
+		if cur_ver[i] < min_ver[i]:
+			return (cur_ver_str, False)
+		if cur_ver[i] > min_ver[i]:
+			return (cur_ver_str, True)
+	return (cur_ver_str, True)
+
 # Same as git() but inserts --quiet at quiet_index if verbose is less than DEBUG
 def git_quiet(quiet_index, *args, **kwargs):
 	args = args_to_list(args)
@@ -303,6 +317,8 @@ class Config:
 		self.baseurl = self.sanitize_url('baseurl',
 			git_config('baseurl', 'https://api.github.com'))
 		self.forcerebase = git_config('forcerebase', "true",
+				opts=['--bool']) == "true"
+		self.triangular = git_config('triangular', "false",
 				opts=['--bool']) == "true"
 
 	def sanitize_url(self, name, url):
@@ -669,13 +685,17 @@ class CloneCmd (object):
 			"cloned repository")
 		parser.add_argument('-r', '--remote', metavar='NAME',
 			help="use NAME as the upstream remote repository name "
-			"instead of the default 'upstream'")
+			"instead of the default 'upstream' (for a conventional "
+			"clone) or 'fork' (for a --triangular clone)")
+		parser.add_argument('-t', '--triangular', action="store_true",
+			help="use Git 'triangular workflow' setup, so you can "
+			"push by default to your fork but pull by default "
+			"from 'upstream'")
 		return True # we need to get unknown arguments
 
 	@classmethod
 	def run(cls, parser, args):
 		upstream = args.repository
-		remote = args.remote or 'upstream'
 		if '/' in upstream:
 			(owner, proj) = upstream.split('/', 1)
 			for repo in req.get('/user/repos'):
@@ -697,16 +717,53 @@ class CloneCmd (object):
 			else:
 				upstream = repo['parent']['full_name']
 		dest = args.dest or repo['name']
-		infof('Cloning {} to {}', repo[config.urltype], dest)
-		clone_args = args.unknown_args + [repo[config.urltype], dest]
-		git_quiet(1, 'clone', *clone_args)
-		if upstream:
-			os.chdir(dest)
-			git_config('upstream', value=upstream)
-			repo_url = repo['parent'][config.urltype]
-			git('remote', 'add', remote, repo_url)
-			infof('Fetching from {} ({})', remote, repo_url)
-			git_quiet(1, 'fetch', remote)
+		triangular = cls.check_triangular(config.triangular or
+				args.triangular)
+		if triangular and not upstream:
+			parser.error("Can't use triangular workflow without "
+					"an upstream repo")
+		url = repo['parent'][config.urltype] if triangular \
+				else repo[config.urltype]
+		infof('Cloning {} to {}', url, dest)
+		git_quiet(1, 'clone', *(args.unknown_args + [url, dest]))
+		if not upstream:
+			# Not a forked repository, nothing else to do
+			return
+		# Complete the repository setup
+		os.chdir(dest)
+		remote = args.remote or ('fork' if triangular else 'upstream')
+		remote_url = repo['parent'][config.urltype]
+		if triangular:
+			remote_url = repo[config.urltype]
+			git_config('remote.pushdefault', prefix='', value=remote)
+		git_config('upstream', value=upstream)
+		git('remote', 'add', remote, remote_url)
+		infof('Fetching from {} ({})', remote, remote_url)
+		git_quiet(1, 'fetch', remote)
+
+	@classmethod
+	def check_triangular(cls, triangular):
+		if not triangular:
+			return False
+		min_ver = '1.8.3'
+		(cur_ver, ver_ok) = git_check_version(min_ver)
+		if not ver_ok:
+			warnf("Current git version ({}) is too old to support "
+				"--triangular, at least {} is needed. Ignoring "
+				"the --triangular option...", cur_ver, min_ver)
+			return False
+		min_ver = '1.8.4'
+		(cur_ver, ver_ok) = git_check_version(min_ver)
+		pd = git_config('push.default', prefix='', default=None)
+		if not ver_ok and pd == 'simple':
+			warnf("Current git version ({}) has an issue when "
+				"using the option push.default=simple and "
+				"using the --triangular workflow. Please "
+				"use Git {} or newer, or change push.default "
+				"to 'current' for example. Ignoring the "
+				"--triangular option...", cur_ver, min_ver)
+			return False
+		return True
 
 
 # Utility class that group common functionality used by the multiple `git hub

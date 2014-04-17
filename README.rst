@@ -55,12 +55,14 @@ Clone (and fork) a project
 --------------------------
 ::
 
-  $ git hub clone sociomantic/git-hub
+  $ git hub clone -t sociomantic/git-hub
   Forking sociomantic/git-hub to octocat/git-hub
-  Cloning git@github.com:octocat/git-hub.git to git-hub
-  Fetching from upstream (git@github.com:sociomantic/git-hub.git)
+  Cloning git@github.com:sociomantic/git-hub.git to git-hub
+  Fetching from fork (git@github.com:octocat/git-hub.git)
 
-The fork will happen only if you haven't fork the project before, of course.
+The fork will happen only if you haven't fork the project before, of course. And
+we are using the *triangular workflow* option (``-t`` / ``--triangular``), so we
+can pull from the *parent* repo but push to our fork by default.
 
 Using a pre-existing cloned repository
 --------------------------------------
