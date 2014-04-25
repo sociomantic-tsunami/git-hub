@@ -447,7 +447,7 @@ class RequestManager:
 		data = None
 		prev_data = None
 		while url:
-			debugf("Request: {} {}\n%s", method, url, body)
+			debugf("Request: {} {}\n{}", method, url, body)
 			res = self.auth_urlopen(url, method, body)
 			data = res.read()
 			debugf("Response:\n{}", data)
