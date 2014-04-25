@@ -811,28 +811,27 @@ class IssueUtil (object):
 	@classmethod
 	def print_issue(cls, issue, comments):
 		issue = dict(issue)
-		issue['labels'] = ', '.join([l['name']
+		issue['name'] = cls.name.capitalize()
+		issue['comments'] += issue.get('review_comments', 0)
+		issue['labels'] = ' '.join(['['+l['name']+']'
 				for l in issue.get('labels', [])])
-		infof(
-				(u"""
-Issue {number}
-=========
+		if issue['labels']:
+			issue['labels'] += '\n'
+		infof(u"""
+#{number}: {title}
+================================================================================
+{name} is {state}, was reported by {user[login]} and has {comments} comment(s).
+{labels}<{html_url}>
 
-Title   : {title}
-User    : {user[login]}
-State   : {state}
-Comments: {comments}
-URL     : {html_url}
-Labels  : {labels}
-
-Contents
-========
 {body}
 
-"""
-				), **issue)
+""",
+				**issue)
 		for comment in comments:
-			infof(u'[{created_at}][{user[login]}]:\n{body}\n', **comment)
+			body = comment['body']
+			body = '\n'.join(['    '+l for l in body.splitlines()])
+			infof(u'On {created_at}, {user[login]} commented:\n'
+				'{0}\n\n    <{html_url}>\n', body, **comment)
 
 	@classmethod
 	def print_comment(cls, comment):
