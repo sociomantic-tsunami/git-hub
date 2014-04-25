@@ -924,13 +924,15 @@ class IssueCmd (CmdGroup):
 				"the full details with comments")
 		@classmethod
 		def run(cls, parser, args):
-			for number in args.issues:
-				issue = req.get(cls.url(number))
+			for n in args.issues:
+				issue = req.get(cls.url(n))
 				if args.summary:
 					cls.print_issue_summary(issue)
 					continue
-				comments = req.get(cls.url(number) + "/comments")
-				cls.print_issue(issue, comments)
+				c = []
+				if issue['comments'] > 0:
+					c = req.get(cls.url(n) + "/comments")
+				cls.print_issue(issue, c)
 
 	class NewCmd (IssueUtil):
 		cmd_help = "create a new issue"
