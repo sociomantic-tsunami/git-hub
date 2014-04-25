@@ -1164,7 +1164,24 @@ class PullCmd (IssueCmd):
 
 	class ShowCmd (PullUtil, IssueCmd.ShowCmd):
 		cmd_help = "show details for existing pull requests"
-		pass
+		@classmethod
+		def run(cls, parser, args):
+			for n in args.issues:
+				pull = req.get(cls.url(n))
+				# Damn GitHub doesn't provide labels for
+				# pull request objects
+				issue_url = '/repos/%s/issues/%s' % (
+						config.upstream, n)
+				issue = req.get(issue_url)
+				pull['labels'] = issue.get('labels', [])
+				c = []
+				if pull['comments'] > 0:
+					c = req.get(issue_url + '/comments')
+				if pull['review_comments'] > 0:
+					ic = req.get(cls.url(n) + "/comments")
+					c.extend(ic)
+					c.sort(key=lambda i: i['created_at'])
+				cls.print_issue(pull, c)
 
 	class UpdateCmd (PullUtil, IssueCmd.UpdateCmd):
 		cmd_help = "update an existing pull request"
