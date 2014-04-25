@@ -925,9 +925,8 @@ class IssueCmd (CmdGroup):
 		def run(cls, parser, args):
 			for number in args.issues:
 				issue = req.get(cls.url(number))
-				comments = req.get(cls.url(number + "/comments"))
+				comments = req.get(cls.url(number) + "/comments")
 				cls.print_issue(issue, comments)
-
 
 	class NewCmd (IssueUtil):
 		cmd_help = "create a new issue"
