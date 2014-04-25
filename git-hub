@@ -445,7 +445,7 @@ class RequestManager:
 			body = None
 			url += '?' + urllib.urlencode(kwargs)
 		data = None
-		prev_data = []
+		prev_data = None
 		while url:
 			debugf("Request: {} {}\n%s", method, url, body)
 			res = self.auth_urlopen(url, method, body)
@@ -454,11 +454,13 @@ class RequestManager:
 			if data:
 				data = json.loads(data)
 				if isinstance(data, list):
+					if prev_data is None:
+						prev_data = list()
 					prev_data.extend(data)
 					data = None
 			url = self.get_next_url(res)
 		assert not (prev_data and data)
-		if prev_data:
+		if prev_data is not None:
 			data = prev_data
 		debugf("Parsed data:\n{}", data)
 		return data
