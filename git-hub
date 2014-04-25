@@ -42,6 +42,7 @@ import json
 import string
 import base64
 import urllib
+import pprint
 import urllib2
 import getpass
 import os.path
@@ -62,6 +63,9 @@ def localeprintf(stream, fmt='', *args, **kwargs):
 	encoding = sys.getfilesystemencoding()
 	msg = fmt.decode(encoding, 'replace').format(*args, **kwargs) + '\n'
 	stream.write(msg.encode(encoding, 'replace'))
+
+def pformat(obj):
+	return pprint.pformat(obj, indent=4)
 
 def debugf(fmt='', *args, **kwargs):
 	if verbose < DEBUG:
@@ -462,7 +466,7 @@ class RequestManager:
 		assert not (prev_data and data)
 		if prev_data is not None:
 			data = prev_data
-		debugf("Parsed data:\n{}", data)
+		debugf("Parsed data:\n{}", pformat(data))
 		return data
 
 # Create RequestManager.head(), get(), ... methods
@@ -1848,12 +1852,12 @@ if __name__ == '__main__':
 			else:
 				debugf('{}', error)
 			debugf('{}', error.geturl())
-			debugf('{}', error.headers)
+			debugf('{}', pformat(error.headers))
 			debugf('{}', error.read())
 		except:
 			errf('{}', error)
 			errf('{}', error.geturl())
-			errf('{}', error.headers)
+			errf('{}', pformat(error.headers))
 			errf('{}', body)
 			sys.exit(3)
 		sys.exit(4)
