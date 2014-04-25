@@ -919,9 +919,6 @@ class IssueCmd (CmdGroup):
 				nargs='+', metavar=cls.id_var,
 				help="number identifying the %s to show"
 						% cls.name)
-			parser.add_argument('-f', '--full',
-				default=False, action='store_true',
-				help="number identifying the issue to show")
 		@classmethod
 		def run(cls, parser, args):
 			for number in args.issues:
