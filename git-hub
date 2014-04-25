@@ -918,10 +918,17 @@ class IssueCmd (CmdGroup):
 				nargs='+', metavar=cls.id_var,
 				help="number identifying the %s to show"
 						% cls.name)
+			parser.add_argument('--summary',
+				default=False, action='store_true',
+				help="print just a summary of the issue, not "
+				"the full details with comments")
 		@classmethod
 		def run(cls, parser, args):
 			for number in args.issues:
 				issue = req.get(cls.url(number))
+				if args.summary:
+					cls.print_issue_summary(issue)
+					continue
 				comments = req.get(cls.url(number) + "/comments")
 				cls.print_issue(issue, comments)
 
@@ -1167,6 +1174,9 @@ class PullCmd (IssueCmd):
 		def run(cls, parser, args):
 			for n in args.issues:
 				pull = req.get(cls.url(n))
+				if args.summary:
+					cls.print_issue_summary(pull)
+					continue
 				# Damn GitHub doesn't provide labels for
 				# pull request objects
 				issue_url = '/repos/%s/issues/%s' % (
