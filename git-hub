@@ -811,7 +811,8 @@ class IssueUtil (object):
 	@classmethod
 	def print_issue(cls, issue, comments):
 		issue = dict(issue)
-		issue['labels'] = ', '.join([l['name'] for l in issue['labels']])
+		issue['labels'] = ', '.join([l['name']
+				for l in issue.get('labels', [])])
 		infof(
 				(u"""
 Issue {number}
