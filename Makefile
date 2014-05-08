@@ -14,7 +14,7 @@ all: man bash-completion
 
 .PHONY: deb
 deb:
-	$(MAKE) DESTDIR=deb/install install
+	$(MAKE) prefix=/usr DESTDIR=deb/install install
 	deb/build
 
 .PHONY: man
