@@ -45,6 +45,10 @@ release:
 	@read -p "Enter version (previous: $$(git describe --abbrev=0)): " version; \
 	test -z $$version && exit 1; \
 	msg=`echo $$version | sed 's/v/Version /;s/-rc/ Release Candidate /'`; \
+	echo ; \
+	echo Changelog: ; \
+	git log --format='* %s (%h)' `git describe --abbrev=0 HEAD^`..HEAD; \
+	echo ; \
 	set -x; \
 	git tag -a -m "$$msg" $$version
 
