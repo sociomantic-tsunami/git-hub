@@ -857,6 +857,7 @@ class IssueUtil (object):
 
 	@classmethod
 	def print_issue(cls, issue, comments, review_comments=()):
+		review_comments = list(review_comments)
 		issue = dict(issue)
 		issue['name'] = cls.name.capitalize()
 		issue['comments'] += len(comments) + len(review_comments)
