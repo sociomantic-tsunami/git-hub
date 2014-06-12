@@ -1586,7 +1586,7 @@ class RebaseCmd (PullUtil):
 			git_quiet(2, 'stash', 'pop')
 			return True
 		elif stashed_state is False:
-			warf("Stash produced by this command found "
+			warnf("Stash produced by this command found "
 				"(stash@{{}}) but not as the last stashed "
 				"changes, leaving the stashed as it is", i)
 		return False
