@@ -1581,29 +1581,27 @@ class RebaseCmd (PullUtil):
 	# Returns True if it was successfully popped, False otherwise.
 	@classmethod
 	def pop_stashed(cls):
-		stashed_state = cls.get_stashed_state()
-		if stashed_state:
+		stashed_index = cls.get_stashed_state()
+		if stashed_index == 0:
 			git_quiet(2, 'stash', 'pop')
 			return True
-		elif stashed_state is False:
+		elif stashed_index > 0:
 			warnf("Stash produced by this command found "
 				"(stash@{{}}) but not as the last stashed "
-				"changes, leaving the stashed as it is", i)
+				"changes, leaving the stashed as it is",
+				stashed_index)
 		return False
 
-	# Returns True if the stash created by this program is the latest stash
-	# in the stack, False if is present but is not on the top of the stack,
-	# and None if is not present at all.
+	# Returns the index of the stash created by this program in the stash
+	# in the stack, or None if not present at all. 0 means is the latest
+	# stash in the stash stack.
 	@classmethod
 	def get_stashed_state(cls):
 		stash_msg_re = re.compile(r'.*' + cls.stash_msg_base + r' \d+')
 		stashs = git('stash', 'list').splitlines()
 		for i, stash in enumerate(stashs):
 			if stash_msg_re.match(stash):
-				if i == 0:
-					return True
-				else:
-					return False
+				return i
 		return None
 
 	# Returns a string with the message to use when stashing local changes.
