@@ -37,7 +37,7 @@ install: git-hub git-hub.1 ftdetect.vim bash-completion README.rst
 	install -m 644 -D git-hub.1 $(DESTDIR)$(prefix)/share/man/man1/git-hub.1
 	install -m 644 -D ftdetect.vim \
 		$(DESTDIR)$(prefix)/share/vim/addons/ftdetect/githubmsg.vim
-	install -m 644 -D bash-completion $(DESTDIR)/etc/bash_completion.d/git-hub
+	-install -m 644 -D bash-completion $(DESTDIR)/etc/bash_completion.d/git-hub
 	install -m 644 -D README.rst $(DESTDIR)$(prefix)/share/doc/git-hub/README.rst
 
 .PHONY: release
