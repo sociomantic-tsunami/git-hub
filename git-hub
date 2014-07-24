@@ -651,7 +651,7 @@ class SetupCmd (object):
 				not sys.stdin.isatty():
 			die("Can't perform an interactive setup outside a tty")
 		if username is None:
-			username = getpass.getuser()
+			username = config.username or getpass.getuser()
 			reply = raw_input('GitHub username [%s]: ' % username)
 			if reply:
 				username = reply
