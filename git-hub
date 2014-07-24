@@ -659,12 +659,24 @@ class SetupCmd (object):
 			password = getpass.getpass(
 				'GitHub password (will not be stored): ')
 		req.set_basic_auth(username, password)
+
 		note = 'git-hub'
 		if config.forkrepo:
 			proj = config.forkrepo.split('/', 1)[1]
 			note += ' (%s)' % proj
-		auth = req.post('/authorizations', note=note,
-				scopes=['user', 'repo'])
+
+		infof("Looking for GitHub authorization tokens...")
+		auths = dict([(a['note'], a)
+				for a in req.get('/authorizations')])
+		if note in auths:
+			auth = auths[note]
+			infof("Reusing existing token '{}' (id: {})", note,
+					auth['id'])
+		else:
+			infof("Creating auth token '{}'", note)
+			auth = req.post('/authorizations', note=note,
+					scopes=['user', 'repo'])
+
 		set_config = lambda k, v: git_config(k, value=v, opts=args.opts)
 		set_config('username', username)
 		set_config('oauthtoken', auth['token'])
