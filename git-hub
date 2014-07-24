@@ -666,6 +666,15 @@ class SetupCmd (object):
 		auth = req.post('/authorizations', note=note,
 				scopes=['user', 'repo'])
 		set_config = lambda k, v: git_config(k, value=v, opts=args.opts)
+
+		try:
+			if '--system' not in args.opts and \
+					'--global' not in args.opts:
+				git('rev-parse --git-dir')
+		except GitError as error:
+			errf(error.output)
+			die("Maybe you want to use --global or --system?")
+
 		set_config('username', username)
 		set_config('oauthtoken', auth['token'])
 		if args.baseurl is not None:
