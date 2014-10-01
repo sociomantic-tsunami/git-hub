@@ -763,6 +763,7 @@ class CloneCmd (object):
 		if triangular:
 			remote_url = repo[config.urltype]
 			git_config('remote.pushdefault', prefix='', value=remote)
+			git_config('forkremote', value=remote)
 		git_config('upstream', value=upstream)
 		git('remote', 'add', remote, remote_url)
 		infof('Fetching from {} ({})', remote, remote_url)
