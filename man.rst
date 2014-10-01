@@ -91,8 +91,8 @@ COMMANDS
   \-t, --triangular
     Use Git's *triangular workflow* configuration. This option clones from the
     parent/upstream repository instead of cloning the fork, and adds the fork
-    as a remote repository. Then sets the `remote.pushdefault` Git option to
-    the fork.
+    as a remote repository. Then sets the `remote.pushdefault` Git option and
+    `hub.forkremote` git-hub option to the fork.
 
     The effect of this having the upstream repository used by default
     when you pull but using your fork when you push, which is typically what
