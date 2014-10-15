@@ -124,7 +124,7 @@ def interrupt(fmt='', *args, **kwargs):
     raise InterruptException(fmt.format(*args, **kwargs))
 
 
-class InterruptException (Exception):
+class InterruptException(Exception):
 
     def __init__(self, msg):
         super(InterruptException, self).__init__(msg)
@@ -188,7 +188,7 @@ GIT_CONFIG_PREFIX = 'hub.'
 # preseved because that's how is it called in the parent class.
 
 
-class GitError (subprocess.CalledProcessError):
+class GitError(subprocess.CalledProcessError):
 
     def __init__(self, returncode, cmd, output):
         super(GitError, self).__init__(returncode, cmd, output)
@@ -623,7 +623,7 @@ def split_titled_message(msg):
 #   program exists with an error).
 #
 # All methods are expected to be `classmethod`s really.
-class CmdGroup (object):
+class CmdGroup(object):
 
     subcommand_suffix = 'Cmd'
 
@@ -668,7 +668,7 @@ class CmdGroup (object):
 # `git hub setup` command implementation
 
 
-class SetupCmd (object):
+class SetupCmd(object):
 
     cmd_help = 'perform an initial setup to connect to GitHub'
 
@@ -752,7 +752,7 @@ class SetupCmd (object):
 
 
 # `git hub clone` command implementation
-class CloneCmd (object):
+class CloneCmd(object):
 
     cmd_required_config = ['username', 'urltype', 'oauthtoken']
     cmd_help = 'clone a GitHub repository (and fork as needed)'
@@ -862,7 +862,7 @@ class CloneCmd (object):
 
 # Utility class that group common functionality used by the multiple `git hub
 # issue` (and `git hub pull`) subcommands.
-class IssueUtil (object):
+class IssueUtil(object):
 
     cmd_required_config = ['upstream', 'oauthtoken']
     # Since this class is reused by the CmdPull subcommands, we use several
@@ -1005,12 +1005,12 @@ class IssueUtil (object):
 # `git hub issue` command implementation
 
 
-class IssueCmd (CmdGroup):
+class IssueCmd(CmdGroup):
 
     cmd_title = 'subcommands to manage issues'
     cmd_help = 'manage issues'
 
-    class ListCmd (IssueUtil):
+    class ListCmd(IssueUtil):
         cmd_help = "show a list of open issues"
 
         @classmethod
@@ -1050,7 +1050,7 @@ class IssueCmd (CmdGroup):
             for issue in issues:
                 cls.print_issue_summary(issue)
 
-    class ShowCmd (IssueUtil):
+    class ShowCmd(IssueUtil):
         cmd_help = "show details for existing issues"
 
         @classmethod
@@ -1076,7 +1076,7 @@ class IssueCmd (CmdGroup):
                     c = req.get(cls.url(n) + "/comments")
                 cls.print_issue(issue, c)
 
-    class NewCmd (IssueUtil):
+    class NewCmd(IssueUtil):
         cmd_help = "create a new issue"
 
         @classmethod
@@ -1108,7 +1108,7 @@ class IssueCmd (CmdGroup):
                              milestone=args.milestone)
             cls.print_issue_summary(issue)
 
-    class UpdateCmd (IssueUtil):
+    class UpdateCmd(IssueUtil):
         cmd_help = "update an existing issue"
 
         @classmethod
@@ -1193,7 +1193,7 @@ class IssueCmd (CmdGroup):
             issue = req.patch(url, **params)
             cls.print_issue_summary(issue)
 
-    class CommentCmd (IssueUtil):
+    class CommentCmd(IssueUtil):
         cmd_help = "add a comment to an existing issue"
 
         @classmethod
@@ -1212,7 +1212,7 @@ class IssueCmd (CmdGroup):
             body = args.message or cls.comment_editor()
             cls.clean_and_post_comment(args.issue, body)
 
-    class CloseCmd (IssueUtil):
+    class CloseCmd(IssueUtil):
         cmd_help = "close an opened issue"
 
         @classmethod
@@ -1242,7 +1242,7 @@ class IssueCmd (CmdGroup):
 
 # Utility class that group common functionality used by the multiple `git hub
 # pull`) subcommands specifically.
-class PullUtil (IssueUtil):
+class PullUtil(IssueUtil):
 
     name = 'pull request'
     gh_path = 'pulls'
@@ -1317,7 +1317,7 @@ class PullUtil (IssueUtil):
 # `git hub pull` command implementation
 
 
-class PullCmd (IssueCmd):
+class PullCmd(IssueCmd):
 
     cmd_title = 'subcommands to manage pull requests'
     cmd_help = 'manage pull requests'
@@ -1326,11 +1326,11 @@ class PullCmd (IssueCmd):
     # We derive from the PullUtil first to get the pull specific variables
     # (name, gh_path, id_var) with higher priority than the ones in the
     # IssueCmd subcommands.
-    class ListCmd (PullUtil, IssueCmd.ListCmd):
+    class ListCmd(PullUtil, IssueCmd.ListCmd):
         cmd_help = "show a list of open pull requests"
         pass
 
-    class ShowCmd (PullUtil, IssueCmd.ShowCmd):
+    class ShowCmd(PullUtil, IssueCmd.ShowCmd):
         cmd_help = "show details for existing pull requests"
 
         @classmethod
@@ -1354,19 +1354,19 @@ class PullCmd (IssueCmd):
                     ic = req.get(cls.url(n) + "/comments")
                 cls.print_issue(pull, c, ic)
 
-    class UpdateCmd (PullUtil, IssueCmd.UpdateCmd):
+    class UpdateCmd(PullUtil, IssueCmd.UpdateCmd):
         cmd_help = "update an existing pull request"
         pass
 
-    class CommentCmd (PullUtil, IssueCmd.CommentCmd):
+    class CommentCmd(PullUtil, IssueCmd.CommentCmd):
         cmd_help = "add a comment to an existing pull request"
         pass
 
-    class CloseCmd (PullUtil, IssueCmd.CloseCmd):
+    class CloseCmd(PullUtil, IssueCmd.CloseCmd):
         cmd_help = "close an opened pull request"
         pass
 
-    class NewCmd (PullUtil):
+    class NewCmd(PullUtil):
         cmd_help = "create a new pull request"
 
         @classmethod
@@ -1410,7 +1410,7 @@ class PullCmd (IssueCmd):
                             title=title, body=body)
             cls.print_issue_summary(pull)
 
-    class AttachCmd (PullUtil):
+    class AttachCmd(PullUtil):
         cmd_help = "attach code to an existing issue (convert it " \
             "to a pull request)"
 
@@ -1462,7 +1462,7 @@ class PullCmd (IssueCmd):
             if msg:
                 cls.clean_and_post_comment(args.issue, msg)
 
-    class CheckoutCmd (PullUtil):
+    class CheckoutCmd(PullUtil):
         cmd_help = "checkout the remote branch (head) of the pull request"
 
         @classmethod
@@ -1508,7 +1508,7 @@ class PullCmd (IssueCmd):
 # set to true so the normal cleanup is not done (or done partially).
 
 
-class RebaseCmd (PullUtil):
+class RebaseCmd(PullUtil):
     cmd_help = "close a pull request by rebasing its base branch"
 
     stash_msg_base = "stashed by git hub pull rebase"
@@ -1997,7 +1997,7 @@ PullCmd.RebaseCmd = RebaseCmd
 
 
 # `git hub` command implementation
-class HubCmd (CmdGroup):
+class HubCmd(CmdGroup):
     cmd_title = "subcommands"
     cmd_help = "git command line interface to GitHub"
     SetupCmd = SetupCmd
