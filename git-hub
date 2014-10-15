@@ -39,7 +39,6 @@ VERSION = "git-hub devel"
 import re
 import sys
 import json
-import string
 import base64
 import urllib
 import pprint
@@ -55,6 +54,9 @@ INFO  = 2
 WARN  = 1
 ERR   = 0
 
+config = None
+req = None
+verbose = None
 
 # Output functions, all use the str.format() function for formatting
 ########################################################################
