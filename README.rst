@@ -201,6 +201,29 @@ activate the *ftdetect* plugin by copying or symbolic-linking it to
   # ln -s ftdetect.vim ~/.vim/ftdetect/githubmsg.vim
 
 
+Similar Projects
+================
+
+We explored other other alternatives before starting this project, but none of
+these tools do (or are targeted) at what we needed. But here are the ones we
+found, in case they are a better fit for you:
+
+* `hub <https://hub.github.com/>`_: Is the *official* tool, but it completely
+  replaces the Git command, adding special syntax for official git commands.
+  This is definitely something we didn't want. We don't want to mess with Git.
+
+* `ghi <https://github.com/stephencelis/ghi>`_:  This only handle issues. Not
+  what we needed.
+
+* `git-hub <https://github.com/seveas/git-hub>`_: This tool was discovered after
+  we started and published this project, sadly, as it covers similar ground (it
+  doesn't offer the rebase capabilities but it could have been implemented as an
+  extension), and worse, it has the same name, and extends the Git command-line
+  adding the ``hub`` command too, which can introduce a lot of confusion to
+  users. We might try to merge our code into that project eventually, if there
+  is interest.
+
+
 Contact
 =======
 
