@@ -1311,6 +1311,8 @@ class PullCmd (IssueCmd):
 			(title, body) = split_titled_message(msg)
 			cls.push(head_name or head_ref, remote_head,
 					force=args.force_push)
+			infof("Creating pull request from branch {} to {}:{}",
+					remote_head, config.upstream, base)
 			pull = req.post(cls.url(), head=gh_head, base=base,
 					title=title, body=body)
 			cls.print_issue_summary(pull)
@@ -1357,6 +1359,9 @@ class PullCmd (IssueCmd):
 				msg = cls.comment_editor(msg)
 			cls.push(head_name or head_ref, remote_head,
 					force=args.force_push)
+			infof("Attaching commits in branch {} to issue #{} "
+					"(to be merged to {}:{})", remote_head,
+					args.issue, config.upstream, base)
 			pull = req.post(cls.url(), issue=args.issue, base=base,
 					head=gh_head)
 			cls.print_issue_summary(pull)
