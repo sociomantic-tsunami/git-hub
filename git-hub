@@ -1289,8 +1289,9 @@ class PullCmd (IssueCmd):
 				"used as the optional body")
 			parser.add_argument('-b', '--base', metavar='BASE',
 				help="branch (or git ref) you want your "
-				"changes pulled into (uses hub.pullbase or "
-				"'master' in hub.upstream by default)")
+				"changes pulled into (uses the tracking "
+				"branch by default, or hub.pullbase if "
+				"there is none, or 'master' as a fallback)")
 			parser.add_argument('-c', '--create-branch',
 				metavar='NAME',
 				help="create a new remote branch with NAME "
@@ -1336,8 +1337,9 @@ class PullCmd (IssueCmd):
 				"after attaching the code to it")
 			parser.add_argument('-b', '--base', metavar='BASE',
 				help="branch (or git ref) you want your "
-				"changes pulled into (uses hub.pullbase or "
-				"'master' in hub.upstream by default)")
+				"changes pulled into (uses the tracking "
+				"branch by default, or hub.pullbase if "
+				"there is none, or 'master' as a fallback)")
 			parser.add_argument('-c', '--create-branch',
 				metavar='NAME',
 				help="create a new remote branch with NAME "
