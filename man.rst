@@ -47,7 +47,9 @@ COMMANDS
 
   \-u USERNAME, --username=USERNAME
     GitHub's username (login name), will be stored in the configuration
-    variable `hub.username`.
+    variable `hub.username`. If an e-mail is provided, then a username matching
+    that e-mail will be searched and used instead, if found (for this to work
+    the e-mail must be part of the public profile).
 
   \-p PASSWORD, --password=PASSWORD
     GitHub's password (will not be stored).

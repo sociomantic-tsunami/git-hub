@@ -626,7 +626,11 @@ class SetupCmd (object):
 	@classmethod
 	def setup_parser(cls, parser):
 		parser.add_argument('-u', '--username',
-			help="GitHub's username (login name)")
+			help="GitHub's username (login name). If an e-mail is "
+			"provided instead, a username matching that e-mail "
+			"will be searched and used instead, if found (for "
+			"this to work the e-mail must be part of the public "
+			"profile)")
 		parser.add_argument('-p', '--password',
 			help="GitHub's password (will not be stored)")
 		parser.add_argument('-b', '--baseurl', metavar='URL',
@@ -658,6 +662,12 @@ class SetupCmd (object):
 		if password is None:
 			password = getpass.getpass(
 				'GitHub password (will not be stored): ')
+		if '@' in username:
+			infof("E-mail used to authenticate, trying to "
+					"retrieve the GitHub username...")
+			username = cls.find_username(username)
+			infof("Found: {}", username)
+
 		req.set_basic_auth(username, password)
 
 		note = 'git-hub'
@@ -691,6 +701,18 @@ class SetupCmd (object):
 		set_config('oauthtoken', auth['token'])
 		if args.baseurl is not None:
 			set_config('baseurl', args.baseurl)
+
+	@classmethod
+	def find_username(cls, name):
+		users = req.get('/search/users', q=name)['items']
+		users = [u['login'] for u in users]
+		if not users:
+			die("No users found when searching for '{}'", name)
+		if len(users) > 1:
+			die("More than one username found ({}), please try "
+					"again using your username instead",
+					', '.join(users))
+		return users[0].encode('UTF8')
 
 
 # `git hub clone` command implementation
