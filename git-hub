@@ -46,6 +46,7 @@ import pprint
 import urllib2
 import getpass
 import os.path
+import urlparse
 import argparse
 import subprocess
 
@@ -326,8 +327,7 @@ class Config:
 				opts=['--bool']) == "true"
 
 	def sanitize_url(self, name, url):
-		from urlparse import urlsplit, urlunsplit
-		u = urlsplit(url)
+		u = urlparse.urlsplit(url)
 		name = GIT_CONFIG_PREFIX + name
 		# interpret www.github.com/api/v4 as www.github.com, /api/v4
 		if not u.hostname or not u.scheme:
@@ -341,8 +341,8 @@ class Config:
 		netloc = u.hostname
 		if u.port:
 			netloc += ':' + u.port
-		return urlunsplit((u.scheme, netloc, u.path.rstrip('/'),
-				u.query, u.fragment))
+		return urlparse.urlunsplit((u.scheme, netloc,
+				u.path.rstrip('/'), u.query, u.fragment))
 
 	def check(self, name):
 		if getattr(self, name) is None:
@@ -744,8 +744,7 @@ class CloneCmd (object):
 
 	@classmethod
 	def run(cls, parser, args):
-		from urlparse import urlsplit
-		upstream = urlsplit(args.repository).path
+		upstream = urlparse.urlsplit(args.repository).path
 		if upstream.endswith('.git'): upstream = upstream[:-4]
 		if '/' in upstream:
 			(owner, proj) = upstream.split('/')[-2:]
