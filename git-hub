@@ -1407,7 +1407,8 @@ class PullCmd (IssueCmd):
 			pull = req.get(cls.url(args.pull))
 
 			if pull['state'] == 'closed':
-				warnf('Checking out a closed pull request (#{})!', pull)
+				warnf('Checking out a closed pull request '
+					'(closed at {closed_at})!', **pull)
 
 			remote_url = pull['head']['repo'][config.urltype]
 			remote_branch = pull['head']['ref']
