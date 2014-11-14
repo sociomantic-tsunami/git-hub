@@ -1622,6 +1622,23 @@ class RebaseCmd (PullUtil):
 					"in a mergeable state")
 			elif answer == 'no':
 				sys.exit(0)
+		# Check status
+		status = req.get('/repos/%s/commits/%s/status' %
+				(config.upstream, pull['head']['sha']))
+		state = status['state']
+		statuses = status['statuses']
+		if len(statuses) > 0 and state != 'success':
+			url = statuses[0]['target_url']
+			answer = ask("The current pull request status is '%s' "
+				"(take a look at %s for more information), "
+				"do you want to continue anyway?" %
+				(state, url), default="no")
+			if answer is None:
+				die("Can't continue, the pull request status "
+					"is '{}' (take a look at {} for more "
+					"information)", state, url)
+			elif answer == 'no':
+				sys.exit(0)
 		return pull
 
 	# Returns the name of the temporary branch to work on while doing the
