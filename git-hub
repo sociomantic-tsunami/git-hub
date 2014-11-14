@@ -1603,14 +1603,16 @@ class RebaseCmd (PullUtil):
 			infof("Nothing to do, already merged (--abort to get "
 					"back to normal)")
 			sys.exit(0)
-		if check_all and pull['state'] == 'closed':
+		if not check_all:
+			return pull
+		if pull['state'] == 'closed':
 			answer = ask("The pull request is closed, are you sure "
 				"you want to rebase it?", default="no")
 			if answer is None:
 				die("Can't rebase/merge, pull request is closed")
 			elif answer == 'no':
 				sys.exit(0)
-		if check_all and not pull['mergeable']:
+		if not pull['mergeable']:
 			answer = ask("The pull request is not in a mergeable "
 				"state (there are probably conflicts to "
 				"resolve), do you want to continue anyway?",
