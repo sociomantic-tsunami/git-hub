@@ -317,7 +317,7 @@ COMMANDS
     5. git push `pullbase`
     6. git checkout `oldhead`
     7. git branch -D `tmp`
-    8. git pop
+    8. git stash pop
 
     If `hub.forcerebase` is set to "true" (the default), ``--force`` will be
     passed to rebase (not to be confused with this command option
