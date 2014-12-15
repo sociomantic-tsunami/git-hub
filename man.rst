@@ -357,11 +357,11 @@ COMMANDS
       working directory in a very clean state, which avoid conflicts when
       checking out the pull request to rebase.
 
-   \-a, --stash-all
-     Passes the **--all** option to stash. Is like
-     **--stash-include-untracked** but the ignored files are stashed and
-     cleaned in addition to the untracked files, which completely removes the
-     possibility of conflicts when checking out the pull request to reabase.
+    \-a, --stash-all
+      Passes the **--all** option to stash. Is like
+      **--stash-include-untracked** but the ignored files are stashed and
+      cleaned in addition to the untracked files, which completely removes the
+      possibility of conflicts when checking out the pull request to reabase.
 
     Actions:
 
