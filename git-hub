@@ -780,7 +780,8 @@ class CloneCmd (object):
 	def repo_from_upstream(cls, upstream):
 		(owner, proj) = upstream.split('/')[-2:]
 		for repo in req.get('/user/repos'):
-			if repo['name'] == proj and repo['fork']:
+			if (repo['fork'] and
+					repo['parent']['full_name'] == upstream):
 				break
 		else: # Fork not found
 			infof('Forking {} to {}/{}', upstream,
