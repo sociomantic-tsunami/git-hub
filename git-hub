@@ -779,11 +779,18 @@ class CloneCmd (object):
 	@classmethod
 	def repo_from_upstream(cls, upstream):
 		(owner, proj) = upstream.split('/')[-2:]
+		name_found = False
 		for repo in req.get('/user/repos'):
+			if repo['name'] == proj:
+				name_found = True
 			if (repo['fork'] and
 					repo['parent']['full_name'] == upstream):
 				break
 		else: # Fork not found
+			if name_found:
+				die("No fork were found and the we can't name "
+					"the fork '{}' because the '{}' "
+					"already exists", proj, upstream)
 			infof('Forking {} to {}/{}', upstream,
 				config.username, proj)
 			repo = req.post('/repos/' + upstream + '/forks')
