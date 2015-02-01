@@ -1,6 +1,5 @@
 
-# prefix ?= /usr/local
-prefix ?= /home/jean/local
+prefix ?= /usr/local
 
 export PYTHON := python
 
