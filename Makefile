@@ -56,3 +56,8 @@ release:
 clean:
 	$(RM) -r git-hub.1 bash-completion deb/*.deb deb/install
 
+pep8:
+	pep8 git-hub
+
+lint:
+	pylint git-hub
