@@ -215,13 +215,13 @@ found, in case they are a better fit for you:
 * `ghi <https://github.com/stephencelis/ghi>`_:  This only handle issues. Not
   what we needed.
 
-* `git-hub <https://github.com/seveas/git-hub>`_: This tool was discovered after
-  we started and published this project, sadly, as it covers similar ground (it
-  doesn't offer the rebase capabilities but it could have been implemented as an
-  extension), and worse, it has the same name, and extends the Git command-line
-  adding the ``hub`` command too, which can introduce a lot of confusion to
-  users. We might try to merge our code into that project eventually, if there
-  is interest.
+* `git-spindle <https://github.com/seveas/git-spindle>`_: This tool was
+  discovered after we started and published this project. It covers similar
+  ground, but doesn't offer rebase capabilities (this, of course, could have
+  been implemented as an extension). Sadly, it also extends the Git command-line
+  adding the ``hub`` command, which can introduce a lot of confusion to users.
+  We might try to merge our code into that project eventually, if there is
+  interest.
 
 
 Contact
