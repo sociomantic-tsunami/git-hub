@@ -363,6 +363,11 @@ COMMANDS
       cleaned in addition to the untracked files, which completely removes the
       possibility of conflicts when checking out the pull request to reabase.
 
+    \-D, --delete-branch
+      Delete the pull request branch if the rebase was successful. This is
+      similar to press the "Delete Branch" Button (TM) in the web interface
+      after merging.
+
     Actions:
 
     \--continue
