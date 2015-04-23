@@ -19,7 +19,7 @@ Git command line interface to GitHub
 SYNOPSYS
 ========
 
-git hub <command> [options] [arguments]
+git hub [global options]  <command> [options] [arguments]
 
 
 DESCRIPTION
@@ -32,6 +32,22 @@ directly through the git command line.
 To use this command you'll probably need to make an initial configuration to
 get authorization from GitHub. To do this you can use the `setup` command.
 See the CONFIGURATION_ section for more configuration options.
+
+
+GLOBAL OPTIONS
+==============
+
+\-h, --help
+  Show this help and exit.
+
+\--version
+  Show program's version number and exit.
+
+\-v, --verbose
+  Be more verbose (can be specified multiple times to get extra verbosity)
+
+\-s, --silent
+  Be less verbose (can be specified multiple times to get less verbosity)
 
 
 COMMANDS
