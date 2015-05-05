@@ -1449,6 +1449,7 @@ class RebaseCmd (PullUtil):
 	saved_message = None
 	saved_edit_msg = None
 	saved_pause = None
+	saved_delete_branch = None
 	# this variable is a bit different, as is read/write by
 	# read_rebasing_file()/create_rebasing_file() directly. This is not
 	# ideal and should be addressed when #35 is fixed.
@@ -1521,6 +1522,8 @@ class RebaseCmd (PullUtil):
 				args.edit_message = cls.saved_edit_msg
 			if not args.pause:
 				args.pause = cls.saved_pause
+			if not args.delete_branch:
+				args.delete_branch = cls.saved_delete_branch
 
 			if args.action == '--abort':
 				cls.abort_rebase(args)
@@ -1872,6 +1875,8 @@ class RebaseCmd (PullUtil):
 					assert cls.saved_old_ref
 					pause = f.readline()[:-1]
 					cls.saved_pause = (pause == "True")
+					delete_branch = f.readline()[:-1]
+					cls.saved_delete_branch = (delete_branch == "True")
 					in_pause = f.readline()[:-1]
 					cls.in_pause = (in_pause == "True")
 					edit_msg = f.readline()[:-1]
@@ -1904,6 +1909,7 @@ class RebaseCmd (PullUtil):
 				f.write(str(pull['number']) + '\n')
 				f.write(old_ref + '\n')
 				f.write(repr(args.pause) + '\n')
+				f.write(repr(args.delete_branch) + '\n')
 				f.write(repr(cls.in_pause) + '\n')
 				f.write(repr(args.edit_message) + '\n')
 				if (args.message is not None):
