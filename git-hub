@@ -1751,6 +1751,7 @@ class RebaseCmd (PullUtil):
 				cls.in_pause = True
 				# Re-create the rebasing file as we are going
 				# to pause
+				cls.remove_rebasing_file()
 				cls.create_rebasing_file(pull, args, old_ref)
 				interrupt("Rebase done, now --pause'ing. "
 					'Use --continue {}when done.',
