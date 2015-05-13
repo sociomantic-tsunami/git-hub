@@ -649,9 +649,10 @@ class SetupCmd (object):
 
 	@classmethod
 	def run(cls, parser, args):
+		is_global = ('--system' in args.opts or
+				'--global' in args.opts)
 		try:
-			if '--system' not in args.opts and \
-					'--global' not in args.opts:
+			if not is_global:
 				git('rev-parse --git-dir')
 		except GitError as error:
 			errf(error.output)
@@ -679,7 +680,7 @@ class SetupCmd (object):
 		req.set_basic_auth(username, password)
 
 		note = 'git-hub'
-		if config.forkrepo:
+		if not is_global and config.forkrepo:
 			proj = config.forkrepo.split('/', 1)[1]
 			note += ' (%s)' % proj
 
