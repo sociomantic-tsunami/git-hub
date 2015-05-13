@@ -684,17 +684,29 @@ class SetupCmd (object):
 			proj = config.forkrepo.split('/', 1)[1]
 			note += ' (%s)' % proj
 
-		infof("Looking for GitHub authorization tokens...")
-		auths = dict([(a['note'], a)
+		while True:
+			infof("Looking for GitHub authorization token...")
+			auths = dict([(a['note'], a)
 				for a in req.get('/authorizations')])
-		if note in auths:
-			auth = auths[note]
-			infof("Reusing existing token '{}' (id: {})", note,
-					auth['id'])
-		else:
-			infof("Creating auth token '{}'", note)
-			auth = req.post('/authorizations', note=note,
-					scopes=['user', 'repo'])
+
+			if note not in auths:
+				break
+
+			errf("The OAuth token with name '{}' already exists.",
+				note)
+			infof("If you want to create a new one, enter a "
+				"name for it. Otherwise you can go to "
+				"https://github.com/settings/tokens to "
+				"regenerate or delete the token '{}'", note)
+			note = raw_input("Enter a new token name (an empty "
+				"name cancels the setup): ")
+
+			if not note:
+				sys.exit(0)
+
+		infof("Creating auth token '{}'", note)
+		auth = req.post('/authorizations', note=note,
+				scopes=['user', 'repo'])
 
 		set_config = lambda k, v: git_config(k, value=v, opts=args.opts)
 
