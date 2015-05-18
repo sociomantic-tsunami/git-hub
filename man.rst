@@ -461,6 +461,26 @@ from. These are the git config keys used:
 [1] http://developer.github.com/v3/pulls/#get-a-single-pull-request
 
 
+FILES
+=====
+
+This program creates some temporary files in the '.git' directory during its
+operation. The contents of these files can be used for debugging/recovery
+purposes if necessary.
+
+`HUB_EDITMSG`
+  This file is used to take input from the user, e.g. issue comments, pull
+  request title & description etc. If, after accepting user input, the command
+  given by the user fails for some reason, then the entered text can still be
+  retrieved from this file.
+
+`HUB_PULL_REBASING`
+  This file is used to store various metadata information related to a rebase
+  operation (with the primary aim of being able to rollback the repository to
+  its original state if the rebase fails or is interrupted due to conflicts).
+  The sole presence of this file indicates that a rebase is in progress. 
+
+
 VIM SYNTAX HIGHLIGHT
 ====================
 
