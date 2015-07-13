@@ -172,7 +172,7 @@ GIT_CONFIG_PREFIX = 'hub.'
 # This error is thrown when a git command fails (if git prints something in
 # stderr, this is considered an error even if the return code is 0). The
 # `output` argument is really the stderr output only, the `output` name is
-# preseved because that's how is it called in the parent class.
+# preserved because that's how is it called in the parent class.
 class GitError (subprocess.CalledProcessError):
 
 	def __init__(self, returncode, cmd, output):
@@ -774,7 +774,7 @@ class CloneCmd (object):
 					upstream))
 			if not repo['fork']:
 				warnf('Repository {} is not a fork, just '
-					'clonning, upstream will not be set',
+					'cloning, upstream will not be set',
 					repo['full_name'])
 				upstream = None
 			else:
@@ -1525,7 +1525,7 @@ class RebaseCmd (PullUtil):
 		if args.pull is not None:
 			if cls.rebasing():
 				die("Can't start a pull rebase while a "
-					"regular reabase is in progress")
+					"regular rebase is in progress")
 			cls.start_rebase(args)
 		else:
 			args.pull = ongoing_rebase_pull_id

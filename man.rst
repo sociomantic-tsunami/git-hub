@@ -278,7 +278,7 @@ COMMANDS
   `attach` ISSUE [HEAD]
     Convert the issue identified by **ISSUE** to a pull request by attaching
     commits to it. The branch (or git ref) where your changes are
-    implementedhead can be optionally specified with **HEAD** (otherwise the
+    implemented can be optionally specified with **HEAD** (otherwise the
     current branch is used). This subcommand is very similar to the `new`
     subcommand, please refer to it for more details.
 
@@ -377,7 +377,7 @@ COMMANDS
       Passes the **--all** option to stash. Is like
       **--stash-include-untracked** but the ignored files are stashed and
       cleaned in addition to the untracked files, which completely removes the
-      possibility of conflicts when checking out the pull request to reabase.
+      possibility of conflicts when checking out the pull request to rebase.
 
     \-D, --delete-branch
       Delete the pull request branch if the rebase was successful. This is
@@ -426,7 +426,7 @@ from. These are the git config keys used:
 
 `hub.forkrepo`
   Your blessed repository fork. The format is *<owner>/<project>*. Used to set
-  the head for your pull requests. [defaul: *<username>/(upstream <project>
+  the head for your pull requests. [default: *<username>/(upstream <project>
   part)*]
 
 `hub.forkremote`
