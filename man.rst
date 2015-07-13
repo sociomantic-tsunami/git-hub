@@ -395,13 +395,13 @@ COMMANDS
     \--skip
       Skip current patch in an ongoing rebase and continue.
 
-  `update`
+  `update` PULL
     Alias for `issue update`.
 
-  `comment`
+  `comment` PULL
     Alias for `issue comment`.
 
-  `close`
+  `close` PULL
     Alias for `issue close`.
 
 
