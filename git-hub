@@ -761,6 +761,7 @@ class CloneCmd (object):
 		if upstream.endswith('.git'): upstream = upstream[:-4]
 		if '/' in upstream:
 			(owner, proj) = upstream.split('/')[-2:]
+			upstream = '{}/{}'.format(owner, proj)
 			for repo in req.get('/user/repos'):
 				if repo['name'] == proj and repo['fork']:
 					break
