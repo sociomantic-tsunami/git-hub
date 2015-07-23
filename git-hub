@@ -1050,7 +1050,7 @@ class IssueCmd (CmdGroup):
 				"any text after an empty line is used as "
 				"the optional body" % cls.name)
 			parser.add_argument('-l', '--label', dest='labels',
-				metavar='LABEL', action='append',
+				metavar='LABEL', action='append', default=[],
 				help="attach LABEL to the %s (can be "
 				"specified multiple times to set multiple "
 				"labels)" % cls.name)
