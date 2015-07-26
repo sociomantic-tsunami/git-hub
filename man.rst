@@ -458,7 +458,7 @@ from. These are the git config keys used:
   Makes **--triangular** for `clone` if set to "true" (boolean value). See
   `clone` documentation for details.
 
-[1] http://developer.github.com/v3/pulls/#get-a-single-pull-request
+[1] https://developer.github.com/v3/pulls/#get-a-single-pull-request
 
 
 FILES
