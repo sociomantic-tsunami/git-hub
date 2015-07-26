@@ -26,7 +26,7 @@ Another *unique* feature is the ability to transform an issue into a pull
 request by attaching commits to it (this is something offered by the `GitHub
 API`__ but not by the web interface).
 
-__ http://developer.github.com/
+__ https://developer.github.com/
 
 
 Usage
@@ -254,12 +254,12 @@ tool I'm sure you already have a GitHub_ account ;).
 __ https://github.com/sociomantic/git-hub/issues/new
 
 
-.. _Python: http://www.python.org/
+.. _Python: https://www.python.org/
 .. _Docutils: http://docutils.sourceforge.net/
-.. _Git: http://www.git-scm.com/
-.. _GitHub: http://www.github.com/
+.. _Git: https://www.git-scm.com/
+.. _GitHub: https://www.github.com/
 .. _Ubuntu: http://www.ubuntu.com/
-.. _Debian: http://www.debian.org/
+.. _Debian: https://www.debian.org/
 .. _VIM: http://www.vim.org/
 .. _FPM: https://github.com/jordansissel/fpm
 

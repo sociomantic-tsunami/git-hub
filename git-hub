@@ -23,7 +23,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 """\
@@ -371,7 +371,7 @@ class Config:
 # to use OAuth just leave `basic_auth` and set `oauthtoken`. To fill the
 # `basic_auth` member, the `set_basic_auth()` convenient method is provided).
 #
-# See http://developer.github.com/ for more details on the GitHub API
+# See https://developer.github.com/ for more details on the GitHub API
 class RequestManager:
 
 	basic_auth = None
@@ -493,7 +493,7 @@ def check_empty_message(msg):
 message_markdown_help = '''\
 # Remember GitHub will parse comments and descriptions as GitHub
 # Flavored Markdown.
-# For details see: http://github.github.com/github-flavored-markdown/
+# For details see: https://github.github.com/github-flavored-markdown/
 #
 # Lines starting with '# ' (note the space after the hash!) will be
 # ignored, and an empty message aborts the command. The space after the
