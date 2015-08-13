@@ -993,6 +993,9 @@ class IssueCmd (CmdGroup):
 				action='store_true',
 				help=("show only %ss assigned to me" %
 						cls.name))
+			parser.add_argument('-i', '--issues-only',
+				action='store_true', default=False,
+				help="show only issues, no pull requests")
 		@classmethod
 		def run(cls, parser, args):
 			def filter(issue, name):
@@ -1013,6 +1016,9 @@ class IssueCmd (CmdGroup):
 			elif args.assigned_to_me:
 				issues = [i for i in issues
 					if filter(i, 'assignee')]
+			elif args.issues_only:
+				issues = [i for i in issues
+					if not i.has_key('pull_request')]
 			for issue in issues:
 				cls.print_issue_summary(issue)
 
