@@ -861,10 +861,15 @@ class IssueUtil (object):
 ''' + message_markdown_help
 
 	@classmethod
-	def print_issue_summary(cls, issue):
-		infof(u'[{number}] {title} ({user[login]})\n{}{html_url}',
-				u' ' * (len(str(issue['number'])) + 3),
-				**issue)
+	def print_issue_summary(cls, issue, title_only=False):
+		if title_only:
+			infof(u'#{number} {title}',
+					u' ' * (len(str(issue['number'])) + 3),
+					**issue)
+		else:
+			infof(u'[{number}] {title} ({user[login]})\n{}{html_url}',
+					u' ' * (len(str(issue['number'])) + 3),
+					**issue)
 
 	@classmethod
 	def print_issue_header(cls, issue):
@@ -996,6 +1001,9 @@ class IssueCmd (CmdGroup):
 			parser.add_argument('-i', '--issues-only',
 				action='store_true', default=False,
 				help="show only issues, no pull requests")
+			parser.add_argument('-t', '--title-only',
+				action='store_true', default=False,
+				help="omit issues urls and users from list")
 		@classmethod
 		def run(cls, parser, args):
 			def filter(issue, name):
@@ -1020,7 +1028,7 @@ class IssueCmd (CmdGroup):
 				issues = [i for i in issues
 					if not i.has_key('pull_request')]
 			for issue in issues:
-				cls.print_issue_summary(issue)
+				cls.print_issue_summary(issue, args.title_only)
 
 	class ShowCmd (IssueUtil):
 		cmd_help = "show details for existing issues"
