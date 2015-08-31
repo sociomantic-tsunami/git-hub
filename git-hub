@@ -1004,14 +1004,27 @@ class IssueCmd (CmdGroup):
 			parser.add_argument('-t', '--title-only',
 				action='store_true', default=False,
 				help="omit issues urls and users from list")
+			parser.add_argument('-s', '--since',
+				help="Timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ."
+					"Only issues updated at or after this time are returned.")
+			parser.add_argument('--closed-after',
+				help="Timestamp in ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ."
+					"Only issues closed at or after this time are returned."
+					"It overrides --since and --closed options.")
 		@classmethod
 		def run(cls, parser, args):
 			def filter(issue, name):
 				a = issue[name]
 				if a and a['login'] == config.username:
 					return True
+			if args.closed_after:
+				args.closed = True
+				args.since = args.closed_after
 			state = 'closed' if args.closed else 'open'
-			issues = req.get(cls.url(), state=state)
+			if args.since:
+				issues = req.get(cls.url(), since=args.since, state=state)
+			else:
+				issues = req.get(cls.url(), state=state)
 			if not issues:
 				return
 			if args.created_by_me and args.assigned_to_me:
@@ -1027,6 +1040,9 @@ class IssueCmd (CmdGroup):
 			elif args.issues_only:
 				issues = [i for i in issues
 					if not i.has_key('pull_request')]
+			if args.closed_after:
+				issues = [i for i in issues
+					if i['closed_at'] >= args.closed_after]
 			for issue in issues:
 				cls.print_issue_summary(issue, args.title_only)
 
