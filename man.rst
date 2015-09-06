@@ -158,7 +158,7 @@ COMMANDS
       Attach `LABEL` to the issue (can be specified multiple times to set
       multiple labels).
 
-    \-a USER, --assign=USER`
+    \-a USER, --assign=USER
       Assign an user to the issue. `USER` must be a valid GitHub login name.
 
     \-M ID, --milestone=ID
