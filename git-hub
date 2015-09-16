@@ -293,7 +293,7 @@ def editor(help_msg, msg=None):
 	with file(fname, 'w') as f:
 		f.write(msg or '')
 		f.write(help_msg)
-	status = subprocess.call([prog, fname])
+	status = subprocess.call([prog + ' "$@"', prog, fname], shell=True)
 	if status != 0:
 		die("Editor returned {}, aborting...", status)
 	with file(fname) as f:
