@@ -1260,7 +1260,7 @@ class PullUtil (IssueUtil):
 				"use --create-branch to specify one")
 		base = args.base or cls.tracking_branch(head_name) or \
 				config.pullbase
-		gh_head = config.username + ':' + remote_head
+		gh_head = config.forkrepo.split('/')[0] + ':' + remote_head
 		return head_ref, head_name, remote_head, base, gh_head
 
 # `git hub pull` command implementation
