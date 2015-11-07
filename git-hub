@@ -761,25 +761,13 @@ class CloneCmd (object):
 		if upstream.endswith('.git'): upstream = upstream[:-4]
 		if '/' in upstream:
 			(owner, proj) = upstream.split('/')[-2:]
-			upstream = '{}/{}'.format(owner, proj)
-			for repo in req.get('/user/repos'):
-				if repo['name'] == proj and repo['fork']:
-					break
-			else: # Fork not found
-				infof('Forking {} to {}/{}', upstream,
-					config.username, proj)
-				repo = req.post('/repos/' + upstream + '/forks')
-			repo = req.get('/repos/' + repo['full_name'])
-		else: # no '/' in upstream
-			repo = req.get('/repos/%s/%s' % (config.username,
-					upstream))
-			if not repo['fork']:
-				warnf('Repository {} is not a fork, just '
-					'cloning, upstream will not be set',
-					repo['full_name'])
-				upstream = None
-			else:
-				upstream = repo['parent']['full_name']
+			if owner == config.username:
+				(repo, upstream) = cls.set_own_repo_params(proj)
+			else: # not own repo
+				(repo, upstream) = cls.set_not_own_repo_params(
+						'{}/{}'.format(owner, proj))
+		else: # no '/' in upstream, so it's an own repo
+			(repo, upstream) = cls.set_own_repo_params(upstream)
 		dest = args.dest or repo['name']
 		triangular = cls.check_triangular(config.triangular or
 				args.triangular)
@@ -805,6 +793,31 @@ class CloneCmd (object):
 		git('remote', 'add', remote, remote_url)
 		infof('Fetching from {} ({})', remote, remote_url)
 		git_quiet(1, 'fetch', remote)
+
+	@classmethod
+	def set_own_repo_params(cls, upstream):
+		repo = req.get('/repos/%s/%s' % (config.username,
+				upstream))
+		if not repo['fork']:
+			warnf('Repository {} is not a fork, just '
+				'cloning, upstream will not be set',
+				repo['full_name'])
+			upstream = None
+		else:
+			upstream = repo['parent']['full_name']
+		return (repo, upstream)
+
+	@classmethod
+	def set_not_own_repo_params(cls, upstream):
+		for repo in req.get('/user/repos'):
+			if repo['name'] == proj and repo['fork']:
+				break
+		else: # Fork not found
+			infof('Forking {} to {}/{}', upstream,
+				config.username, proj)
+			repo = req.post('/repos/' + upstream + '/forks')
+		repo = req.get('/repos/' + repo['full_name'])
+		return (repo, upstream)
 
 	@classmethod
 	def check_triangular(cls, triangular):
