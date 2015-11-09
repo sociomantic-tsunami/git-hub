@@ -89,7 +89,9 @@ COMMANDS
   repository is specified in *<owner>/<project>* form, the **REPO** will be
   used as upstream and a personal fork will be looked up. If none is found,
   a new fork will be created. In both cases, the fork will be cloned instead of
-  the upstream repository.
+  the upstream repository. The **REPO** can be specified as a regular *clone*
+  URL too (http, ssh, git), in that case the URL will be inspected and the
+  `hub.urltype` will be set as appropriate.
 
   If only *<project>* is specified as **REPO**, then the configuration
   `hub.username` is used as *<owner>*, and the parent repository is looked up
