@@ -1812,8 +1812,11 @@ class RebaseCmd (PullUtil):
 			if args.delete_branch:
 				infof('Removing pull request branch {} in {}',
 						head_ref, head_url)
-				git_push(head_url, ':' + head_ref,
-						force=args.force_push)
+				try:
+					git_push(head_url, ':' + head_ref,
+							force=args.force_push)
+				except GitError as e:
+					warnf('Error removing branch: {}', e)
 			return git('rev-parse HEAD')
 		finally:
 			if not cls.in_conflict and not cls.in_pause:
