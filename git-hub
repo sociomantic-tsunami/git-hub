@@ -493,7 +493,8 @@ def check_empty_message(msg):
 message_markdown_help = '''\
 # Remember GitHub will parse comments and descriptions as GitHub
 # Flavored Markdown.
-# For details see: https://github.github.com/github-flavored-markdown/
+# For details see:
+# https://help.github.com/articles/github-flavored-markdown/
 #
 # Lines starting with '# ' (note the space after the hash!) will be
 # ignored, and an empty message aborts the command. The space after the
