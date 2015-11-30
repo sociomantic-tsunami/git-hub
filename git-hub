@@ -39,7 +39,6 @@ VERSION = "git-hub devel"
 import re
 import sys
 import json
-import string
 import base64
 import urllib
 import pprint
