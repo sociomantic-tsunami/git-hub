@@ -452,7 +452,7 @@ from. These are the git config keys used:
 `hub.forcerebase`
   If is set to "true", ``--force`` will be passed to rebase. If is set to
   "false" a regular rebase is performed. See the `pull` `rebase` command for
-  detils. [default: *true*]
+  details. [default: *true*]
 
 `hub.triangular`
   Makes **--triangular** for `clone` if set to "true" (boolean value). See
