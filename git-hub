@@ -567,7 +567,7 @@ def split_titled_message(msg):
 #
 # `cmd_usage`
 #   A usage string to be passed to the parser. If it's not defined, is
-#   genreated from the options as usual. %(prog)s can be used to name the
+#   generated from the options as usual. %(prog)s can be used to name the
 #   current program (and subcommand).
 #
 # `cmd_required_config`
