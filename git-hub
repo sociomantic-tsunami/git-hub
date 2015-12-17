@@ -115,6 +115,13 @@ class InterruptException (Exception):
 	def __init__(self, msg):
 		super(InterruptException, self).__init__(msg)
 
+# Wrapper for raw_input to treat EOF as an empty input
+def user_input(*args, **kwargs):
+	try:
+		return raw_input(*args, **kwargs)
+	except EOFError:
+		sys.stdout.write('\n')
+		return ''
 
 # Ask the user a question
 #
@@ -153,7 +160,7 @@ def ask(question, default=None, options=["yes", "no"]):
 	while True:
 		# question in yellow
 		sys.stderr.write('\033[33m' + question + '\033[0m')
-		choice = raw_input().lower().strip()
+		choice = user_input().lower().strip()
 		if default is not None and choice == '':
 			return default
 		elif choice in valid_answers:
@@ -665,12 +672,16 @@ class SetupCmd (object):
 			die("Can't perform an interactive setup outside a tty")
 		if username is None:
 			username = config.username or getpass.getuser()
-			reply = raw_input('GitHub username [%s]: ' % username)
+			reply = user_input('GitHub username [%s]: ' % username)
 			if reply:
 				username = reply
 		if password is None:
-			password = getpass.getpass(
-				'GitHub password (will not be stored): ')
+			try:
+				password = getpass.getpass('GitHub '
+					'password (will not be stored): ')
+			except EOFError:
+				sys.stdout.write('\n')
+				password = ''
 		if '@' in username:
 			infof("E-mail used to authenticate, trying to "
 					"retrieve the GitHub username...")
@@ -698,7 +709,7 @@ class SetupCmd (object):
 				"name for it. Otherwise you can go to "
 				"https://github.com/settings/tokens to "
 				"regenerate or delete the token '{}'", note)
-			note = raw_input("Enter a new token name (an empty "
+			note = user_input("Enter a new token name (an empty "
 				"name cancels the setup): ")
 
 			if not note:
