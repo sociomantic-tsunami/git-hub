@@ -453,7 +453,7 @@ class RequestManager:
 			debugf("Request: {} {}\n{}", method, url, body)
 			res = self.auth_urlopen(url, method, body)
 			data = res.read()
-			debugf("Response:\n{}", data)
+			debugf("Response:\n{}", data.decode('UTF8'))
 			if data:
 				data = json.loads(data)
 				if isinstance(data, list):
