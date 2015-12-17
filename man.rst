@@ -16,7 +16,7 @@ Git command line interface to GitHub
 .. |date| date::
 
 
-SYNOPSYS
+SYNOPSIS
 ========
 
 git hub [global options]  <command> [options] [arguments]
