@@ -972,7 +972,7 @@ class IssueUtil (object):
 
 	@classmethod
 	def print_comment(cls, comment):
-		body = comment['body'].decode('UTF8')
+		body = comment['body']
 		infof(u'[{id}] {}{} ({user[login]})', body[:60],
 				u'…' if len(body) > 60 else u'',
 				u' ' * (len(str(comment['id'])) + 3),
