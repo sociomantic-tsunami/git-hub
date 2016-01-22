@@ -204,7 +204,7 @@ activate the *ftdetect* plugin by copying or symbolic-linking it to
 Similar Projects
 ================
 
-We explored other other alternatives before starting this project, but none of
+We explored other alternatives before starting this project, but none of
 these tools do (or are targeted) at what we needed. But here are the ones we
 found, in case they are a better fit for you:
 
