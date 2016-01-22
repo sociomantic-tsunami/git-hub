@@ -161,7 +161,7 @@ COMMANDS
       multiple labels).
 
     \-a USER, --assign=USER
-      Assign an user to the issue. `USER` must be a valid GitHub login name.
+      Assign a user to the issue. `USER` must be a valid GitHub login name.
 
     \-M ID, --milestone=ID
       Assign the milestone identified by the number ID to the issue.
@@ -193,7 +193,7 @@ COMMANDS
       labels of an issue.
 
     \-a USER, --assign=USER
-      Assign an user to the issue. `USER` must be a valid GitHub login name.
+      Assign a user to the issue. `USER` must be a valid GitHub login name.
 
     \-M ID, --milestone=ID
       Assign the milestone identified by the number ID to the issue.

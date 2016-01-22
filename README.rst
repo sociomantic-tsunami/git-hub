@@ -227,7 +227,7 @@ found, in case they are a better fit for you:
 Contact
 =======
 
-If you want to contact us, either because you are an user and have questions, or
+If you want to contact us, either because you are a user and have questions, or
 because you want to contribute to the project, you can subscribe to the mailing
 list.
 

@@ -1098,7 +1098,7 @@ class IssueCmd (CmdGroup):
 				"labels)" % cls.name)
 			parser.add_argument('-a', '--assign', dest='assignee',
 				metavar='USER',
-				help="assign an user to the %s; must be a "
+				help="assign a user to the %s; must be a "
 				"valid GitHub login name" % cls.name)
 			parser.add_argument('-M', '--milestone', metavar='ID',
 				help="assign the milestone identified by the "
@@ -1146,7 +1146,7 @@ class IssueCmd (CmdGroup):
 				"labels)" % cls.name)
 			parser.add_argument('-a', '--assign', dest='assignee',
 				metavar='USER',
-				help="assign an user to the %s; must be a "
+				help="assign a user to the %s; must be a "
 				"valid GitHub login name" % cls.name)
 			parser.add_argument('-M', '--milestone', metavar='ID',
 				help="assign the milestone identified by the "
