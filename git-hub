@@ -23,7 +23,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 """\
@@ -39,7 +39,6 @@ VERSION = "git-hub devel"
 import re
 import sys
 import json
-import string
 import base64
 import urllib
 import pprint
@@ -116,6 +115,13 @@ class InterruptException (Exception):
 	def __init__(self, msg):
 		super(InterruptException, self).__init__(msg)
 
+# Wrapper for raw_input to treat EOF as an empty input
+def user_input(*args, **kwargs):
+	try:
+		return raw_input(*args, **kwargs)
+	except EOFError:
+		sys.stdout.write('\n')
+		return ''
 
 # Ask the user a question
 #
@@ -154,7 +160,7 @@ def ask(question, default=None, options=["yes", "no"]):
 	while True:
 		# question in yellow
 		sys.stderr.write('\033[33m' + question + '\033[0m')
-		choice = raw_input().lower().strip()
+		choice = user_input().lower().strip()
 		if default is not None and choice == '':
 			return default
 		elif choice in valid_answers:
@@ -172,7 +178,7 @@ GIT_CONFIG_PREFIX = 'hub.'
 # This error is thrown when a git command fails (if git prints something in
 # stderr, this is considered an error even if the return code is 0). The
 # `output` argument is really the stderr output only, the `output` name is
-# preseved because that's how is it called in the parent class.
+# preserved because that's how is it called in the parent class.
 class GitError (subprocess.CalledProcessError):
 
 	def __init__(self, returncode, cmd, output):
@@ -293,7 +299,7 @@ def editor(help_msg, msg=None):
 	with file(fname, 'w') as f:
 		f.write(msg or '')
 		f.write(help_msg)
-	status = subprocess.call([prog, fname])
+	status = subprocess.call([prog + ' "$@"', prog, fname], shell=True)
 	if status != 0:
 		die("Editor returned {}, aborting...", status)
 	with file(fname) as f:
@@ -371,7 +377,7 @@ class Config:
 # to use OAuth just leave `basic_auth` and set `oauthtoken`. To fill the
 # `basic_auth` member, the `set_basic_auth()` convenient method is provided).
 #
-# See http://developer.github.com/ for more details on the GitHub API
+# See https://developer.github.com/ for more details on the GitHub API
 class RequestManager:
 
 	basic_auth = None
@@ -454,7 +460,7 @@ class RequestManager:
 			debugf("Request: {} {}\n{}", method, url, body)
 			res = self.auth_urlopen(url, method, body)
 			data = res.read()
-			debugf("Response:\n{}", data)
+			debugf("Response:\n{}", data.decode('UTF8'))
 			if data:
 				data = json.loads(data)
 				if isinstance(data, list):
@@ -493,7 +499,8 @@ def check_empty_message(msg):
 message_markdown_help = '''\
 # Remember GitHub will parse comments and descriptions as GitHub
 # Flavored Markdown.
-# For details see: http://github.github.com/github-flavored-markdown/
+# For details see:
+# https://help.github.com/articles/github-flavored-markdown/
 #
 # Lines starting with '# ' (note the space after the hash!) will be
 # ignored, and an empty message aborts the command. The space after the
@@ -567,7 +574,7 @@ def split_titled_message(msg):
 #
 # `cmd_usage`
 #   A usage string to be passed to the parser. If it's not defined, is
-#   genreated from the options as usual. %(prog)s can be used to name the
+#   generated from the options as usual. %(prog)s can be used to name the
 #   current program (and subcommand).
 #
 # `cmd_required_config`
@@ -649,9 +656,10 @@ class SetupCmd (object):
 
 	@classmethod
 	def run(cls, parser, args):
+		is_global = ('--system' in args.opts or
+				'--global' in args.opts)
 		try:
-			if '--system' not in args.opts and \
-					'--global' not in args.opts:
+			if not is_global:
 				git('rev-parse --git-dir')
 		except GitError as error:
 			errf(error.output)
@@ -664,12 +672,16 @@ class SetupCmd (object):
 			die("Can't perform an interactive setup outside a tty")
 		if username is None:
 			username = config.username or getpass.getuser()
-			reply = raw_input('GitHub username [%s]: ' % username)
+			reply = user_input('GitHub username [%s]: ' % username)
 			if reply:
 				username = reply
 		if password is None:
-			password = getpass.getpass(
-				'GitHub password (will not be stored): ')
+			try:
+				password = getpass.getpass('GitHub '
+					'password (will not be stored): ')
+			except EOFError:
+				sys.stdout.write('\n')
+				password = ''
 		if '@' in username:
 			infof("E-mail used to authenticate, trying to "
 					"retrieve the GitHub username...")
@@ -679,21 +691,33 @@ class SetupCmd (object):
 		req.set_basic_auth(username, password)
 
 		note = 'git-hub'
-		if config.forkrepo:
+		if not is_global and config.forkrepo:
 			proj = config.forkrepo.split('/', 1)[1]
 			note += ' (%s)' % proj
 
-		infof("Looking for GitHub authorization tokens...")
-		auths = dict([(a['note'], a)
+		while True:
+			infof("Looking for GitHub authorization token...")
+			auths = dict([(a['note'], a)
 				for a in req.get('/authorizations')])
-		if note in auths:
-			auth = auths[note]
-			infof("Reusing existing token '{}' (id: {})", note,
-					auth['id'])
-		else:
-			infof("Creating auth token '{}'", note)
-			auth = req.post('/authorizations', note=note,
-					scopes=['user', 'repo'])
+
+			if note not in auths:
+				break
+
+			errf("The OAuth token with name '{}' already exists.",
+				note)
+			infof("If you want to create a new one, enter a "
+				"name for it. Otherwise you can go to "
+				"https://github.com/settings/tokens to "
+				"regenerate or delete the token '{}'", note)
+			note = user_input("Enter a new token name (an empty "
+				"name cancels the setup): ")
+
+			if not note:
+				sys.exit(0)
+
+		infof("Creating auth token '{}'", note)
+		auth = req.post('/authorizations', note=note,
+				scopes=['user', 'repo'])
 
 		set_config = lambda k, v: git_config(k, value=v, opts=args.opts)
 
@@ -718,7 +742,7 @@ class SetupCmd (object):
 # `git hub clone` command implementation
 class CloneCmd (object):
 
-	cmd_required_config = ['username', 'urltype', 'oauthtoken']
+	cmd_required_config = ['username', 'oauthtoken']
 	cmd_help = 'clone a GitHub repository (and fork as needed)'
 	cmd_usage = '%(prog)s [OPTIONS] [GIT CLONE OPTIONS] REPO [DEST]'
 
@@ -744,36 +768,15 @@ class CloneCmd (object):
 
 	@classmethod
 	def run(cls, parser, args):
-		upstream = urlparse.urlsplit(args.repository).path
-		if upstream.endswith('.git'): upstream = upstream[:-4]
-		if '/' in upstream:
-			(owner, proj) = upstream.split('/')[-2:]
-			for repo in req.get('/user/repos'):
-				if repo['name'] == proj and repo['fork']:
-					break
-			else: # Fork not found
-				infof('Forking {} to {}/{}', upstream,
-					config.username, proj)
-				repo = req.post('/repos/' + upstream + '/forks')
-			repo = req.get('/repos/' + repo['full_name'])
-		else: # no '/' in upstream
-			repo = req.get('/repos/%s/%s' % (config.username,
-					upstream))
-			if not repo['fork']:
-				warnf('Repository {} is not a fork, just '
-					'clonning, upstream will not be set',
-					repo['full_name'])
-				upstream = None
-			else:
-				upstream = repo['parent']['full_name']
+		(urltype, proj) = cls.parse_repo(args.repository)
+		(repo, upstream) = cls.setup_repo(proj)
 		dest = args.dest or repo['name']
 		triangular = cls.check_triangular(config.triangular or
 				args.triangular)
 		if triangular and not upstream:
 			parser.error("Can't use triangular workflow without "
 					"an upstream repo")
-		url = repo['parent'][config.urltype] if triangular \
-				else repo[config.urltype]
+		url = repo['parent'][urltype] if triangular else repo[urltype]
 		infof('Cloning {} to {}', url, dest)
 		git_quiet(1, 'clone', *(args.unknown_args + [url, dest]))
 		if not upstream:
@@ -782,15 +785,67 @@ class CloneCmd (object):
 		# Complete the repository setup
 		os.chdir(dest)
 		remote = args.remote or ('fork' if triangular else 'upstream')
-		remote_url = repo['parent'][config.urltype]
+		remote_url = repo['parent'][urltype]
 		if triangular:
-			remote_url = repo[config.urltype]
+			remote_url = repo[urltype]
 			git_config('remote.pushdefault', prefix='', value=remote)
 			git_config('forkremote', value=remote)
+		git_config('urltype', value=urltype)
 		git_config('upstream', value=upstream)
 		git('remote', 'add', remote, remote_url)
 		infof('Fetching from {} ({})', remote, remote_url)
 		git_quiet(1, 'fetch', remote)
+
+	@classmethod
+	def parse_repo(cls, repo):
+		# None means the URL was specified as just 'owner/repo' or
+		# plain 'repo'
+		urltype = config.urltype
+		if repo.endswith('.git'):
+			repo = repo[:-4] # remove suffix
+		if repo.startswith('https://'):
+			urltype = 'clone_url' # how GitHub calls HTTP
+		elif repo.startswith('git:'):
+			urltype = 'git_url'
+		elif ':' in repo:
+			urltype = 'ssh_url'
+		# At this point we need to have an urltype
+		if urltype is None:
+			die("Can't infer a urltype and can't find the config "
+					"key '{}{}' config key in git config. "
+					"Read the man page for details.")
+		# If no / was found, then we assume the owner is the user
+		if '/' not in repo:
+			repo = config.username + '/' + repo
+		# Get just the owner/repo form from the full URL
+		url = urlparse.urlsplit(repo)
+		proj = '/'.join(url.path.split(':')[-1:][0].split('/')[-2:])
+		return (urltype, proj)
+
+	@classmethod
+	def setup_repo(cls, proj):
+		# Own repo
+		if proj.split('/')[0] == config.username:
+			repo = req.get('/repos/' + proj)
+			if repo['fork']:
+				upstream = repo['parent']['full_name']
+			else:
+				upstream = None
+				warnf('Repository {} is not a fork, just '
+					'cloning, upstream will not be set',
+					repo['full_name'])
+		else:
+			upstream = proj
+			repo_name = proj.split('/')[1]
+			for repo in req.get('/user/repos'):
+				if repo['name'] == repo_name and repo['fork']:
+					break
+			else: # Fork not found
+				infof('Forking {} to {}/{}', upstream,
+					config.username, repo_name)
+				repo = req.post('/repos/' + upstream + '/forks')
+			repo = req.get('/repos/' + repo['full_name'])
+		return (repo, upstream)
 
 	@classmethod
 	def check_triangular(cls, triangular):
@@ -928,7 +983,7 @@ class IssueUtil (object):
 
 	@classmethod
 	def print_comment(cls, comment):
-		body = comment['body'].decode('UTF8')
+		body = comment['body']
 		infof(u'[{id}] {}{} ({user[login]})', body[:60],
 				u'…' if len(body) > 60 else u'',
 				u' ' * (len(str(comment['id'])) + 3),
@@ -1037,13 +1092,13 @@ class IssueCmd (CmdGroup):
 				"any text after an empty line is used as "
 				"the optional body" % cls.name)
 			parser.add_argument('-l', '--label', dest='labels',
-				metavar='LABEL', action='append',
+				metavar='LABEL', action='append', default=[],
 				help="attach LABEL to the %s (can be "
 				"specified multiple times to set multiple "
 				"labels)" % cls.name)
 			parser.add_argument('-a', '--assign', dest='assignee',
 				metavar='USER',
-				help="assign an user to the %s; must be a "
+				help="assign a user to the %s; must be a "
 				"valid GitHub login name" % cls.name)
 			parser.add_argument('-M', '--milestone', metavar='ID',
 				help="assign the milestone identified by the "
@@ -1091,7 +1146,7 @@ class IssueCmd (CmdGroup):
 				"labels)" % cls.name)
 			parser.add_argument('-a', '--assign', dest='assignee',
 				metavar='USER',
-				help="assign an user to the %s; must be a "
+				help="assign a user to the %s; must be a "
 				"valid GitHub login name" % cls.name)
 			parser.add_argument('-M', '--milestone', metavar='ID',
 				help="assign the milestone identified by the "
@@ -1246,7 +1301,7 @@ class PullUtil (IssueUtil):
 				"use --create-branch to specify one")
 		base = args.base or cls.tracking_branch(head_name) or \
 				config.pullbase
-		gh_head = config.username + ':' + remote_head
+		gh_head = config.forkrepo.split('/')[0] + ':' + remote_head
 		return head_ref, head_name, remote_head, base, gh_head
 
 # `git hub pull` command implementation
@@ -1449,6 +1504,7 @@ class RebaseCmd (PullUtil):
 	saved_message = None
 	saved_edit_msg = None
 	saved_pause = None
+	saved_delete_branch = None
 	# this variable is a bit different, as is read/write by
 	# read_rebasing_file()/create_rebasing_file() directly. This is not
 	# ideal and should be addressed when #35 is fixed.
@@ -1492,6 +1548,10 @@ class RebaseCmd (PullUtil):
 			action='store_true', default=False,
 			help="uses git stash save --all when stashing local "
 			"changes")
+		parser.add_argument('-D', '--delete-branch',
+			action='store_true', default=False,
+			help="removes the PR branch, like the Delete "
+			"Branch button (TM)")
 
 	@classmethod
 	def run(cls, parser, args):
@@ -1507,7 +1567,7 @@ class RebaseCmd (PullUtil):
 		if args.pull is not None:
 			if cls.rebasing():
 				die("Can't start a pull rebase while a "
-					"regular reabase is in progress")
+					"regular rebase is in progress")
 			cls.start_rebase(args)
 		else:
 			args.pull = ongoing_rebase_pull_id
@@ -1517,6 +1577,8 @@ class RebaseCmd (PullUtil):
 				args.edit_message = cls.saved_edit_msg
 			if not args.pause:
 				args.pause = cls.saved_pause
+			if not args.delete_branch:
+				args.delete_branch = cls.saved_delete_branch
 
 			if args.action == '--abort':
 				cls.abort_rebase(args)
@@ -1744,6 +1806,7 @@ class RebaseCmd (PullUtil):
 				cls.in_pause = True
 				# Re-create the rebasing file as we are going
 				# to pause
+				cls.remove_rebasing_file()
 				cls.create_rebasing_file(pull, args, old_ref)
 				interrupt("Rebase done, now --pause'ing. "
 					'Use --continue {}when done.',
@@ -1757,6 +1820,14 @@ class RebaseCmd (PullUtil):
 					base_ref, base_url)
 			git_push(base_url, 'HEAD:' + base_ref,
 					force=args.force_push)
+			if args.delete_branch:
+				infof('Removing pull request branch {} in {}',
+						head_ref, head_url)
+				try:
+					git_push(head_url, ':' + head_ref,
+							force=args.force_push)
+				except GitError as e:
+					warnf('Error removing branch: {}', e)
 			return git('rev-parse HEAD')
 		finally:
 			if not cls.in_conflict and not cls.in_pause:
@@ -1863,6 +1934,8 @@ class RebaseCmd (PullUtil):
 					assert cls.saved_old_ref
 					pause = f.readline()[:-1]
 					cls.saved_pause = (pause == "True")
+					delete_branch = f.readline()[:-1]
+					cls.saved_delete_branch = (delete_branch == "True")
 					in_pause = f.readline()[:-1]
 					cls.in_pause = (in_pause == "True")
 					edit_msg = f.readline()[:-1]
@@ -1895,6 +1968,7 @@ class RebaseCmd (PullUtil):
 				f.write(str(pull['number']) + '\n')
 				f.write(old_ref + '\n')
 				f.write(repr(args.pause) + '\n')
+				f.write(repr(args.delete_branch) + '\n')
 				f.write(repr(cls.in_pause) + '\n')
 				f.write(repr(args.edit_message) + '\n')
 				if (args.message is not None):

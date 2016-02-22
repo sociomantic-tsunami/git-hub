@@ -16,10 +16,10 @@ Git command line interface to GitHub
 .. |date| date::
 
 
-SYNOPSYS
+SYNOPSIS
 ========
 
-git hub <command> [options] [arguments]
+git hub [global options]  <command> [options] [arguments]
 
 
 DESCRIPTION
@@ -32,6 +32,22 @@ directly through the git command line.
 To use this command you'll probably need to make an initial configuration to
 get authorization from GitHub. To do this you can use the `setup` command.
 See the CONFIGURATION_ section for more configuration options.
+
+
+GLOBAL OPTIONS
+==============
+
+\-h, --help
+  Show this help and exit.
+
+\--version
+  Show program's version number and exit.
+
+\-v, --verbose
+  Be more verbose (can be specified multiple times to get extra verbosity)
+
+\-s, --silent
+  Be less verbose (can be specified multiple times to get less verbosity)
 
 
 COMMANDS
@@ -73,7 +89,9 @@ COMMANDS
   repository is specified in *<owner>/<project>* form, the **REPO** will be
   used as upstream and a personal fork will be looked up. If none is found,
   a new fork will be created. In both cases, the fork will be cloned instead of
-  the upstream repository.
+  the upstream repository. The **REPO** can be specified as a regular *clone*
+  URL too (http, ssh, git), in that case the URL will be inspected and the
+  `hub.urltype` will be set as appropriate.
 
   If only *<project>* is specified as **REPO**, then the configuration
   `hub.username` is used as *<owner>*, and the parent repository is looked up
@@ -142,8 +160,8 @@ COMMANDS
       Attach `LABEL` to the issue (can be specified multiple times to set
       multiple labels).
 
-    \-a USER, --assign=USER`
-      Assign an user to the issue. `USER` must be a valid GitHub login name.
+    \-a USER, --assign=USER
+      Assign a user to the issue. `USER` must be a valid GitHub login name.
 
     \-M ID, --milestone=ID
       Assign the milestone identified by the number ID to the issue.
@@ -175,7 +193,7 @@ COMMANDS
       labels of an issue.
 
     \-a USER, --assign=USER
-      Assign an user to the issue. `USER` must be a valid GitHub login name.
+      Assign a user to the issue. `USER` must be a valid GitHub login name.
 
     \-M ID, --milestone=ID
       Assign the milestone identified by the number ID to the issue.
@@ -262,7 +280,7 @@ COMMANDS
   `attach` ISSUE [HEAD]
     Convert the issue identified by **ISSUE** to a pull request by attaching
     commits to it. The branch (or git ref) where your changes are
-    implementedhead can be optionally specified with **HEAD** (otherwise the
+    implemented can be optionally specified with **HEAD** (otherwise the
     current branch is used). This subcommand is very similar to the `new`
     subcommand, please refer to it for more details.
 
@@ -361,7 +379,12 @@ COMMANDS
       Passes the **--all** option to stash. Is like
       **--stash-include-untracked** but the ignored files are stashed and
       cleaned in addition to the untracked files, which completely removes the
-      possibility of conflicts when checking out the pull request to reabase.
+      possibility of conflicts when checking out the pull request to rebase.
+
+    \-D, --delete-branch
+      Delete the pull request branch if the rebase was successful. This is
+      similar to press the "Delete Branch" Button (TM) in the web interface
+      after merging.
 
     Actions:
 
@@ -374,13 +397,13 @@ COMMANDS
     \--skip
       Skip current patch in an ongoing rebase and continue.
 
-  `update`
+  `update` PULL
     Alias for `issue update`.
 
-  `comment`
+  `comment` PULL
     Alias for `issue comment`.
 
-  `close`
+  `close` PULL
     Alias for `issue close`.
 
 
@@ -405,7 +428,7 @@ from. These are the git config keys used:
 
 `hub.forkrepo`
   Your blessed repository fork. The format is *<owner>/<project>*. Used to set
-  the head for your pull requests. [defaul: *<username>/(upstream <project>
+  the head for your pull requests. [default: *<username>/(upstream <project>
   part)*]
 
 `hub.forkremote`
@@ -431,13 +454,33 @@ from. These are the git config keys used:
 `hub.forcerebase`
   If is set to "true", ``--force`` will be passed to rebase. If is set to
   "false" a regular rebase is performed. See the `pull` `rebase` command for
-  detils. [default: *true*]
+  details. [default: *true*]
 
 `hub.triangular`
   Makes **--triangular** for `clone` if set to "true" (boolean value). See
   `clone` documentation for details.
 
-[1] http://developer.github.com/v3/pulls/#get-a-single-pull-request
+[1] https://developer.github.com/v3/pulls/#get-a-single-pull-request
+
+
+FILES
+=====
+
+This program creates some temporary files in the '.git' directory during its
+operation. The contents of these files can be used for debugging/recovery
+purposes if necessary.
+
+`HUB_EDITMSG`
+  This file is used to take input from the user, e.g. issue comments, pull
+  request title & description etc. If, after accepting user input, the command
+  given by the user fails for some reason, then the entered text can still be
+  retrieved from this file.
+
+`HUB_PULL_REBASING`
+  This file is used to store various metadata information related to a rebase
+  operation (with the primary aim of being able to rollback the repository to
+  its original state if the rebase fails or is interrupted due to conflicts).
+  The sole presence of this file indicates that a rebase is in progress. 
 
 
 VIM SYNTAX HIGHLIGHT
