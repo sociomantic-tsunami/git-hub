@@ -928,31 +928,29 @@ class IssueUtil (object):
 			infof(u'Comments:')
 
 	@classmethod
-	def print_issue_comment(cls, comment):
+	def print_issue_comment(cls, comment, indent=u''):
 		body = comment['body']
-		body = '\n'.join(['    '+l for l in body.splitlines()])
-		infof(u'On {created_at}, {user[login]} commented:\n'
-			'{0}\n\n    <{html_url}>\n', body, **comment)
+		body = '\n'.join([indent+'    '+l for l in body.splitlines()])
+		infof(u'{0}On {created_at}, {user[login]}, commented:\n'
+			u'{0}<{html_url}>\n\n{1}\n', indent, body, **comment)
 
 	@classmethod
 	def merge_issue_comments(cls, comments, review_comments):
-		for c in comments:
-			c['sort_key'] = c['created_at']
 		prev_commit_pos = None
 		prev_created = None
+		hunks = dict()
+		new_review_comments = list()
 		for c in review_comments:
-			curr_commit_pos = c['commit_id'], c['position']
-			if prev_commit_pos is None:
-				prev_commit_pos = curr_commit_pos
-				prev_created = c['created_at']
-			if prev_commit_pos == curr_commit_pos:
-				c['sort_key'] = '%s %s %s' % (prev_created,
-					prev_commit_pos[0], prev_commit_pos[1])
+			hunk_id = (c['commit_id'], c['original_commit_id'],
+					c['position'], c['original_position'])
+			if hunk_id in hunks:
+				hunks[hunk_id]['_comments'].append(c)
 			else:
-				prev_commit_pos = None
-				prev_created = None
-		comments = comments + review_comments
-		comments.sort(key=lambda c: c['sort_key'])
+				c['_comments'] = list()
+				hunks[hunk_id] = c
+				new_review_comments.append(c)
+		comments = comments + new_review_comments
+		comments.sort(key=lambda c: c['created_at'])
 		return comments
 
 	@classmethod
@@ -962,23 +960,21 @@ class IssueUtil (object):
 		issue['name'] = cls.name.capitalize()
 		issue['comments'] += len(comments) + len(review_comments)
 		cls.print_issue_header(issue)
-		prev_commit_pos = None
 		for c in cls.merge_issue_comments(comments, review_comments):
+			infof(u'{}\n', u'-' * 80)
 			if 'diff_hunk' in c:
-				curr_commit_pos = c['commit_id'], ['position']
-				if prev_commit_pos is None:
-					infof(u'{}\n', u'-' * 80)
-					infof(u'diff --git a/{path} b/{path}\n'
-						u'index {original_commit_id}..{commit_id}\n'
-						u'--- a/{path}\n'
-						u'+++ b/{path}\n'
-						u'{diff_hunk}\n',
-						**c)
-					prev_commit_pos = curr_commit_pos
-				if prev_commit_pos == curr_commit_pos:
-					cls.print_issue_comment(c)
+				hunk = '\n'.join(c['diff_hunk'].splitlines()[-5:])
+				infof(u'diff --git a/{path} b/{path}\n'
+					u'index {original_commit_id}..{commit_id}\n'
+					u'--- a/{path}\n'
+					u'+++ b/{path}\n'
+					u'{0}\n',
+					hunk, **c)
+				indent = '    '
+				cls.print_issue_comment(c, indent)
+				for cc in c['_comments']:
+					cls.print_issue_comment(cc, indent)
 			else:
-				infof(u'{}\n', u'-' * 80)
 				cls.print_issue_comment(c)
 
 	@classmethod
