@@ -664,6 +664,9 @@ class SetupCmd (object):
 			errf(error.output)
 			die("Maybe you want to use --global or --system?")
 
+		if not is_global:
+			infof("Using Git repository local configuration")
+
 		username = args.username
 		password = args.password
 		if (username is None or password is None) and \

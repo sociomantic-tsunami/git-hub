@@ -55,11 +55,15 @@ COMMANDS
 
 `setup`
   This command performs an initial setup to connect to GitHub. It basically
-  asks GitHub for an authorization token and stores it in the configuration
+  asks GitHub for an authorization token and stores it in the Git configuration
   variable `hub.oauthtoken` for future use so you don't need to type your
   password each time (or store it in the config). The username is also stored
   for future use in the `hub.username` variable. If the base URL is specified,
-  it is stored in `hub.baseurl` too.
+  it is stored in `hub.baseurl` too. By default configuration is stored in the
+  repository's ``.git/config`` file (using ``git config``). If you want your
+  configuration to be global to your user or system-wide, use the ``--global``
+  or ``--system`` option respectively. These options are passed straight to
+  ``git config``.
 
   \-u USERNAME, --username=USERNAME
     GitHub's username (login name), will be stored in the configuration
