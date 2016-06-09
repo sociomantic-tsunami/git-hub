@@ -2037,7 +2037,7 @@ def main():
 	args.run(parser, args)
 
 
-# Entry point of the program, just calls main() and handle errors.
+# Entry point of the program, just calls main() and handles errors.
 if __name__ == '__main__':
 	try:
 		main()
