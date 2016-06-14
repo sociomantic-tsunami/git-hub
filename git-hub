@@ -515,7 +515,7 @@ message_markdown_help = '''\
 def clean_message(msg):
 	lines = msg.splitlines()
 	# Remove comment lines
-	lines = [l for l in lines if not l.strip().startswith('#')]
+	lines = [l for l in lines if not l.startswith('# ') and l != '#']
 	return '\n'.join(lines)
 
 # For messages expecting a title, split the first line as the title and the
