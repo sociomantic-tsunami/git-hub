@@ -836,14 +836,14 @@ class CloneCmd (object):
 					repo['full_name'])
 		else:
 			upstream = proj
-			repo_name = proj.split('/')[1]
-			for repo in req.get('/user/repos'):
-				if repo['name'] == repo_name and repo['fork']:
+			for repo in req.get('/repos/' + proj + '/forks'):
+				if repo['owner']['login'] == config.username:
 					break
 			else: # Fork not found
-				infof('Forking {} to {}/{}', upstream,
-					config.username, repo_name)
+				infof('Forking {} to {}', upstream,
+					config.username)
 				repo = req.post('/repos/' + upstream + '/forks')
+				infof('New fork at {}', repo['html_url'])
 			repo = req.get('/repos/' + repo['full_name'])
 		return (repo, upstream)
 
