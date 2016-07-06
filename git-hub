@@ -242,9 +242,8 @@ def git_quiet(quiet_index, *args, **kwargs):
 # keyword argument named 'force'. If present, '--force' is passed to git push.
 def git_push(*args, **kwargs):
 	cmd = ['push']
-	if 'force' in kwargs:
+	if kwargs.pop('force', False):
 		cmd.append('--force')
-		del kwargs['force']
 	cmd += args_to_list(args)
 	git_quiet(1, *cmd, **kwargs)
 
