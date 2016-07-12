@@ -330,6 +330,8 @@ class Config:
 				opts=['--bool']) == "true"
 		self.triangular = git_config('triangular', "false",
 				opts=['--bool']) == "true"
+		self.publicgist = git_config('publicgist', "false",
+				opts=['--bool']) == "true"
 
 	def sanitize_url(self, name, url):
 		u = urlparse.urlsplit(url)
@@ -719,7 +721,7 @@ class SetupCmd (object):
 
 		infof("Creating auth token '{}'", note)
 		auth = req.post('/authorizations', note=note,
-				scopes=['user', 'repo'])
+				scopes=['user', 'repo', 'gist'])
 
 		set_config = lambda k, v: git_config(k, value=v, opts=args.opts)
 
@@ -1470,6 +1472,81 @@ class PullCmd (IssueCmd):
 
 			git_quiet(1, 'fetch', remote_url, remote_branch)
 			git_quiet(1, 'checkout', 'FETCH_HEAD', *args.args)
+
+	class PushCmd (PullUtil):
+		cmd_help = "force push an update to an open pull request "
+		"and post a diff to the changes"
+
+		@classmethod
+		def setup_parser(cls, parser):
+			parser.add_argument('pr',
+				help="number identifying the pull request to update")
+			parser.add_argument('head', metavar='HEAD', nargs='?',
+				help="branch (or git ref) where your changes "
+				"are implemented")
+			parser.add_argument('-m', '--message', metavar='MSG',
+				help="text you want to add to the normal update message")
+			parser.add_argument('-e', '--editor', action='store_true',
+				default=False,
+				help="opens the editor, allowing you to edit the comment"
+				"before posting")
+			parser.add_argument('-c', '--commit', metavar='COMMIT',
+				help="optional, commit you want to diff against, uses remote "
+				"head by default")
+		@classmethod
+		def run(cls, parser, args):
+			pull = req.get(cls.url(args.pr))
+
+			if pull['state'] == 'closed':
+				die('Updating a closed pull request '
+					'(closed at {closed_at})!', **pull)
+
+			remote_url = pull['head']['repo'][config.urltype]
+			remote_branch = pull['head']['ref']
+
+			git('remote update')
+
+			head_ref, head_name = cls.get_ref(args.head or 'HEAD')
+			gh_remote_head = args.commit or (config.forkremote + '/' + head_name)
+
+			content = git('diff', gh_remote_head, head_name)
+
+			if len(content) == 0:
+				die("Couldn't find any changes to push!")
+
+			# Upload diff to gist
+			try:
+				gist = req.post('/gists',
+					description='Update diff for http://github.com/%s/pull/%s' %
+						(config.upstream, args.pr),
+					public=config.publicgist,
+					files={"pr-%s.diff" % args.pr: {
+						"language":"Diff",
+						"filename": "pr-%s.diff" % args.pr,
+						"content" : content}})
+			except urllib2.HTTPError as error:
+				if error.code == 404:
+					die("Permission to gist was denied.\nIs 'gist' access enabled for"
+						" git-hub's access token at"
+						" https://github.com/settings/tokens?"
+						"\n(Look at the most recently used git-hub token)");
+				raise error
+
+			# Force push changes
+			infof("Pushing changes in local branch {} to {}", head_name, gh_remote_head)
+			cls.push(head_name, head_name, force=True)
+
+			msg = "This pull request was [updated](%s). Previous HEAD was %s" \
+						% (gist['html_url'], pull['head']['sha'])
+
+			if args.message:
+				msg += "\n" + args.message
+
+			if args.editor:
+				msg = editor('\n\n' + message_markdown_help, msg)
+
+			infof("Posting update comment in pull request...")
+			cls.clean_and_post_comment(args.pr, msg)
 
 # This class is top-level just for convenience, because is too big. Is added to
 # PullCmd after is completely defined!
