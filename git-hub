@@ -30,8 +30,8 @@
 Git command line interface to GitHub.
 
 This program integrates Git and GitHub as a Git extension command (hub).
-It enabling most useful GitHub tasks (like creating and listing pull request or
-issues) to be accessed directly through the git command line.
+It enables many useful GitHub tasks (like creating and listing pull requests or
+issues) to be carried out directly from the command line.
 """
 
 VERSION = "git-hub devel"
