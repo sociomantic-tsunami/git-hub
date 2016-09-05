@@ -1503,6 +1503,7 @@ class RebaseCmd (PullUtil):
     saved_edit_msg = None
     saved_pause = None
     saved_delete_branch = None
+    saved_is_merge = None
     # this variable is a bit different, as is read/write by
     # read_rebasing_file()/create_rebasing_file() directly. This is not
     # ideal and should be addressed when #35 is fixed.
@@ -1563,9 +1564,9 @@ class RebaseCmd (PullUtil):
                 args.action)
 
         if args.pull is not None:
-            if cls.rebasing():
+            if cls.rebasing() or cls.merging():
                 die("Can't start a pull rebase while a "
-                    "regular rebase is in progress")
+                    "regular rebase or merge is in progress")
             cls.start_rebase(args)
         else:
             args.pull = ongoing_rebase_pull_id
@@ -1589,7 +1590,7 @@ class RebaseCmd (PullUtil):
     # conditions the user is asked about what to do.
     @classmethod
     def check_continue_rebasing(cls, args):
-        if cls.rebasing():
+        if cls.rebasing() or cls.merging():
             return
         head_ref, head_name = cls.get_ref()
         if args.action == '--continue' and \
@@ -1780,32 +1781,44 @@ class RebaseCmd (PullUtil):
         base_ref = pull['base']['ref']
         tmp_ref = cls.get_tmp_ref(pull['number'])
         old_ref = cls.saved_old_ref
+        is_merge = cls.saved_is_merge
         if old_ref is None:
             old_ref_ref, old_ref_name = cls.get_ref()
             old_ref = old_ref_name or old_ref_ref
 
         if starting:
-            infof('Fetching {} from {}', head_ref, head_url)
+            infof('Fetching head {} from {}', head_ref, head_url)
             git_quiet(1, 'fetch', head_url, head_ref)
-            git_quiet(1, 'checkout', '-b', tmp_ref,
-                'FETCH_HEAD')
+            head_hash = git('rev-parse FETCH_HEAD')
+            infof('Fetching base {} from {}', base_ref, base_url)
+            git_quiet(1, 'fetch', base_url, base_ref)
+            base_hash = git('rev-parse FETCH_HEAD')
+            parents = git('show --quiet --format=%P ' + head_hash).split()
+            is_merge = len(parents) > 1
+            # Last commit is a merge commit, so ask the user to merge instead
+            if is_merge:
+                answer = ask("The last commit in the pull request is a merge "
+                    "commit, use the merge instead of doing a rebase?",
+                    default="yes")
+                if answer == 'no':
+                    is_merge = False
         try:
             if starting:
-                infof('Rebasing to {} in {}',
-                        base_ref, base_url)
-                git_quiet(1, 'fetch', base_url, base_ref)
-                cls.create_rebasing_file(pull, args, old_ref)
+                git_quiet(1, 'checkout', '-b', tmp_ref,
+                        base_hash if is_merge else head_hash)
+                infof('Rebasing to {} in {}', base_ref, base_url)
+                cls.create_rebasing_file(pull, args, old_ref, is_merge)
             # Only run the rebase if we are not continuing with
             # a pull rebase that the user finished rebasing using
             # a plain git rebase --continue
-            if starting or cls.rebasing():
-                cls.rebase(args, pull)
+            if starting or cls.rebasing() or cls.merging():
+                cls.rebase(args, pull, is_merge, base_hash, head_hash)
             if args.pause and not cls.in_pause:
                 cls.in_pause = True
                 # Re-create the rebasing file as we are going
                 # to pause
                 cls.remove_rebasing_file()
-                cls.create_rebasing_file(pull, args, old_ref)
+                cls.create_rebasing_file(pull, args, old_ref, is_merge)
                 interrupt("Rebase done, now --pause'ing. "
                     'Use --continue {}when done.',
                     '' if starting else 'once more ')
@@ -1849,19 +1862,23 @@ class RebaseCmd (PullUtil):
     # Performs the rebasing itself. Sets the `in_conflict` flag if
     # a conflict is detected.
     @classmethod
-    def rebase(cls, args, pull):
+    def rebase(cls, args, pull, is_merge, base_hash, head_hash):
         starting = args.action is None
         try:
             if starting:
+                # Last commit is a merge commit, so merge --ff-only instead
+                if is_merge:
+                    git_quiet(1, 'merge --ff-only ' + head_hash)
+                    return
                 a = []
                 if config.forcerebase:
                     a.append('--force')
-                a.append('FETCH_HEAD')
+                a.append(base_hash)
                 git_quiet(1, 'rebase', *a)
             else:
                 git('rebase', args.action)
         except subprocess.CalledProcessError as e:
-            if e.returncode == 1 and cls.rebasing():
+            if e.returncode == 1 and (cls.rebasing() or cls.merging()):
                 cls.in_conflict = True
                 die("Conflict detected, resolve "
                     "conflicts and run git hub "
@@ -1879,7 +1896,8 @@ class RebaseCmd (PullUtil):
     @classmethod
     def force_rebase_abort(cls):
         try:
-            git('rebase', '--abort', stderr=subprocess.STDOUT)
+            git('rebase' if cls.rebasing() else 'merge', '--abort',
+                    stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError:
             return False
         return True
@@ -1907,6 +1925,11 @@ class RebaseCmd (PullUtil):
     @classmethod
     def rebasing(cls):
         return os.path.exists(git_dir()+'/rebase-apply/rebasing')
+
+    # Returns True if there is a `git merge` going on
+    @classmethod
+    def merging(cls):
+        return os.path.exists(git_dir()+'/MERGE_HEAD')
 
     # Returns the file name used to store `git hub pull rebase` metadata
     # (the sole presence of this file indicates there is a `git hub pull
@@ -1940,6 +1963,8 @@ class RebaseCmd (PullUtil):
                     cls.in_pause = (in_pause == "True")
                     edit_msg = f.readline()[:-1]
                     cls.saved_edit_msg = (edit_msg == "True")
+                    is_merge = f.readline()[:-1]
+                    cls.saved_is_merge = (is_merge == "True")
                     msg = f.read()
                     if msg == '\n':
                         msg = ''
@@ -1957,7 +1982,7 @@ class RebaseCmd (PullUtil):
     # the `args.edit_message` flag and the `args.message` text. It fails
     # (and exits) if the file was already present.
     @classmethod
-    def create_rebasing_file(cls, pull, args, old_ref):
+    def create_rebasing_file(cls, pull, args, old_ref, is_merge):
         fname = cls.rebasing_file_name()
         try:
             fd = os.open(cls.rebasing_file_name(),
@@ -1971,6 +1996,7 @@ class RebaseCmd (PullUtil):
                 f.write(repr(args.delete_branch) + '\n')
                 f.write(repr(cls.in_pause) + '\n')
                 f.write(repr(args.edit_message) + '\n')
+                f.write(repr(is_merge) + '\n')
                 if (args.message is not None):
                     f.write(args.message + '\n')
         except EnvironmentError as e:
