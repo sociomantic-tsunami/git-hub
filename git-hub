@@ -838,15 +838,15 @@ class CloneCmd (object):
                     repo['full_name'])
         else:
             upstream = proj
-            for repo in req.get('/repos/' + proj + '/forks'):
-                if repo['owner']['login'] == config.username:
-                    break
-            else: # Fork not found
-                infof('Forking {} to {}', upstream,
-                    config.username)
-                repo = req.post('/repos/' + upstream + '/forks')
-                infof('New fork at {}', repo['html_url'])
-            repo = req.get('/repos/' + repo['full_name'])
+            # Try to fork, if a fork already exists, we'll get the
+            # information for the pre-existing fork
+            # XXX: This is not properly documented in the GitHub
+            #      API docs, but it seems to work as of Sep 2016.
+            #      See https://github.com/sociomantic-tsunami/git-hub/pull/193
+            #      for more details.
+            infof('Checking for existing fork / forking...')
+            repo = req.post('/repos/' + upstream + '/forks')
+            infof('Fork at {}', repo['html_url'])
         return (repo, upstream)
 
     @classmethod
