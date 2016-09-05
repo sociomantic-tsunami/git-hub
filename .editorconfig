@@ -1,0 +1,18 @@
+# EditorConfig configuration file.
+# Please see http://editorconfig.org for details
+
+# Top-most EditorConfig file
+root = true
+
+# Default configuration for all files
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# reStructuredTex and Markdown files
+[**.{rest,rst,md}]
+indent_size = 2
