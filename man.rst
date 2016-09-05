@@ -484,7 +484,7 @@ purposes if necessary.
   This file is used to store various metadata information related to a rebase
   operation (with the primary aim of being able to rollback the repository to
   its original state if the rebase fails or is interrupted due to conflicts).
-  The sole presence of this file indicates that a rebase is in progress. 
+  The sole presence of this file indicates that a rebase is in progress.
 
 
 VIM SYNTAX HIGHLIGHT
