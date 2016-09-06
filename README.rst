@@ -37,7 +37,7 @@ command an options, please refer to the man page using ``git hub --help`` or
 looking at the `online version`__ (this is for the latest development snapshot
 though).
 
-__ https://github.com/sociomantic/git-hub/blob/master/man.rst
+__ https://github.com/sociomantic-tsunami/git-hub/blob/master/man.rst
 
 One time global setup to get the credentials
 --------------------------------------------
@@ -55,9 +55,9 @@ Clone (and fork) a project
 --------------------------
 ::
 
-  $ git hub clone -t sociomantic/git-hub
-  Forking sociomantic/git-hub to octocat/git-hub
-  Cloning git@github.com:sociomantic/git-hub.git to git-hub
+  $ git hub clone -t sociomantic-tsunami/git-hub
+  Forking sociomantic-tsunami/git-hub to octocat/git-hub
+  Cloning git@github.com:sociomantic-tsunami/git-hub.git to git-hub
   Fetching from fork (git@github.com:octocat/git-hub.git)
 
 The fork will happen only if you haven't fork the project before, of course. And
@@ -68,7 +68,7 @@ Using a pre-existing cloned repository
 --------------------------------------
 ::
 
-  $ git config hub.upstream sociomantic/git-hub
+  $ git config hub.upstream sociomantic-tsunami/git-hub
 
 This sets the *master* GitHub_ project. It's where we query for issues and pull
 requests and where we create new pull requests, etc.
@@ -82,9 +82,9 @@ List issues
 
   $ git hub issue list
   [3] pull: Use the tracking branch as default base branch (leandro-lucarella-sociomantic)
-      https://github.com/sociomantic/git-hub/issues/3
+      https://github.com/sociomantic-tsunami/git-hub/issues/3
   [1] bash-completion: Complete with IDs only when is appropriate according to command line arguments (leandro-lucarella-sociomantic)
-      https://github.com/sociomantic/git-hub/issues/1
+      https://github.com/sociomantic-tsunami/git-hub/issues/1
 
 Update an issue
 ---------------
@@ -93,7 +93,7 @@ Update an issue
   $ git hub issue update --label important --label question \
         -m 'New Title' --assign octocat --open --milestone v0.5 1
   [1] New Title (leandro-lucarella-sociomantic)
-      https://github.com/sociomantic/git-hub/issues/1
+      https://github.com/sociomantic-tsunami/git-hub/issues/1
 
 Create a new pull request
 -------------------------
@@ -102,7 +102,7 @@ Create a new pull request
   $ git hub pull new -b experimental -c mypull
   Pushing master to mypull in myfork
   [4] Some pull request (octocat)
-      https://github.com/sociomantic/git-hub/pull/4
+      https://github.com/sociomantic-tsunami/git-hub/pull/4
 
 This creates a pull request against the upstream branch ``experimental`` using
 the current ``HEAD``, but creating a new topic branch called ``mypull`` to store
@@ -115,7 +115,7 @@ Attach code to an existing issue
   $ git hub pull attach -b experimental -c mypull 1
   Pushing master to mypull in myfork
   [1] Some issue (octocat)
-      https://github.com/sociomantic/git-hub/pull/1
+      https://github.com/sociomantic-tsunami/git-hub/pull/1
 
 Same as before, but this time attach the commits to issue 2 (effectively
 converting the issue into a pull request).
@@ -126,10 +126,10 @@ Rebase a pull request
 
   $ git hub pull rebase 4
   Fetching mypull from git@github.com:octocat/git-hub.git
-  Rebasing to master in git@github.com:sociomantic/git-hub.git
-  Pushing results to master in git@github.com:sociomantic/git-hub.git
+  Rebasing to master in git@github.com:sociomantic-tsunami/git-hub.git
+  Pushing results to master in git@github.com:sociomantic-tsunami/git-hub.git
   [4] Some pull request (octocat)
-      https://github.com/sociomantic/git-hub/pull/4
+      https://github.com/sociomantic-tsunami/git-hub/pull/4
 
 If the rebase fails, you can use ``git hub pull rebase --continue`` as you would
 do with a normal rebase.
@@ -141,8 +141,8 @@ Download
 You can get this tool from the `GitHub project`__. If you want to grab
 a release, please remember to visit the Release__ section.
 
-__ https://github.com/sociomantic/git-hub
-__ https://github.com/sociomantic/git-hub/releases
+__ https://github.com/sociomantic-tsunami/git-hub
+__ https://github.com/sociomantic-tsunami/git-hub/releases
 
 
 Installation
@@ -251,7 +251,7 @@ __ nntp://news.gmane.org/gmane.comp.version-control.git.git-hub
 If you want to report a bug, just `create an issue`__ please (if you use this
 tool I'm sure you already have a GitHub_ account ;).
 
-__ https://github.com/sociomantic/git-hub/issues/new
+__ https://github.com/sociomantic-tsunami/git-hub/issues/new
 
 
 .. _Python: https://www.python.org/
