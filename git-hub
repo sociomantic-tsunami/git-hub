@@ -370,7 +370,7 @@ class Config:
 #
 # Example:
 #
-#    r = req.post('/repos/sociomantic/test/labels/', name=name, color=color)
+#    r = req.post('/repos/sociomantic-tsunami/test/labels/', name=name, color=color)
 #
 # The basic auth has priority over oauthtoken for authentication. If you want
 # to use OAuth just leave `basic_auth` and set `oauthtoken`. To fill the
