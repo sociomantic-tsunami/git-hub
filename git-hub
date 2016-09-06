@@ -1572,7 +1572,13 @@ class PullCmd (IssueCmd):
 
                 if review:
                     prev_commit = current_commit + '~1'
-                    git('difftool', '--no-prompt', prev_commit, current_commit)
+
+                    if files_changed_str.split()[0] == '1':
+                        git('difftool', '--no-prompt', prev_commit,
+                            current_commit)
+                    else:
+                        git('difftool', '--dir-diff', prev_commit,
+                            current_commit)
 
                 # Clear the "review or skip" line
                 sys.stdout.write("\033[K")
