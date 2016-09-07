@@ -1495,6 +1495,13 @@ class PullCmd (IssueCmd):
                     "to configure a diff tool\n")
                 die("No diff tool has been configured. Aborting.")
 
+            # BUG: using vimdiff as the diff tool hangs the terminal :(
+            # The reason is most likely that vimdiff doesn't open in a new
+            # window altogether. For now, we just reject vimdiff.
+            if git_config('diff.tool', prefix='') == 'vimdiff':
+                die("vimdiff cannot be used as the diff tool because of a "
+                    "known issue (please consider using gvimdiff instead).")
+
             # First confirm that there are no modified files
             modified_files = git('diff', '--name-only')
             if modified_files:
