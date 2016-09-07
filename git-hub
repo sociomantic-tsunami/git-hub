@@ -1484,6 +1484,8 @@ class PullCmd (IssueCmd):
                 default='upstream/master',
                 help="branch (or git ref) from which to start reviewing "
                     "(defaults to 'upstream/master')")
+            parser.add_argument('-s', '--auto-skip', metavar='N', type=int,
+                help="automatically skip the first N commits")
         @classmethod
         def run(cls, parser, args):
             # First confirm that a diff tool has been configured
@@ -1534,9 +1536,28 @@ class PullCmd (IssueCmd):
             infof("Found {} commits in range '{}'",
                 len(commits_list), commits_range)
 
-            commit_num = 1
+            if args.auto_skip:
+                if args.auto_skip >= len(commits_list):
+                    infof('All commits automatically skipped')
+                    return
+                else:
+                    if args.auto_skip == 1:
+                        infof('Skipping commit 1')
+                    elif args.auto_skip == 2:
+                        infof('Skipping commits 1 & 2')
+                    else:
+                        infof('Skipping commits 1 to {}', args.auto_skip)
+
+            commit_num = 0
+            num_commits_auto_skipped = 0
 
             for c in reversed(commits_list):
+                commit_num += 1
+
+                if args.auto_skip and num_commits_auto_skipped < args.auto_skip:
+                    num_commits_auto_skipped += 1
+                    continue
+
                 current_commit, commit_msg_title = c.split(' ', 1)
 
                 infof('')
@@ -1582,8 +1603,6 @@ class PullCmd (IssueCmd):
 
                 # Clear the "review or skip" line
                 sys.stdout.write("\033[K")
-
-                commit_num += 1
 
 # This class is top-level just for convenience, because is too big. Is added to
 # PullCmd after is completely defined!
