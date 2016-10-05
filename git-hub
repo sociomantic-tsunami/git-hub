@@ -777,7 +777,7 @@ class CloneCmd (object):
 					"an upstream repo")
 		url = repo['parent'][urltype] if triangular else repo[urltype]
 		infof('Cloning {} to {}', url, dest)
-		git_quiet(1, 'clone', *(args.unknown_args + [url, dest]))
+		git_quiet(1, 'clone', *(args.unknown_args + ['--', url, dest]))
 		if not upstream:
 			# Not a forked repository, nothing else to do
 			return
