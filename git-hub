@@ -805,7 +805,7 @@ class CloneCmd (object):
 		url = repo['parent'][urltype] if triangular else repo[urltype]
 		validate_url(url, urltype)
 		infof('Cloning {} to {}', url, dest)
-		git_quiet(1, 'clone', *(args.unknown_args + [url, dest]))
+		git_quiet(1, 'clone', *(args.unknown_args + ['--', url, dest]))
 		if not upstream:
 			# Not a forked repository, nothing else to do
 			return
@@ -820,9 +820,9 @@ class CloneCmd (object):
 		git_config('urltype', value=urltype)
 		git_config('upstream', value=upstream)
 		validate_url(remote_url, urltype)
-		git('remote', 'add', remote, remote_url)
+		git('remote', 'add', '--', remote, remote_url)
 		infof('Fetching from {} ({})', remote, remote_url)
-		git_quiet(1, 'fetch', remote)
+		git_quiet(1, 'fetch', '--', remote)
 
 	@classmethod
 	def parse_repo(cls, repo):
@@ -1333,7 +1333,7 @@ class PullUtil (IssueUtil):
 	def git_fetch(cls, url, ref, urltype=config.urltype):
 		validate_url(url, urltype)
 		infof('Fetching {} from {}', ref, url)
-		git_quiet(1, 'fetch', url, ref)
+		git_quiet(1, 'fetch', '--', url, ref)
 
 # `git hub pull` command implementation
 class PullCmd (IssueCmd):
