@@ -1330,8 +1330,8 @@ class PullUtil (IssueUtil):
 
 	# Perform a validated git fetch
 	@classmethod
-	def git_fetch(cls, url, ref, urltype):
-		validate_url(url, urltype)
+	def git_fetch(cls, url, ref):
+		validate_url(url, config.urltype)
 		infof('Fetching {} from {}', ref, url)
 		git_quiet(1, 'fetch', '--', url, ref)
 
@@ -1499,7 +1499,7 @@ class PullCmd (IssueCmd):
 			remote_url = pull['head']['repo'][config.urltype]
 			remote_branch = pull['head']['ref']
 
-			cls.git_fetch(remote_url, remote_branch, config.urltype)
+			cls.git_fetch(remote_url, remote_branch)
 			git_quiet(1, 'checkout', 'FETCH_HEAD', *args.args)
 
 # This class is top-level just for convenience, because is too big. Is added to
@@ -1816,12 +1816,12 @@ class RebaseCmd (PullUtil):
 			old_ref = old_ref_name or old_ref_ref
 
 		if starting:
-			cls.git_fetch(head_url, head_ref, config.urltype)
+			cls.git_fetch(head_url, head_ref)
 			git_quiet(1, 'checkout', '-b', tmp_ref,
 				'FETCH_HEAD')
 		try:
 			if starting:
-				cls.git_fetch(base_url, base_ref, config.urltype)
+				cls.git_fetch(base_url, base_ref)
 				infof('Rebasing to {} in {}',
 						base_ref, base_url)
 				cls.create_rebasing_file(pull, args, old_ref)
