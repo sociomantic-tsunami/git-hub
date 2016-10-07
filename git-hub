@@ -1330,8 +1330,8 @@ class PullUtil (IssueUtil):
 
 	# Perform a validated git fetch
 	@classmethod
-	def git_fetch(cls, url, ref, urltype=config.urltype):
-		validate_url(url, urltype)
+	def git_fetch(cls, url, ref):
+		validate_url(url, config.urltype)
 		infof('Fetching {} from {}', ref, url)
 		git_quiet(1, 'fetch', '--', url, ref)
 
