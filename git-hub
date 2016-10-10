@@ -1827,11 +1827,6 @@ class RebaseCmd (PullUtil):
             if cls.in_pause:
                 cls.in_pause = False
                 cls.remove_rebasing_file()
-            infof('Trying to Update the PR branch {} in {}', head_ref, head_url)
-            try:
-                git_push(head_url, 'HEAD:' + head_ref, force=True)
-            except GitError as e:
-                warnf('Error pushing branch: {}', e)
             infof('Pushing results to {} in {}',
                     base_ref, base_url)
             git_push(base_url, 'HEAD:' + base_ref,
