@@ -135,7 +135,6 @@ COMMANDS
 
 `issue`
   This command is used to manage GitHub issues through a set of subcommands.
-  Is no subcommand is specified, `list` is used.
 
   `list`
     Show a list of open issues.

@@ -534,6 +534,33 @@ def split_titled_message(msg):
         body = '\n'.join(lines[2:])
     return (title, body)
 
+# Perform some basic checks on the URL to avoid MitM attacks
+def validate_url(url, urltype):
+    scheme = urltype[:-4] # Remove the '_url'
+    # Any URL starting with <transport>:: will run
+    # a git-remote-<transport> command. "ext::" is specially
+    # unsafe, as that can run arbitrary commands.
+    if '::' in url:
+        pass # Fishy already, so skip to the question
+    elif scheme in ('clone', 'svn') and re.match(r'^https?://', url):
+        return
+    elif scheme == 'git' and re.match(r'^git://', url):
+        return
+    elif scheme == 'ssh' and (re.match(r'^ssh://', url) or
+            re.match(r'^[^@:]+@[^:]+:', url)):
+        return
+    else:
+        warnf("Unknown url type {}!", urltype)
+    answer = ask("The URL reported by the GitHub server ({!r}) looks quite "
+        "fishy! You might be under a man-in-the-middle attack "
+        "(https://en.wikipedia.org/wiki/Man-in-the-middle_attack). Do "
+        "you really trust your GitHub server ({})?"
+            .format(url, config.baseurl),
+        default='NO! ABORT!',
+        options=["NO! ABORT!", "yes, it's fine"])
+    if answer != "yes, it's fine":
+        die("Aborted because of potential MitM attack")
+
 
 # Command-line commands helper classes
 ########################################################################
@@ -779,8 +806,9 @@ class CloneCmd (object):
             parser.error("Can't use triangular workflow without "
                     "an upstream repo")
         url = repo['parent'][urltype] if triangular else repo[urltype]
+        validate_url(url, urltype)
         infof('Cloning {} to {}', url, dest)
-        git_quiet(1, 'clone', *(args.unknown_args + [url, dest]))
+        git_quiet(1, 'clone', *(args.unknown_args + ['--', url, dest]))
         if not upstream:
             # Not a forked repository, nothing else to do
             return
@@ -794,9 +822,10 @@ class CloneCmd (object):
             git_config('forkremote', value=remote)
         git_config('urltype', value=urltype)
         git_config('upstream', value=upstream)
-        git('remote', 'add', remote, remote_url)
+        validate_url(remote_url, urltype)
+        git('remote', 'add', '--', remote, remote_url)
         infof('Fetching from {} ({})', remote, remote_url)
-        git_quiet(1, 'fetch', remote)
+        git_quiet(1, 'fetch', '--', remote)
 
     @classmethod
     def parse_repo(cls, repo):
@@ -1302,6 +1331,13 @@ class PullUtil (IssueUtil):
         gh_head = config.forkrepo.split('/')[0] + ':' + remote_head
         return head_ref, head_name, remote_head, base, gh_head
 
+    # Perform a validated git fetch
+    @classmethod
+    def git_fetch(cls, url, ref):
+        validate_url(url, config.urltype)
+        infof('Fetching {} from {}', ref, url)
+        git_quiet(1, 'fetch', '--', url, ref)
+
 # `git hub pull` command implementation
 class PullCmd (IssueCmd):
 
@@ -1466,9 +1502,7 @@ class PullCmd (IssueCmd):
             remote_url = pull['head']['repo'][config.urltype]
             remote_branch = pull['head']['ref']
 
-            infof('Fetching {} from {}', remote_branch, remote_url)
-
-            git_quiet(1, 'fetch', remote_url, remote_branch)
+            cls.git_fetch(remote_url, remote_branch)
             git_quiet(1, 'checkout', 'FETCH_HEAD', *args.args)
 
 # This class is top-level just for convenience, because is too big. Is added to
@@ -1787,11 +1821,9 @@ class RebaseCmd (PullUtil):
             old_ref = old_ref_name or old_ref_ref
 
         if starting:
-            infof('Fetching head {} from {}', head_ref, head_url)
-            git_quiet(1, 'fetch', head_url, head_ref)
+            cls.git_fetch(head_url, head_ref)
             head_hash = git('rev-parse FETCH_HEAD')
-            infof('Fetching base {} from {}', base_ref, base_url)
-            git_quiet(1, 'fetch', base_url, base_ref)
+            cls.git_fetch(base_url, base_ref)
             base_hash = git('rev-parse FETCH_HEAD')
             parents = git('show --quiet --format=%P ' + head_hash).split()
             is_merge = len(parents) > 1
