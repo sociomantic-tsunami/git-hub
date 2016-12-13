@@ -847,7 +847,7 @@ class CloneCmd (object):
 			repo = config.username + '/' + repo
 		# Get just the owner/repo form from the full URL
 		url = urlparse.urlsplit(repo)
-		proj = '/'.join(url.path.split(':')[-1:][0].split('/')[-2:])
+		proj = '/'.join(url.path.split(':')[-1:][0].strip('/').split('/')[-2:])
 		return (urltype, proj)
 
 	@classmethod
