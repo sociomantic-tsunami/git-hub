@@ -1264,9 +1264,6 @@ class PullUtil (IssueUtil):
     name = 'pull request'
     gh_path = 'pulls'
     id_var = 'PULL'
-    rebase_msg = 'This pull request has been rebased via ' \
-            '`git hub pull rebase`. Original pull request HEAD ' \
-            'was {}, new (rebased) HEAD is {}'
 
     @classmethod
     def get_ref(cls, ref='HEAD'):
@@ -1938,8 +1935,6 @@ class RebaseCmd (PullUtil):
     def update_github(cls, args, pull, pushed_sha):
         pull_sha = pull['head']['sha']
         msg = args.message
-        if msg is None and pull_sha != pushed_sha:
-            msg = cls.rebase_msg.format(pull_sha, pushed_sha)
         if args.edit_message:
             msg = cls.comment_editor(msg)
         if msg:
