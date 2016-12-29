@@ -163,6 +163,8 @@ Dependencies
 * FPM_ (>= 1.0.1, although it might work with older versions too, only needed to
   build the Debian package)
 
+* Readchar_ (can be installed using ``pip install readchar``)
+
 __ https://launchpad.net/~git-core/+archive/ppa
 
 Building
@@ -265,5 +267,6 @@ __ https://github.com/sociomantic-tsunami/git-hub/issues/new
 .. _Debian: https://www.debian.org/
 .. _VIM: http://www.vim.org/
 .. _FPM: https://github.com/jordansissel/fpm
+.. _Readchar: https://github.com/magmax/python-readchar
 
 .. vim: set et sw=2 tw=80 :

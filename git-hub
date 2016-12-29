@@ -42,12 +42,15 @@ import json
 import base64
 import urllib
 import pprint
+import readchar
 import urllib2
 import getpass
 import os.path
 import urlparse
 import argparse
 import subprocess
+
+from readchar import key
 
 # Output levels according to user selected verbosity
 DEBUG = 3
@@ -1504,6 +1507,143 @@ class PullCmd (IssueCmd):
 
             cls.git_fetch(remote_url, remote_branch)
             git_quiet(1, 'checkout', 'FETCH_HEAD', *args.args)
+
+    class ReviewCmd (PullUtil):
+        cmd_help = "review the pull request"
+        @classmethod
+        def setup_parser(cls, parser):
+            parser.add_argument('pull',
+                help="number identifying the pull request to review")
+            parser.add_argument('-b', '--base', metavar='BASE',
+                default='upstream/master',
+                help="branch (or git ref) from which to start reviewing "
+                    "(defaults to 'upstream/master')")
+            parser.add_argument('-s', '--auto-skip', metavar='N', type=int,
+                help="automatically skip the first N commits")
+        @classmethod
+        def run(cls, parser, args):
+            # First confirm that a diff tool has been configured
+            if not git_config('diff.tool', prefix=''):
+                sys.stdout.write("Use '\033[94m"
+                    "git config diff.tool <your-favourite-diff-tool>\033[0m' "
+                    "to configure a diff tool\n")
+                die("No diff tool has been configured. Aborting.")
+
+            # BUG: using vimdiff as the diff tool hangs the terminal :(
+            # The reason is most likely that vimdiff doesn't open in a new
+            # window altogether. For now, we just reject vimdiff.
+            if git_config('diff.tool', prefix='') == 'vimdiff':
+                die("vimdiff cannot be used as the diff tool because of a "
+                    "known issue (please consider using gvimdiff instead).")
+
+            # First confirm that there are no modified files
+            modified_files = git('diff', '--name-only')
+            if modified_files:
+                die("Modified files detected. Aborting.")
+
+            # Next confirm that the base is valid
+            try:
+                git_quiet(1, 'rev-parse', '--short', '--verify', args.base)
+            except GitError:
+                die("Base '{}' doesn't exist. Aborting.", args.base)
+
+            # Warn if the PR is already closed
+            pull = req.get(cls.url(args.pull))
+            if pull['state'] == 'closed':
+                warnf('Reviewing a closed pull request '
+                    '(closed at {closed_at})!', **pull)
+
+            remote_url = pull['head']['repo'][config.urltype]
+            remote_branch = pull['head']['ref']
+
+            infof("Fetching '{}' from {}", remote_branch, remote_url)
+            git_quiet(1, 'fetch', remote_url, remote_branch)
+
+            local_branch = 'pull_' + args.pull
+
+            # Warn if the pull branch already exists locally
+            try:
+                pull_branch_hash = git_quiet(1, 'rev-parse', '--short',
+                    '--verify', local_branch)
+                warnf("Pull branch '{}' already exists at commit '{}'. "
+                    "It _may_ get moved.", local_branch, pull_branch_hash)
+                git_quiet(1, 'checkout', '-B', local_branch, 'FETCH_HEAD')
+            except GitError:
+                infof("Checking out locally as branch '{}'", local_branch)
+                git_quiet(1, 'checkout', '-b', local_branch, 'FETCH_HEAD')
+
+            commits_range = args.base + '..' + local_branch
+            commits_list = git('log', '--oneline', commits_range).split('\n')
+            infof("Found {} commits in range '{}'",
+                len(commits_list), commits_range)
+
+            if args.auto_skip:
+                if args.auto_skip >= len(commits_list):
+                    infof('All commits automatically skipped')
+                    return
+                else:
+                    if args.auto_skip == 1:
+                        infof('Skipping commit 1')
+                    elif args.auto_skip == 2:
+                        infof('Skipping commits 1 & 2')
+                    else:
+                        infof('Skipping commits 1 to {}', args.auto_skip)
+
+            commit_num = 0
+            num_commits_auto_skipped = 0
+
+            for c in reversed(commits_list):
+                commit_num += 1
+
+                if args.auto_skip and num_commits_auto_skipped < args.auto_skip:
+                    num_commits_auto_skipped += 1
+                    continue
+
+                current_commit, commit_msg_title = c.split(' ', 1)
+
+                infof('')
+                sys.stdout.write('    ' + str(commit_num) + '. (\033[94m' +
+                    current_commit + '\033[0m) \033[1m' + commit_msg_title +
+                    '\033[0m\n')
+
+                shortstat_list = git('show', '--shortstat', '--format=%b',
+                    current_commit).split('\n')
+
+                # If the shortstat list has less than 3 elements, then the
+                # commit message only has a title, but no body
+                if len(shortstat_list) > 3:
+                    for line in shortstat_list[0:-3]:
+                        infof('            {}', line)
+
+                files_changed_str = shortstat_list[-1]
+                sys.stdout.write('\033[35m' + files_changed_str.rjust(84) +
+                    '\n')
+                sys.stdout.write("press 'r' to review, 's' to skip".rjust(84) +
+                    '\033[0m\r')
+
+                review = False
+                while True:
+                    c = readchar.readkey()
+                    if c == key.CTRL_C:
+                        sys.exit(1)
+                    elif c == key.ENTER or c == 'r' or c == 'R':
+                        review = True
+                        break
+                    elif c == 's' or c == 'S':
+                        break
+
+                if review:
+                    prev_commit = current_commit + '~1'
+
+                    if files_changed_str.split()[0] == '1':
+                        git('difftool', '--no-prompt', prev_commit,
+                            current_commit)
+                    else:
+                        git('difftool', '--dir-diff', prev_commit,
+                            current_commit)
+
+                # Clear the "review or skip" line
+                sys.stdout.write("\033[K")
 
 # This class is top-level just for convenience, because is too big. Is added to
 # PullCmd after is completely defined!
