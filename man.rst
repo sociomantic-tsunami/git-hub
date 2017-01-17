@@ -101,22 +101,20 @@ COMMANDS
   `hub.username` is used as *<owner>*, and the parent repository is looked up
   at GitHub to determine the real upstream repository.
 
-  The upstream repository is also added as a remote by the name `upstream`
-  (unless **--triangular** is used, in which case the remote is called `fork`
-  by default) and the `hub.upstream` configuration variable is set (see
-  CONFIGURATION_), unless only *<project>* was used and the resulting
-  repository is not really a fork, in which case is impossible to automatically
-  determine the upstream repository.
+  The upstream repository is added as `origin` and the remote for the fork is
+  called `fork` by default (unless `--no-triangular` is used, please see the
+  option for more details). Also the `hub.upstream` configuration variable is set
+  (see CONFIGURATION_).
 
   \-r NAME, --remote=NAME
     Use `NAME` as the upstream remote repository name instead of the default
     ('fork' if **--triangular** is used, 'upstream' otherwise).
 
   \-t, --triangular
-    Use Git's *triangular workflow* configuration. This option clones from the
-    parent/upstream repository instead of cloning the fork, and adds the fork
-    as a remote repository. Then sets the `remote.pushdefault` Git option and
-    `hub.forkremote` git-hub option to the fork.
+    Use Git's *triangular workflow* configuration (this is the default). This
+    option clones from the parent/upstream repository, and adds the fork as
+    a remote repository. Then sets the `remote.pushdefault` Git option and
+    `hub.forkremote` git-hub option to the just cloned repository.
 
     The effect of this having the upstream repository used by default
     when you pull but using your fork when you push, which is typically what
@@ -125,8 +123,19 @@ COMMANDS
     Git version 1.8.3 or newer is needed to use this option (and 1.8.4 or newer
     is recommended due to some issues in 1.8.3 related to this).
 
-    This option might become the default in the future. To make it the default
-    you can set the option `hub.triangular`. See CONFIGURATION_ for details.
+    To change the default you can set the option `hub.triangular`. See
+    CONFIGURATION_ for details.
+
+  --no-triangular
+    Don't use Git's *triangular workflow* configuration (this is only available
+    for backwards compatibility but is not recommended). This option clones
+    from the forked repository (the remote name will be `origin`) instead of
+    cloning the upstream/parent repo, so both pulls and pushes will be done
+    with the fork by default. The upstream/parent repo Git remove will be
+    called `upstream`.
+
+    This option could be also used to clone a GitHub repository without forking
+    it, but some functionality of the tool will be lost.
 
   GIT CLONE OPTIONS
     Any standard **git clone** option can be passed. Not all of them might make
