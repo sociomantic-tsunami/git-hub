@@ -328,7 +328,7 @@ class Config:
             git_config('baseurl', 'https://api.github.com'))
         self.forcerebase = git_config('forcerebase', "true",
                 opts=['--bool']) == "true"
-        self.triangular = git_config('triangular', "false",
+        self.triangular = git_config('triangular', "true",
                 opts=['--bool']) == "true"
 
     def sanitize_url(self, name, url):
@@ -790,9 +790,13 @@ class CloneCmd (object):
             "instead of the default 'upstream' (for a conventional "
             "clone) or 'fork' (for a --triangular clone)")
         parser.add_argument('-t', '--triangular', action="store_true",
+            default=None,
             help="use Git 'triangular workflow' setup, so you can "
             "push by default to your fork but pull by default "
             "from 'upstream'")
+        parser.add_argument('--no-triangular', action="store_false",
+            dest='triangular',
+            help="do not use Git 'triangular workflow' setup")
         return True # we need to get unknown arguments
 
     @classmethod
@@ -800,8 +804,8 @@ class CloneCmd (object):
         (urltype, proj) = cls.parse_repo(args.repository)
         (repo, upstream) = cls.setup_repo(proj)
         dest = args.dest or repo['name']
-        triangular = cls.check_triangular(config.triangular or
-                args.triangular)
+        triangular = cls.check_triangular(args.triangular
+                if args.triangular is not None else config.triangular)
         if triangular and not upstream:
             parser.error("Can't use triangular workflow without "
                     "an upstream repo")
