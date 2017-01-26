@@ -1003,8 +1003,6 @@ class IssueUtil (object):
 
     @classmethod
     def merge_issue_comments(cls, comments, review_comments):
-        prev_commit_pos = None
-        prev_created = None
         hunks = dict()
         new_review_comments = list()
         for c in review_comments:
