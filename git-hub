@@ -38,6 +38,7 @@ VERSION = "git-hub devel"
 
 import re
 import sys
+import time
 import json
 import base64
 import urllib
@@ -798,7 +799,7 @@ class CloneCmd (object):
     @classmethod
     def run(cls, parser, args):
         (urltype, proj) = cls.parse_repo(args.repository)
-        (repo, upstream) = cls.setup_repo(proj)
+        (repo, upstream, forked) = cls.setup_repo(proj)
         dest = args.dest or repo['name']
         triangular = cls.check_triangular(config.triangular or
                 args.triangular)
@@ -807,8 +808,12 @@ class CloneCmd (object):
                     "an upstream repo")
         url = repo['parent'][urltype] if triangular else repo[urltype]
         validate_url(url, urltype)
-        infof('Cloning {} to {}', url, dest)
-        git_quiet(1, 'clone', *(args.unknown_args + ['--', url, dest]))
+        # If we just forked the repo, GitHub might still be doing the actual
+        # fork, so cloning could fail temporarily. See
+        # https://github.com/sociomantic-tsunami/git-hub/issues/214
+        cls.git_retry_if(not args.triangular and forked,
+                'clone', args.unknown_args + ['--', url, dest],
+                'Cloning {} to {}'.format(url, dest))
         if not upstream:
             # Not a forked repository, nothing else to do
             return
@@ -824,8 +829,37 @@ class CloneCmd (object):
         git_config('upstream', value=upstream)
         validate_url(remote_url, urltype)
         git('remote', 'add', '--', remote, remote_url)
-        infof('Fetching from {} ({})', remote, remote_url)
-        git_quiet(1, 'fetch', '--', remote)
+        # We also need to retry in here, although is less likely since we
+        # already spent some time doing the previous clone
+        cls.git_retry_if(args.triangular and forked,
+                'fetch', ['--', remote],
+                'Fetching from {} ({})'.format(remote, remote_url))
+
+    @classmethod
+    def git_retry_if(cls, condition, cmd, args, progress_msg):
+        # If we are not retrying, just do it once
+        if not condition:
+            infof(progress_msg)
+            git_quiet(1, cmd, *args)
+            return
+        # ~5m total wait time with "human" exponential backoff
+        wait_times = [1, 2, 5, 10, 15, 30, 60, 90, 90]
+        retries = 0
+        while retries < len(wait_times):
+            try:
+                infof(progress_msg)
+                git_quiet(1, cmd, *args)
+                break
+            except GitError as e:
+                t = wait_times[retries]
+                warnf("Couldn't {}, maybe GitHub is still performing "
+                        "the fork. Retrying in {}s ({})", cmd, t, e)
+                time.sleep(t)
+                retries += 1
+        else:
+            die("Couldn't {} after waiting ~{}m in {} retries. Maybe it's "
+                "time to contact GitHub's support: https://github.com/contact",
+                    cmd, sum(wait_times)//60, retries)
 
     @classmethod
     def parse_repo(cls, repo):
@@ -855,6 +889,7 @@ class CloneCmd (object):
 
     @classmethod
     def setup_repo(cls, proj):
+        forked = False
         # Own repo
         if proj.split('/')[0] == config.username:
             repo = req.get('/repos/' + proj)
@@ -876,7 +911,8 @@ class CloneCmd (object):
             infof('Checking for existing fork / forking...')
             repo = req.post('/repos/' + upstream + '/forks')
             infof('Fork at {}', repo['html_url'])
-        return (repo, upstream)
+            forked = True
+        return (repo, upstream, forked)
 
     @classmethod
     def check_triangular(cls, triangular):
