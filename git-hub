@@ -322,7 +322,8 @@ class Config:
         if not self.forkrepo and self.upstream:
             upstream = self.upstream.split('/')
             self.forkrepo = self.username + '/' + upstream[1]
-        self.forkremote = git_config('forkremote', 'origin')
+        self.upstreamremote = git_config('upstreamremote', 'upstream')
+        self.forkremote = git_config('forkremote', 'fork')
         self.pullbase = git_config('pullbase', 'master')
         self.urltype = git_config('urltype', 'ssh_url')
         self.baseurl = self.sanitize_url('baseurl',
@@ -786,10 +787,14 @@ class CloneCmd (object):
         parser.add_argument('dest', metavar='DEST', nargs='?',
             help="destination directory where to put the new "
             "cloned repository")
-        parser.add_argument('-r', '--remote', metavar='NAME',
+        parser.add_argument('-U', '--upstreamremote', metavar='NAME',
+            default=config.upstreamremote,
             help="use NAME as the upstream remote repository name "
-            "instead of the default 'upstream' (for a conventional "
-            "clone) or 'fork' (for a --triangular clone)")
+            "instead of the default '{}'".format(config.upstreamremote))
+        parser.add_argument('-F', '--forkremote', metavar='NAME',
+            default=config.forkremote,
+            help="use NAME as the fork remote repository name "
+            "instead of the default '{}'".format(config.forkremote))
         parser.add_argument('-t', '--triangular', action="store_true",
             default=None,
             help="use Git 'triangular workflow' setup, so you can "
@@ -812,32 +817,41 @@ class CloneCmd (object):
                     "an upstream repo")
         url = repo['parent'][urltype] if triangular else repo[urltype]
         validate_url(url, urltype)
+        remote = args.upstreamremote if triangular else args.forkremote
+        # It's complicated to allow the user to use the --origin option, there
+        # is enough complexity with --upstreamremote and --forkremote, so ask
+        # the user to use those instead
+        for a in args.unknown_args:
+            if a in ('-o', '--origin') or a.startwith('-o', '--origin='):
+                die("Please use --forkremote or --upstreamremote to name your "
+                        "remotes instead of using Git's `{}` option!", a)
         # If we just forked the repo, GitHub might still be doing the actual
         # fork, so cloning could fail temporarily. See
         # https://github.com/sociomantic-tsunami/git-hub/issues/214
         cls.git_retry_if(not args.triangular and forked,
-                'clone', args.unknown_args + ['--', url, dest],
-                'Cloning {} to {}'.format(url, dest))
+                'clone', args.unknown_args + ['--origin', remote, '--', url,
+                    dest], 'Cloning {} to {}'.format(url, dest))
         if not upstream:
             # Not a forked repository, nothing else to do
             return
         # Complete the repository setup
         os.chdir(dest)
-        remote = args.remote or ('fork' if triangular else 'upstream')
+        fetchremote = args.forkremote if triangular else args.upstreamremote
         remote_url = repo['parent'][urltype]
         if triangular:
             remote_url = repo[urltype]
-            git_config('remote.pushdefault', prefix='', value=remote)
-            git_config('forkremote', value=remote)
+            git_config('remote.pushdefault', prefix='', value=fetchremote)
+        git_config('upstreamremote', value=args.upstreamremote)
+        git_config('forkremote', value=args.forkremote)
         git_config('urltype', value=urltype)
         git_config('upstream', value=upstream)
         validate_url(remote_url, urltype)
-        git('remote', 'add', '--', remote, remote_url)
+        git('remote', 'add', '--', fetchremote, remote_url)
         # We also need to retry in here, although is less likely since we
         # already spent some time doing the previous clone
         cls.git_retry_if(args.triangular and forked,
-                'fetch', ['--', remote],
-                'Fetching from {} ({})'.format(remote, remote_url))
+                'fetch', ['--', fetchremote],
+                'Fetching from {} ({})'.format(fetchremote, remote_url))
 
     @classmethod
     def git_retry_if(cls, condition, cmd, args, progress_msg):
