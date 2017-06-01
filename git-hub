@@ -2107,6 +2107,9 @@ class HubCmd (CmdGroup):
 def main():
     global args, config, req, verbose
 
+    verbose = INFO
+    config = Config()
+
     parser = argparse.ArgumentParser(
             description='Git command line interface to GitHub')
     parser.add_argument('--version', action='version', version=VERSION)
@@ -2123,8 +2126,6 @@ def main():
     else:
         args = parser.parse_args()
     verbose = args.verbose - args.silent
-
-    config = Config()
 
     req = RequestManager(config.baseurl, config.oauthtoken)
 
