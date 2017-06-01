@@ -101,14 +101,24 @@ COMMANDS
   `hub.username` is used as *<owner>*, and the parent repository is looked up
   at GitHub to determine the real upstream repository.
 
-  The upstream repository is added as `origin` and the remote for the fork is
-  called `fork` by default (unless `--no-triangular` is used, please see the
-  option for more details). Also the `hub.upstream` configuration variable is set
-  (see CONFIGURATION_).
+  The upstream repository is cloned as `--upstreamremote` (or
+  `hub.upstreamremote`, `upstream` by default), the remote for the fork is
+  added as `--forkremote` (or `hub.forkremote`, `fork` by default) and the fork
+  is set as the git `remote.pushdefault` (so pushing will hit the fork by
+  default), unless `--no-triangular` is used (please see the option for more
+  details).
 
-  \-r NAME, --remote=NAME
+  After cloning and fetching, the git configuration variables `hub.upstream`,
+  `hub.upstreamremote` and `hub.forkremote` are set in the new cloned repo (see
+  CONFIGURATION_).
+
+  \-U NAME, --upstreamremote=NAME
     Use `NAME` as the upstream remote repository name instead of the default
-    ('fork' if **--triangular** is used, 'upstream' otherwise).
+    'upstream').
+
+  \-F NAME, --forkremote=NAME
+    Use `NAME` as the fork remote repository name instead of the default
+    'fork').
 
   \-t, --triangular
     Use Git's *triangular workflow* configuration (this is the default). This
@@ -129,10 +139,8 @@ COMMANDS
   --no-triangular
     Don't use Git's *triangular workflow* configuration (this is only available
     for backwards compatibility but is not recommended). This option clones
-    from the forked repository (the remote name will be `origin`) instead of
-    cloning the upstream/parent repo, so both pulls and pushes will be done
-    with the fork by default. The upstream/parent repo Git remove will be
-    called `upstream`.
+    from the forked repository instead of cloning the upstream/parent repo, so
+    both pulls and pushes will be done with the fork by default.
 
     This option could be also used to clone a GitHub repository without forking
     it, but some functionality of the tool will be lost.
