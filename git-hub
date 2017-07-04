@@ -1513,7 +1513,7 @@ class PullCmd (IssueCmd):
                     "(to be merged to {}:{})", remote_head,
                     args.issue, config.upstream, base)
             pull = req.post(cls.url(), issue=args.issue, base=base,
-                    head=gh_head)
+                    head=gh_head, maintainer_can_modify=False)
             cls.print_issue_summary(pull)
             if msg:
                 cls.clean_and_post_comment(args.issue, msg)
