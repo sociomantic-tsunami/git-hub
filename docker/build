@@ -1,0 +1,5 @@
+#!/bin/sh
+set -xeu
+
+apt-get update
+apt-get -y install python2.7 python-docutils

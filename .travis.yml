@@ -1,0 +1,34 @@
+# We will use docker to set up out environment, so don't use any particular
+# language in Travis itself
+language: generic
+
+# Enable docker
+sudo: required
+services:
+    - docker
+
+# Disable automatic submodule fetching (it's done recursively)
+git:
+    submodules: false
+
+# Do a shallow submodule fetch
+before_install: git submodule update --init
+
+env:
+    global:
+        # Make sure beaver is in the PATH
+        - PATH="$(git config -f .gitmodules submodule.beaver.path)/bin:$PATH"
+    matrix:
+        - DIST=trusty
+        - DIST=xenial
+
+install: beaver install
+
+script: beaver make PYTHON=python2.7 all deb
+
+deploy:
+    provider: script
+    script: beaver bintray upload -d sociomantic-tsunami/tools/git-hub deb/*.deb
+    skip_cleanup: true
+    on:
+        tags: true
