@@ -1,0 +1,3 @@
+[submodule "beaver"]
+	path = beaver
+	url = https://github.com/sociomantic-tsunami/beaver.git
