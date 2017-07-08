@@ -1535,6 +1535,10 @@ class PullCmd (IssueCmd):
                 warnf('Checking out a closed pull request '
                     '(closed at {closed_at})!', **pull)
 
+            if pull['head']['repo'] is None:
+                die("Can't checkout pull request {number}, no head repository "
+                    "found (maybe it was deleted?)", **pull)
+
             remote_url = pull['head']['repo'][config.urltype]
             remote_branch = pull['head']['ref']
 
