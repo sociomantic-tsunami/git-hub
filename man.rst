@@ -446,6 +446,10 @@ from. These are the git config keys used:
   The format is *<owner>/<project>*. This option can be automatically set by
   the `clone` command and is not really required by it or the `setup` command.
 
+`hub.upstreamremote`
+  Remote name for accessing the upstream repository [default: *fork* if
+  **--triangular** is used, *upstream* otherwise).
+
 `hub.forkrepo`
   Your blessed repository fork. The format is *<owner>/<project>*. Used to set
   the head for your pull requests. [default: *<username>/(upstream <project>
@@ -453,7 +457,7 @@ from. These are the git config keys used:
 
 `hub.forkremote`
   Remote name for accessing your fork. Used to push branches before creating
-  a pull request. [default: *origin*]
+  a pull request. [default: *fork*]
 
 `hub.pullbase`
   Default remote branch (or git reference) you want your changes pulled into
