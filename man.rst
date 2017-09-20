@@ -136,7 +136,7 @@ COMMANDS
     To change the default you can set the option `hub.triangular`. See
     CONFIGURATION_ for details.
 
-  --no-triangular
+  \--no-triangular
     Don't use Git's *triangular workflow* configuration (this is only available
     for backwards compatibility but is not recommended). This option clones
     from the forked repository instead of cloning the upstream/parent repo, so
