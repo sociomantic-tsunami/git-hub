@@ -183,7 +183,8 @@ If you built the Debian_/Ubuntu_ package, you can just install the package
 Otherwise you can type ``make install`` to install the tool, man page, *bash
 completion* and VIM_ *ftdetect* plugin (by default in ``/usr/local``, but you
 can pick a different location by passing the ``prefix`` variable to ``make``
-(for example ``make install prefix=/usr``).
+(for example ``make install prefix=/usr``). To pick a location for the
+completion scripts (by default in ``/etc``), use the ``sysconfdir`` variable.
 
 The installation locations might be too specific for Debian_/Ubuntu_ though.
 Please report any failed installation attempts.
