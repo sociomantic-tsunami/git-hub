@@ -1,7 +1,7 @@
 
 prefix ?= /usr/local
 
-export PYTHON := python
+export PYTHON ?= python2
 
 version ?= $(shell git describe --dirty 2> /dev/null | cut -b2-)
 version := $(if $(version),$(version),devel)
@@ -32,7 +32,7 @@ install: git-hub git-hub.1 ftdetect.vim bash-completion README.rst
 	install -m 755 -D git-hub $(DESTDIR)$(prefix)/bin/git-hub
 	sed -i 's/^VERSION = "git-hub devel"$$/VERSION = "git-hub $(version)"/' \
 			$(DESTDIR)$(prefix)/bin/git-hub
-	sed -i 's|^#!/usr/bin/env python$$|#!/usr/bin/env $(PYTHON)|' \
+	sed -i 's|^#!/usr/bin/env python2$$|#!/usr/bin/env $(PYTHON)|' \
 			$(DESTDIR)$(prefix)/bin/git-hub
 	install -m 644 -D git-hub.1 $(DESTDIR)$(prefix)/share/man/man1/git-hub.1
 	install -m 644 -D ftdetect.vim \

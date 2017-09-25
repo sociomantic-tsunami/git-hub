@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # vim: set fileencoding=utf-8 :
 
 # Git command line interface to GitHub.
@@ -1550,6 +1550,10 @@ class PullCmd (IssueCmd):
             if pull['state'] == 'closed':
                 warnf('Checking out a closed pull request '
                     '(closed at {closed_at})!', **pull)
+
+            if pull['head']['repo'] is None:
+                die("Can't checkout pull request {number}, no head repository "
+                    "found (maybe it was deleted?)", **pull)
 
             remote_url = pull['head']['repo'][config.urltype]
             remote_branch = pull['head']['ref']
