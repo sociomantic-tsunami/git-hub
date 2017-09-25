@@ -19,7 +19,6 @@ env:
         # Make sure beaver is in the PATH
         - PATH="$(git config -f .gitmodules submodule.beaver.path)/bin:$PATH"
     matrix:
-        - DIST=trusty
         - DIST=xenial
 
 install: beaver install
