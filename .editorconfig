@@ -16,3 +16,7 @@ trim_trailing_whitespace = true
 # reStructuredTex and Markdown files
 [**.{rest,rst,md}]
 indent_size = 2
+
+# Makefiles need to use tab for indentation
+[{Makefile,**.mak}]
+indent_style = tab
