@@ -6,6 +6,8 @@ export PYTHON ?= python2
 version ?= $(shell git describe --dirty 2> /dev/null | cut -b2-)
 version := $(if $(version),$(version),devel)
 
+install-deps := git-hub git-hub.1 ftdetect.vim bash-completion README.rst
+
 .PHONY: default
 default: all
 
@@ -13,7 +15,7 @@ default: all
 all: man bash-completion
 
 .PHONY: deb
-deb:
+deb: $(install-deps)
 	$(MAKE) prefix=/usr DESTDIR=deb/install install
 	deb/build
 
@@ -28,7 +30,7 @@ bash-completion: generate-bash-completion git-hub
 	./$^ > $@ || ($(RM) $@ && false)
 
 .PHONY: install
-install: git-hub git-hub.1 ftdetect.vim bash-completion README.rst
+install: $(install-deps)
 	install -m 755 -D git-hub $(DESTDIR)$(prefix)/bin/git-hub
 	sed -i 's/^VERSION = "git-hub devel"$$/VERSION = "git-hub $(version)"/' \
 			$(DESTDIR)$(prefix)/bin/git-hub
