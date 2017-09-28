@@ -447,8 +447,7 @@ from. These are the git config keys used:
   the `clone` command and is not really required by it or the `setup` command.
 
 `hub.upstreamremote`
-  Remote name for accessing the upstream repository [default: *fork* if
-  **--triangular** is used, *upstream* otherwise).
+  Remote name for accessing the upstream repository [default: *upstream*].
 
 `hub.forkrepo`
   Your blessed repository fork. The format is *<owner>/<project>*. Used to set
