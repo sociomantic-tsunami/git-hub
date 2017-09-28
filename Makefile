@@ -1,7 +1,5 @@
 
 prefix ?= /usr/local
-# fall back to $prefix/etc (like autoconf); see discussion on #222
-#sysconfdir ?= $(prefix)/etc)
 # fall back to /etc, ignoring prefix
 sysconfdir ?= /etc
 
