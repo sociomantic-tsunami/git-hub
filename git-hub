@@ -950,15 +950,15 @@ class CloneCmd (object):
             warnf("Current git version ({}) has an issue when "
                 "using the option push.default=simple and "
                 "using the --triangular workflow. Please "
-                "use Git {} or newer, or change push.default "
+                "use git {} or newer, or change push.default "
                 "to 'current' for example. Ignoring the "
                 "--triangular option...", cur_ver, min_ver)
             return False
         return True
 
 
-# Utility class that group common functionality used by the multiple `git hub
-# issue` (and `git hub pull`) subcommands.
+# Utility class that groups common functionality used by the multiple 
+# `git hub issue` (and `git hub pull`) subcommands.
 class IssueUtil (object):
 
     cmd_required_config = ['upstream', 'oauthtoken']
@@ -972,7 +972,7 @@ class IssueUtil (object):
 # Please enter the title and description below.
 #
 # The first line is interpreted as the title. An optional description
-# can follow after and empty line.
+# can follow after an empty line.
 #
 # Example:
 #
@@ -1309,8 +1309,8 @@ class IssueCmd (CmdGroup):
             cls.print_issue_summary(issue)
 
 
-# Utility class that group common functionality used by the multiple `git hub
-# pull`) subcommands specifically.
+# Utility class that groups common functionality used by the multiple 
+# `git hub pull`) subcommands specifically.
 class PullUtil (IssueUtil):
 
     name = 'pull request'
