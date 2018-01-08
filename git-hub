@@ -1105,7 +1105,7 @@ class IssueCmd (CmdGroup):
         def setup_parser(cls, parser):
             parser.add_argument('-c', '--closed',
                 action='store_true', default=False,
-                help="show only closed pull requests")
+                help="show only closed %ss" % cls.name)
             parser.add_argument('-C', '--created-by-me',
                 action='store_true',
                 help=("show only %ss created by me" %
