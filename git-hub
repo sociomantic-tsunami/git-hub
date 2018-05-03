@@ -1551,14 +1551,10 @@ class PullCmd (IssueCmd):
                 warnf('Checking out a closed pull request '
                     '(closed at {closed_at})!', **pull)
 
-            if pull['head']['repo'] is None:
-                die("Can't checkout pull request {number}, no head repository "
-                    "found (maybe it was deleted?)", **pull)
+            remote_url = pull['base']['repo'][config.urltype]
+            remote_ref = 'pull/{}/head'.format(pull['number'])
 
-            remote_url = pull['head']['repo'][config.urltype]
-            remote_branch = pull['head']['ref']
-
-            cls.git_fetch(remote_url, remote_branch)
+            cls.git_fetch(remote_url, remote_ref)
             git_quiet(1, 'checkout', 'FETCH_HEAD', *args.args)
 
 # This class is top-level just for convenience, because is too big. Is added to
