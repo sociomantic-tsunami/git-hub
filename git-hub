@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # vim: set fileencoding=utf-8 :
 
 # Git command line interface to GitHub.
@@ -39,12 +39,12 @@ import sys
 import time
 import json
 import base64
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 import pprint
-import urllib2
 import getpass
 import os.path
-import urlparse
 import argparse
 import subprocess
 
@@ -66,9 +66,8 @@ req = None
 ########################################################################
 
 def localeprintf(stream, fmt='', *args, **kwargs):
-    encoding = sys.getfilesystemencoding()
-    msg = fmt.decode(encoding, 'replace').format(*args, **kwargs) + '\n'
-    stream.write(msg.encode(encoding, 'replace'))
+    msg = fmt.format(*args, **kwargs) + '\n'
+    stream.write(msg)
 
 
 def pformat(obj):
@@ -132,10 +131,10 @@ class InterruptException (Exception):
         super(InterruptException, self).__init__(msg)
 
 
-# Wrapper for raw_input to treat EOF as an empty input
+# Wrapper for input to treat EOF as an empty input
 def user_input(*args, **kwargs):
     try:
-        return raw_input(*args, **kwargs)
+        return input(*args, **kwargs)
     except EOFError:
         sys.stdout.write('\n')
         return ''
@@ -229,6 +228,7 @@ def args_to_list(args):
 def git(*args, **kwargs):
     args = args_to_list(args)
     args.insert(0, 'git')
+    kwargs['universal_newlines'] = True
     kwargs['stdout'] = subprocess.PIPE
     kwargs['stderr'] = subprocess.PIPE
     debugf('git command: {} {}', args, kwargs)
@@ -322,13 +322,13 @@ def git_dir():
 def editor(help_msg, msg=None):
     prog = git('var', 'GIT_EDITOR')
     fname = os.path.join(git_dir(), 'HUB_EDITMSG')
-    with file(fname, 'w') as f:
+    with open(fname, 'w') as f:
         f.write(msg or '')
         f.write(help_msg)
     status = subprocess.call([prog + ' "$@"', prog, fname], shell=True)
     if status != 0:
         die("Editor returned {}, aborting...", status)
-    with file(fname) as f:
+    with open(fname) as f:
         msg = f.read()
     return msg
 
@@ -360,7 +360,7 @@ class Config:
                                      opts=['--bool']) == "true"
 
     def sanitize_url(self, name, url):
-        u = urlparse.urlsplit(url)
+        u = urllib.parse.urlsplit(url)
         name = GIT_CONFIG_PREFIX + name
         # interpret www.github.com/api/v4 as www.github.com, /api/v4
         if not u.hostname or not u.scheme:
@@ -374,8 +374,8 @@ class Config:
         netloc = u.hostname
         if u.port:
             netloc += ':' + u.port
-        return urlparse.urlunsplit((u.scheme, netloc,
-                                    u.path.rstrip('/'), u.query, u.fragment))
+        return urllib.parse.urlunsplit(
+            (u.scheme, netloc, u.path.rstrip('/'), u.query, u.fragment))
 
     def check(self, name):
         if getattr(self, name) is None:
@@ -421,14 +421,15 @@ class RequestManager:
 
     # Configure the class to use basic authentication instead of OAuth
     def set_basic_auth(self, username, password):
-        self.basic_auth = "Basic " + base64.urlsafe_b64encode(
-            "%s:%s" % (username, password))
+        b64 = base64.urlsafe_b64encode(
+            "{}:{}".format(username, password).encode())
+        self.basic_auth = "Basic " + b64.decode()
 
     # Open an URL in an authenticated manner using the specified HTTP
     # method. It also add other convenience headers, like Content-Type,
     # Accept (both to json) and Content-Length).
     def auth_urlopen(self, url, method, body):
-        req = urllib2.Request(url, body)
+        req = urllib.request.Request(url, body)
         if self.basic_auth:
             req.add_header("Authorization", self.basic_auth)
         elif self.oauthtoken:
@@ -446,8 +447,8 @@ class RequestManager:
                     debugf('{}: {}', h[0], '<hidden>')
                 else:
                     debugf('{}: {}', *h)
-        debugf('{}', req.get_data())
-        return urllib2.urlopen(req)
+        debugf('{}', req.data)
+        return urllib.request.urlopen(req)
 
     # Serialize args OR kwargs (they are mutually exclusive) as json.
     def dump(self, *args, **kwargs):
@@ -455,9 +456,9 @@ class RequestManager:
             raise ValueError('args and kwargs are mutually '
                              'exclusive')
         if args:
-            return json.dumps(args)
+            return json.dumps(args).encode()
         if kwargs:
-            return json.dumps(kwargs)
+            return json.dumps(kwargs).encode()
         return None
 
     # Get the next URL from the Link: header, if any
@@ -480,14 +481,14 @@ class RequestManager:
             body = self.dump(*args, **kwargs)
         else:
             body = None
-            url += '?' + urllib.urlencode(kwargs)
+            url += '?' + urllib.parse.urlencode(kwargs)
         data = None
         prev_data = None
         while url:
             debugf("Request: {} {}\n{}", method, url, body)
             res = self.auth_urlopen(url, method, body)
             data = res.read()
-            debugf("Response:\n{}", data.decode('UTF8'))
+            debugf("Response:\n{}", data.decode())
             if data:
                 data = json.loads(data)
                 if isinstance(data, list):
@@ -661,7 +662,8 @@ class CmdGroup (object):
         title = None
         if hasattr(cls, 'cmd_title'):
             title = cls.cmd_title
-        subparsers = parser.add_subparsers(title=title)
+        subparsers = parser.add_subparsers(title=title, dest='subcommand')
+        subparsers.required = True
         for cmd in subcommands:
             name = cmd.__name__.lower()[:-len(suffix)]
             if hasattr(cmd, 'cmd_name'):
@@ -809,7 +811,7 @@ class SetupCmd (object):
             die("More than one username found ({}), please try "
                 "again using your username instead",
                 ', '.join(users))
-        return users[0].encode('UTF8')
+        return users[0].decode()
 
 
 # `git hub clone` command implementation
@@ -952,7 +954,7 @@ class CloneCmd (object):
         if '/' not in repo:
             repo = config.username + '/' + repo
         # Get just the owner/repo form from the full URL
-        url = urlparse.urlsplit(repo)
+        url = urllib.parse.urlsplit(repo)
         proj = '/'.join(url.path.split(':')[-1:][0].strip('/').split('/')[-2:])
         return (urltype, proj)
 
@@ -1040,8 +1042,8 @@ class IssueUtil (object):
 
     @classmethod
     def print_issue_summary(cls, issue):
-        infof(u'[{number}] {title} ({user[login]})\n{}{html_url}',
-              u' ' * (len(str(issue['number'])) + 3),
+        infof('[{number}] {title} ({user[login]})\n{}{html_url}',
+              ' ' * (len(str(issue['number'])) + 3),
               **issue)
 
     @classmethod
@@ -1050,7 +1052,7 @@ class IssueUtil (object):
                                     for label in issue.get('labels', [])])
         if issue['labels']:
             issue['labels'] += '\n'
-        infof(u"""
+        infof("""
 #{number}: {title}
 ================================================================================
 {name} is {state}, was reported by {user[login]} and has {comments} comment(s).
@@ -1061,14 +1063,14 @@ class IssueUtil (object):
 """,
               **issue)
         if issue['comments'] > 0:
-            infof(u'Comments:')
+            infof('Comments:')
 
     @classmethod
-    def print_issue_comment(cls, comment, indent=u''):
+    def print_issue_comment(cls, comment, indent=''):
         body = comment['body']
         body = '\n'.join([indent + '    ' + line for line in body.splitlines()])
-        infof(u'{0}On {created_at}, {user[login]}, commented:\n'
-              u'{0}<{html_url}>\n\n{1}\n', indent, body, **comment)
+        infof('{0}On {created_at}, {user[login]}, commented:\n'
+              '{0}<{html_url}>\n\n{1}\n', indent, body, **comment)
 
     @classmethod
     def merge_issue_comments(cls, comments, review_comments):
@@ -1095,14 +1097,14 @@ class IssueUtil (object):
         issue['comments'] += len(comments) + len(review_comments)
         cls.print_issue_header(issue)
         for c in cls.merge_issue_comments(comments, review_comments):
-            infof(u'{}\n', u'-' * 80)
+            infof('{}\n', '-' * 80)
             if 'diff_hunk' in c:
                 hunk = '\n'.join(c['diff_hunk'].splitlines()[-5:])
-                infof(u'diff --git a/{path} b/{path}\n'
-                      u'index {original_commit_id}..{commit_id}\n'
-                      u'--- a/{path}\n'
-                      u'+++ b/{path}\n'
-                      u'{0}\n',
+                infof('diff --git a/{path} b/{path}\n'
+                      'index {original_commit_id}..{commit_id}\n'
+                      '--- a/{path}\n'
+                      '+++ b/{path}\n'
+                      '{0}\n',
                       hunk, **c)
                 indent = '    '
                 cls.print_issue_comment(c, indent)
@@ -1114,9 +1116,9 @@ class IssueUtil (object):
     @classmethod
     def print_comment(cls, comment):
         body = comment['body']
-        infof(u'[{id}] {}{} ({user[login]})\n{html_url}', body[:60],
-              u'…' if len(body) > 60 else u'',
-              u' ' * (len(str(comment['id'])) + 3),
+        infof('[{id}] {}{} ({user[login]})\n{html_url}', body[:60],
+              '…' if len(body) > 60 else '',
+              ' ' * (len(str(comment['id'])) + 3),
               **comment)
 
     @classmethod
@@ -2114,7 +2116,7 @@ class RebaseCmd (PullUtil):
         fname = cls.rebasing_file_name()
         if os.path.exists(fname):
             try:
-                with file(fname) as f:
+                with open(fname) as f:
                     # id read as string
                     pull_id = f.readline()[:-1]  # strip \n
                     cls.saved_old_ref = f.readline()[:-1]
@@ -2237,7 +2239,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except urllib2.HTTPError as error:
+    except urllib.error.HTTPError as error:
         try:
             body = error.read()
             err = json.loads(body)
@@ -2266,7 +2268,7 @@ if __name__ == '__main__':
             errf('{}', body)
             sys.exit(3)
         sys.exit(4)
-    except urllib2.URLError as error:
+    except urllib.error.URLError as error:
         errf('Network error: {}', error)
         sys.exit(5)
     except KeyboardInterrupt:
