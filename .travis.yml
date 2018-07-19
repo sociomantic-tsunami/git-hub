@@ -20,6 +20,7 @@ env:
         - PATH="$(git config -f .gitmodules submodule.beaver.path)/bin:$PATH"
     matrix:
         - DIST=xenial
+        - DIST=bionic
 
 install: beaver install
 
