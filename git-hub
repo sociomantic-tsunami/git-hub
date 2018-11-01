@@ -823,7 +823,7 @@ class CloneCmd (object):
         # is enough complexity with --upstreamremote and --forkremote, so ask
         # the user to use those instead
         for a in args.unknown_args:
-            if a in ('-o', '--origin') or a.startwith('-o', '--origin='):
+            if a in ('-o', '--origin') or a.startswith('-o', '--origin='):
                 die("Please use --forkremote or --upstreamremote to name your "
                         "remotes instead of using Git's `{}` option!", a)
         # If we just forked the repo, GitHub might still be doing the actual
