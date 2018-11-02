@@ -3,9 +3,10 @@
 
 # Git command line interface to GitHub.
 #
-# Written by Leandro Lucarella <leandro.lucarella@sociomantic.com>
+# Written by Leandro Lucarella <leandro.lucarella@dunnhumby.com>
 #
-# Copyright (c) 2013 by Sociomantic Labs GmbH
+# Copyright (c) 2013 dunnhumby Germany GmbH.
+# All rights reserved.
 #
 # This program is written as a single file for practical reasons, this way
 # users can download just one file and use it, while if it's spread across
