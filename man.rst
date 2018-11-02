@@ -6,8 +6,8 @@ git-hub
 Git command line interface to GitHub
 ------------------------------------
 
-:Author: Leandro Lucarella <leandro.lucarella@sociomantic.com>
-:Copyright: 2013 Sociomantic Labs GmbH
+:Author: Leandro Lucarella <leandro.lucarella@dunnhumby.com>
+:Copyright: 2013 dunnhumby Germany GmbH
 :Version: devel
 :Date: |date|
 :Manual section: 1
