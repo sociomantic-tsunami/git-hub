@@ -294,12 +294,20 @@ def git_dir():
 # The contents of .git/HUB_EDITMSG are returned by the function (after the
 # editor is closed). The text is not filtered at all at this stage (so if the
 # user left the `help_msg`, it will be part of the returned string too.
-def editor(help_msg, msg=None):
+def editor(help_msg, msg=""):
+    PREV_MSG_HEADER="# This is the recovered text as the previous process didn't finish properly.\n"
     prog = git('var', 'GIT_EDITOR')
     fname = os.path.join(git_dir(), 'HUB_EDITMSG')
+
+    if os.path.isfile(fname):
+        with file(fname, 'r') as f:
+            msg = PREV_MSG_HEADER + f.read()
+    else:
+        msg += help_msg
+
     with file(fname, 'w') as f:
         f.write(msg or '')
-        f.write(help_msg)
+
     status = subprocess.call([prog + ' "$@"', prog, fname], shell=True)
     if status != 0:
         die("Editor returned {}, aborting...", status)
@@ -307,6 +315,9 @@ def editor(help_msg, msg=None):
         msg = f.read()
     return msg
 
+def cleanup_file():
+    fname = os.path.join(git_dir(), 'HUB_EDITMSG')
+    os.path.remove(fname)
 
 # git-hub specific configuration container
 #
@@ -1190,6 +1201,7 @@ class IssueCmd (CmdGroup):
             issue = req.post(cls.url(), title=title, body=body,
                 assignee=args.assignee, labels=args.labels,
                 milestone=args.milestone)
+            cleanup_file()
             cls.print_issue_summary(issue)
 
     class UpdateCmd (IssueUtil):
@@ -1265,6 +1277,7 @@ class IssueCmd (CmdGroup):
                 params['title'] = title
                 params['body'] = body
             issue = req.patch(url, **params)
+            cleanup_file()
             cls.print_issue_summary(issue)
 
     class CommentCmd (IssueUtil):
@@ -1283,6 +1296,7 @@ class IssueCmd (CmdGroup):
         def run(cls, parser, args):
             body = args.message or cls.comment_editor()
             cls.clean_and_post_comment(args.issue, body)
+            cleanup_file()
 
     class CloseCmd (IssueUtil):
         cmd_help = "close an opened issue"
@@ -1307,6 +1321,7 @@ class IssueCmd (CmdGroup):
             if msg:
                 cls.clean_and_post_comment(args.issue, msg)
             issue = req.patch(cls.url(args.issue), state='closed')
+            cleanup_file()
             cls.print_issue_summary(issue)
 
 
@@ -1481,6 +1496,7 @@ class PullCmd (IssueCmd):
                     remote_head, config.upstream, base)
             pull = req.post(cls.url(), head=gh_head, base=base,
                     title=title, body=body)
+            cleanup_file()
             cls.print_issue_summary(pull)
 
     class AttachCmd (PullUtil):
@@ -1534,6 +1550,7 @@ class PullCmd (IssueCmd):
             cls.print_issue_summary(pull)
             if msg:
                 cls.clean_and_post_comment(args.issue, msg)
+            cleanup_file()
 
     class CheckoutCmd (PullUtil):
         cmd_help = "checkout the remote branch (head) of the pull request"
@@ -2001,6 +2018,7 @@ class RebaseCmd (PullUtil):
         if pull['state'] == 'open' and pull_sha != pushed_sha:
             pull = req.patch(cls.url(args.pull),
                     state='closed')
+        cleanup_file()
         return pull
 
     # Returns True if there is a (pure) `git rebase` going on (not
