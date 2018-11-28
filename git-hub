@@ -299,7 +299,7 @@ def editor(help_msg, msg=None):
     fname = os.path.join(git_dir(), 'HUB_EDITMSG')
     with file(fname, 'w') as f:
         f.write(msg or '')
-        f.write(help_msg)
+        f.write(help_msg or '')
     status = subprocess.call([prog + ' "$@"', prog, fname], shell=True)
     if status != 0:
         die("Editor returned {}, aborting...", status)
@@ -525,8 +525,11 @@ def clean_message(msg):
 # by an empty line).
 #
 # Returns the tuple (title, body) where body might be an empty string.
-def split_titled_message(msg):
-    lines = check_empty_message(clean_message(msg)).splitlines()
+def split_titled_message(msg, *args, **kwargs):
+    if "clean_msg" in kwargs and kwargs["clean_msg"] == False:
+        lines = check_empty_message(msg).splitlines()
+    else:
+        lines = check_empty_message(clean_message(msg)).splitlines()
     title = lines[0]
     body = ''
     if len(lines) > 1:
@@ -1077,8 +1080,11 @@ class IssueUtil (object):
         return s
 
     @classmethod
-    def editor(cls, msg=None):
-        return editor(cls.help_msg, msg)
+    def editor(cls, msg=None, *args, **kwargs):
+        if "show_help_msg" in kwargs and kwargs["show_help_msg"] == False:
+            return editor(None, msg)
+        else:
+            return editor(cls.help_msg, msg)
 
     @classmethod
     def comment_editor(cls, msg=None):
@@ -1253,17 +1259,23 @@ class IssueCmd (CmdGroup):
             if args.milestone is not None:
                 params['milestone'] = args.milestone
             msg = args.message
+
+            issue = req.get(url)
+            msg_original = issue['title']
+            if issue['body']:
+                msg_original += '\n\n' + issue['body']
+
             if args.edit_message:
                 if not msg:
-                    issue = req.get(url)
-                    msg = issue['title']
-                    if issue['body']:
-                        msg += '\n\n' + issue['body']
-                msg = cls.editor(msg)
+                    msg = msg_original
+                msg = cls.editor(msg, show_help_msg=False)
             if msg:
-                (title, body) = split_titled_message(msg)
+                (title, body) = split_titled_message(msg, clean_msg=False)
                 params['title'] = title
+                if not body:
+                    body = split_titled_message(msg_original, clean_msg=False)[1]
                 params['body'] = body
+
             issue = req.patch(url, **params)
             cls.print_issue_summary(issue)
 
