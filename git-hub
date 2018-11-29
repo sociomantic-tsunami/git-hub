@@ -1199,7 +1199,10 @@ class IssueCmd (CmdGroup):
             parser.add_argument('issue', metavar=cls.id_var,
                 help="number identifying the %s to update"
                         % cls.name)
-            parser.add_argument('-m', '--message', metavar='MSG',
+            group = parser.add_mutually_exclusive_group()
+            group.add_argument('-t', '--title', metavar='TITLE',
+                help="new %s title" % cls.name)
+            group.add_argument('-m', '--message', metavar='MSG',
                 help="new %s title (and description); the "
                 "first line is used as the title and "
                 "any text after an empty line is used as "
@@ -1253,10 +1256,13 @@ class IssueCmd (CmdGroup):
             if args.milestone is not None:
                 params['milestone'] = args.milestone
             msg = args.message
+            title = args.title
+            if title:
+                params['title'] = title
             if args.edit_message:
                 if not msg:
                     issue = req.get(url)
-                    msg = issue['title']
+                    msg = title if title else issue['title']
                     if issue['body']:
                         msg += '\n\n' + issue['body']
                 msg = cls.editor(msg)
