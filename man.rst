@@ -196,6 +196,9 @@ COMMANDS
       New issue title (and description). The first line is used as the issue
       title and any text after an empty line is used as the optional body.
 
+    \-t TITLE, --message=TITLE
+      New issue title.
+
     \-e, --edit-message
       Open the default `GIT_EDITOR` to edit the current title (and description)
       of the issue.
