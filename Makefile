@@ -4,6 +4,7 @@ prefix ?= /usr/local
 sysconfdir ?= /etc
 
 export PYTHON ?= python2
+RST2MAN ?= rst2man
 
 version ?= $(shell git describe --dirty 2> /dev/null | cut -b2-)
 version := $(if $(version),$(version),devel)
@@ -26,7 +27,7 @@ man: git-hub.1
 
 git-hub.1: man.rst git-hub
 	sed 's/^:Version: devel$$/:Version: $(version)/' $< | \
-		rst2man --exit-status=1 > $@ || ($(RM) $@ && false)
+		$(RST2MAN) --exit-status=1 > $@ || ($(RM) $@ && false)
 
 bash-completion: generate-bash-completion git-hub
 	./$^ > $@ || ($(RM) $@ && false)

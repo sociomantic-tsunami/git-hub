@@ -186,6 +186,9 @@ can pick a different location by passing the ``prefix`` variable to ``make``
 (for example ``make install prefix=/usr``). To pick a location for the
 completion scripts (by default in ``/etc``), use the ``sysconfdir`` variable.
 
+If Docutils_ is installed using ``pip`` the environment variable ``RST2MAN``
+should be set to ``rst2man.py``.
+
 The installation locations might be too specific for Debian_/Ubuntu_ though.
 Please report any failed installation attempts.
 
