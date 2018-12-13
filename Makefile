@@ -4,7 +4,7 @@ prefix ?= /usr/local
 sysconfdir ?= /etc
 
 export PYTHON ?= python2
-RST2MAN ?=rst2man
+RST2MAN ?= rst2man
 
 version ?= $(shell git describe --dirty 2> /dev/null | cut -b2-)
 version := $(if $(version),$(version),devel)
