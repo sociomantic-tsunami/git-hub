@@ -958,7 +958,7 @@ class CloneCmd (object):
         return True
 
 
-# Utility class that groups common functionality used by the multiple 
+# Utility class that groups common functionality used by the multiple
 # `git hub issue` (and `git hub pull`) subcommands.
 class IssueUtil (object):
 
@@ -1316,7 +1316,7 @@ class IssueCmd (CmdGroup):
             cls.print_issue_summary(issue)
 
 
-# Utility class that groups common functionality used by the multiple 
+# Utility class that groups common functionality used by the multiple
 # `git hub pull`) subcommands specifically.
 class PullUtil (IssueUtil):
 
@@ -1495,7 +1495,7 @@ class PullCmd (IssueCmd):
         @classmethod
         def setup_parser(cls, parser):
             parser.add_argument('issue', metavar='ISSUE',
-                help="pull request ID to attach code to")
+                help="issue ID to attach code to")
             parser.add_argument('head', metavar='HEAD', nargs='?',
                 help="branch (or git ref) where your changes "
                 "are implemented")
