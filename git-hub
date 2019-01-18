@@ -1494,7 +1494,7 @@ class PullCmd (IssueCmd):
                 "to a pull request)"
         @classmethod
         def setup_parser(cls, parser):
-            parser.add_argument('issue', metavar='ISSUE',
+            parser.add_argument('issue', metavar='ISSUE', type=int,
                 help="issue ID to attach code to")
             parser.add_argument('head', metavar='HEAD', nargs='?',
                 help="branch (or git ref) where your changes "
