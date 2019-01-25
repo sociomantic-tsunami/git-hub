@@ -75,7 +75,7 @@ COMMANDS
     GitHub's password (will not be stored).
 
   \-b URL, --baseurl=URL
-    GitHub's base URL to use to access the API. Set this when you GitHub API is
+    GitHub's base URL to use to access the API. Set this when your GitHub API is
     in another location other than the default (Enterprise servers usually use
     https://host/api/v3).
 
@@ -472,7 +472,7 @@ from. These are the git config keys used:
   details or options. [default: *ssh_url*]
 
 `hub.baseurl`
-  GitHub's base URL to use to access the API. Set this when you GitHub API is
+  GitHub's base URL to use to access the API. Set this when your GitHub API is
   in another location other than the default (Enterprise servers usually use
   https://host/api/v3). This will be prepended to all GitHub API calls and it
   has to be a full URL, not just something like "www.example.com/api/v3/".

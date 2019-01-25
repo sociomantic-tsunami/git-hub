@@ -823,7 +823,7 @@ class CloneCmd (object):
         # is enough complexity with --upstreamremote and --forkremote, so ask
         # the user to use those instead
         for a in args.unknown_args:
-            if a in ('-o', '--origin') or a.startwith('-o', '--origin='):
+            if a in ('-o', '--origin') or a.startswith('-o', '--origin='):
                 die("Please use --forkremote or --upstreamremote to name your "
                         "remotes instead of using Git's `{}` option!", a)
         # If we just forked the repo, GitHub might still be doing the actual
@@ -1073,7 +1073,7 @@ class IssueUtil (object):
     def url(cls, number=None):
         s = '/repos/%s/%s' % (config.upstream, cls.gh_path)
         if number:
-            s += '/' + number
+            s += '/' + str(number)
         return s
 
     @classmethod
@@ -1143,7 +1143,7 @@ class IssueCmd (CmdGroup):
         @classmethod
         def setup_parser(cls, parser):
             parser.add_argument('issues',
-                nargs='+', metavar=cls.id_var,
+                nargs='+', metavar=cls.id_var, type=int,
                 help="number identifying the %s to show"
                         % cls.name)
             parser.add_argument('--summary',
@@ -1180,7 +1180,7 @@ class IssueCmd (CmdGroup):
                 metavar='USER',
                 help="assign a user to the %s; must be a "
                 "valid GitHub login name" % cls.name)
-            parser.add_argument('-M', '--milestone', metavar='ID',
+            parser.add_argument('-M', '--milestone', metavar='ID', type=int,
                 help="assign the milestone identified by the "
                 "number ID to the %s" % cls.name)
         @classmethod
@@ -1196,7 +1196,7 @@ class IssueCmd (CmdGroup):
         cmd_help = "update an existing issue"
         @classmethod
         def setup_parser(cls, parser):
-            parser.add_argument('issue', metavar=cls.id_var,
+            parser.add_argument('issue', metavar=cls.id_var, type=int,
                 help="number identifying the %s to update"
                         % cls.name)
             group = parser.add_mutually_exclusive_group()
@@ -1231,7 +1231,7 @@ class IssueCmd (CmdGroup):
                 metavar='USER',
                 help="assign a user to the %s; must be a "
                 "valid GitHub login name" % cls.name)
-            parser.add_argument('-M', '--milestone', metavar='ID',
+            parser.add_argument('-M', '--milestone', metavar='ID', type=int,
                 help="assign the milestone identified by the "
                 "number ID to the %s" % cls.name)
         @classmethod
@@ -1277,7 +1277,7 @@ class IssueCmd (CmdGroup):
         cmd_help = "add a comment to an existing issue"
         @classmethod
         def setup_parser(cls, parser):
-            parser.add_argument('issue', metavar=cls.id_var,
+            parser.add_argument('issue', metavar=cls.id_var, type=int,
                 help="number identifying the %s to comment on"
                         % cls.name)
             parser.add_argument('-m', '--message', metavar='MSG',
@@ -1294,7 +1294,7 @@ class IssueCmd (CmdGroup):
         cmd_help = "close an opened issue"
         @classmethod
         def setup_parser(cls, parser):
-            parser.add_argument('issue', metavar=cls.id_var,
+            parser.add_argument('issue', metavar=cls.id_var, type=int,
                 help="number identifying the %s to close"
                         % cls.name)
             parser.add_argument('-m', '--message', metavar='MSG',
@@ -1494,7 +1494,7 @@ class PullCmd (IssueCmd):
                 "to a pull request)"
         @classmethod
         def setup_parser(cls, parser):
-            parser.add_argument('issue', metavar='ISSUE',
+            parser.add_argument('issue', metavar='ISSUE', type=int,
                 help="pull request ID to attach code to")
             parser.add_argument('head', metavar='HEAD', nargs='?',
                 help="branch (or git ref) where your changes "
@@ -1545,7 +1545,7 @@ class PullCmd (IssueCmd):
         cmd_help = "checkout the remote branch (head) of the pull request"
         @classmethod
         def setup_parser(cls, parser):
-            parser.add_argument('pull',
+            parser.add_argument('pull', type=int,
                 help="number identifying the pull request to checkout")
             parser.add_argument("args",
                 nargs=argparse.REMAINDER,
@@ -1606,7 +1606,7 @@ class RebaseCmd (PullUtil):
     def setup_parser(cls, parser):
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument('pull',
-            metavar=cls.id_var, nargs='?',
+            metavar=cls.id_var, nargs='?', type=int,
             help="number identifying the pull request to rebase")
         group.add_argument('--continue', dest='action',
             action='store_const', const='--continue',
