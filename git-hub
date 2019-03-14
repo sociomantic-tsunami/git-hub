@@ -523,25 +523,20 @@ def check_empty_message(msg):
     return msg
 
 message_markdown_help = '''\
-# Remember GitHub will parse comments and descriptions as GitHub
-# Flavored Markdown.
-# For details see:
-# https://help.github.com/articles/github-flavored-markdown/
-#
-# Lines starting with '# ' (note the space after the hash!) will be
-# ignored, and an empty message aborts the command. The space after the
-# hash is required by comments to avoid accidentally commenting out a
-# line starting with a reference to an issue (#4 for example). If you
-# want to include Markdown headers in your message, use the Setext-style
-# headers, which consist on underlining titles with '=' for first-level
-# or '-' for second-level headers.
+#-# Remember GitHub will parse comments and descriptions as GitHub
+#-# Flavored Markdown.
+#-# For details see:
+#-# https://help.github.com/articles/github-flavored-markdown/
+#-#
+#-# Lines starting with '#-#' will be ignored, and an empty message
+#-# aborts the command.
 '''
 
 # For now it only removes comment lines
 def clean_message(msg):
     lines = msg.splitlines()
     # Remove comment lines
-    lines = [l for l in lines if not l.startswith('# ') and l != '#']
+    lines = [l for l in lines if not l.startswith('#-#')]
     return '\n'.join(lines)
 
 # For messages expecting a title, split the first line as the title and the
@@ -994,22 +989,22 @@ class IssueUtil (object):
     gh_path = 'issues'
     id_var = 'ISSUE'
     help_msg = '''
-# Please enter the title and description below.
-#
-# The first line is interpreted as the title. An optional description
-# can follow after an empty line.
-#
-# Example:
-#
-#   Some title
-#
-#   Some description that can span several
-#   lines.
-#
+#-# Please enter the title and description below.
+#-#
+#-# The first line is interpreted as the title. An optional description
+#-# can follow after an empty line.
+#-#
+#-# Example:
+#-#
+#-#   Some title
+#-#
+#-#   Some description that can span several
+#-#   lines.
+#-#
 ''' + message_markdown_help
     comment_help_msg = '''
-# Please enter your comment below.
-#
+#-# Please enter your comment below.
+#-#
 ''' + message_markdown_help
 
     @classmethod
