@@ -284,6 +284,17 @@ COMMANDS
       message in the editor and if not, the message of the last commit will be
       used instead.
 
+    \-l LABEL, --label=LABEL
+      Attach `LABEL` to the pull request (can be specified multiple times to
+      set multiple labels).
+
+    \-a USER, --assign=USER
+      Assign a user to the pull request. `USER` must be a valid GitHub login
+      name.
+
+    \-M ID, --milestone=ID
+      Assign the milestone identified by the number ID to the pull request.
+
     \-b BASE, --base=BASE
       Branch (or git ref) you want your changes pulled into. By default the
       tracking branch (`branch.<ref>.merge` configuration variable) is used or
