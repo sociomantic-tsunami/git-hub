@@ -958,7 +958,7 @@ class CloneCmd (object):
         return True
 
 
-# Utility class that groups common functionality used by the multiple 
+# Utility class that groups common functionality used by the multiple
 # `git hub issue` (and `git hub pull`) subcommands.
 class IssueUtil (object):
 
@@ -1236,29 +1236,11 @@ class IssueCmd (CmdGroup):
                 "number ID to the %s" % cls.name)
         @classmethod
         def run(cls, parser, args):
-            # URL fixed to issues, pull requests updates are made
-            # through issues to allow changing labels, assignee and
-            # milestone (even when GitHub itself doesn't support it
-            # :D)
-            url = '/repos/%s/issues/%s' % (config.upstream,
-                    args.issue)
-            params = dict()
-            # Should labels be cleared?
-            if (args.labels and len(args.labels) == 1 and
-                    not args.labels[0]):
-                params['labels'] = []
-            elif args.labels:
-                params['labels'] = args.labels
-            if args.state:
-                params['state'] = args.state
-            if args.assignee is not None:
-                params['assignee'] = args.assignee
-            if args.milestone is not None:
-                params['milestone'] = args.milestone
+            title_body = dict()
             msg = args.message
             title = args.title
             if title:
-                params['title'] = title
+                title_body['title'] = title
             if args.edit_message:
                 if not msg:
                     issue = req.get(url)
@@ -1268,10 +1250,36 @@ class IssueCmd (CmdGroup):
                 msg = cls.editor(msg)
             if msg:
                 (title, body) = split_titled_message(msg)
+                title_body['title'] = title
+                title_body['body'] = body
+            cls._do_update(args.issue, args.label, args.assignee,
+                    args.milestone, args.state, **title_body)
+            cls.print_issue_summary(issue)
+        @classmethod
+        def _do_update(cls, issue_id, labels=None, assignee=None,
+                milestone=None, state=None, title=None, body=None):
+            # URL fixed to issues, pull requests updates are made
+            # through issues to allow changing labels, assignee and
+            # milestone (even when GitHub itself doesn't support it
+            # :D)
+            url = '/repos/%s/issues/%s' % (config.upstream, issue_id)
+            params = dict()
+            # Should labels be cleared?
+            if (labels and len(labels) == 1 and not labels[0]):
+                params['labels'] = []
+            elif labels:
+                params['labels'] = labels
+            if state:
+                params['state'] = state
+            if assignee is not None:
+                params['assignee'] = assignee
+            if milestone is not None:
+                params['milestone'] = milestone
+            if title:
                 params['title'] = title
+            if body:
                 params['body'] = body
             issue = req.patch(url, **params)
-            cls.print_issue_summary(issue)
 
     class CommentCmd (IssueUtil):
         cmd_help = "add a comment to an existing issue"
@@ -1316,7 +1324,7 @@ class IssueCmd (CmdGroup):
             cls.print_issue_summary(issue)
 
 
-# Utility class that groups common functionality used by the multiple 
+# Utility class that groups common functionality used by the multiple
 # `git hub pull`) subcommands specifically.
 class PullUtil (IssueUtil):
 
@@ -1453,11 +1461,7 @@ class PullCmd (IssueCmd):
             parser.add_argument('head', metavar='HEAD', nargs='?',
                 help="branch (or git ref) where your changes "
                 "are implemented")
-            parser.add_argument('-m', '--message', metavar='MSG',
-                help="pull request title (and description); "
-                "the first line is used as the pull request "
-                "title and any text after an empty line is "
-                "used as the optional body")
+            IssueCmd.NewCmd.setup_parser(parser)
             parser.add_argument('-b', '--base', metavar='BASE',
                 help="branch (or git ref) you want your "
                 "changes pulled into (uses the tracking "
@@ -1487,6 +1491,8 @@ class PullCmd (IssueCmd):
                     remote_head, config.upstream, base)
             pull = req.post(cls.url(), head=gh_head, base=base,
                     title=title, body=body)
+            IssueCmd.UpdateCmd._do_update(pull['number'], args.labels,
+                    args.assignee, args.milestone)
             cls.print_issue_summary(pull)
 
     class AttachCmd (PullUtil):
