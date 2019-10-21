@@ -63,8 +63,8 @@ ERR   = 0
 
 def localeprintf(stream, fmt='', *args, **kwargs):
     encoding = sys.getfilesystemencoding()
-    msg = fmt.decode(encoding, 'replace').format(*args, **kwargs) + '\n'
-    stream.write(msg.encode(encoding, 'replace'))
+    msg = __decode(fmt, encoding).format(*args, **kwargs) + '\n'
+    stream.write(msg)
 
 def pformat(obj):
     return pprint.pformat(obj, indent=4)
