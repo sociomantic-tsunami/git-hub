@@ -427,14 +427,14 @@ class RequestManager:
     # Open an URL in an authenticated manner using the specified HTTP
     # method. It also add other convenience headers, like Content-Type,
     # Accept (both to json) and Content-Length).
-    def auth_urlopen(self, url, method, data):
+    def auth_urlopen(self, url, method, data, media_type):
         req = urllib2.Request(url, _encode(data))
         if self.basic_auth:
             req.add_header("Authorization", self.basic_auth)
         elif self.oauthtoken:
             req.add_header("Authorization", "bearer " + self.oauthtoken)
         req.add_header("Content-Type", "application/json")
-        req.add_header("Accept", "application/vnd.github.v3+json")
+        req.add_header("Accept", media_type)
         req.add_header("Content-Length", str(len(data) if data else 0))
         req.get_method = lambda: method.upper()
         debugf('{}', req.get_full_url())
@@ -472,7 +472,7 @@ class RequestManager:
     # uppercase), and args/kwargs are data to be sent to the client. Only
     # one can be specified at a time and they are serialized as json (args
     # as a json list and kwargs as a json dictionary/object).
-    def json_req(self, url, method, *args, **kwargs):
+    def json_req(self, url, method, media_type, *args, **kwargs):
         url = self.base_url + url
         if method.upper() in ('POST', 'PATCH', 'PUT'):
             body = self.dump(*args, **kwargs)
@@ -483,7 +483,7 @@ class RequestManager:
         prev_data = None
         while url:
             debugf("Request: {} {}\n{}", method, url, body)
-            res = self.auth_urlopen(url, method, body)
+            res = self.auth_urlopen(url, method, body, media_type)
             data = res.read()
             debugf("Response:\n{}", _decode(data))
             if data:
@@ -506,8 +506,9 @@ class RequestManager:
 # methods get bind with the last value of method ('delete') in this case, which
 # is not only what we want, is also very dangerous.
 def make_method(method):
-    return lambda self, url, *args, **kwargs: \
-        self.json_req(url, method, *args, **kwargs)
+    default_media_type = "application/vnd.github.v3+json"
+    return lambda self, url, media_type=default_media_type, *args, **kwargs: \
+        self.json_req(url, method, media_type, *args, **kwargs)
 for method in ('OPTIONS', 'HEAD', 'GET', 'POST', 'PATCH', 'PUT', 'DELETE'):
     setattr(RequestManager, method.lower(), make_method(method))
 
@@ -1499,6 +1500,9 @@ class PullCmd (IssueCmd):
                     action='store_true', default=False,
                     help="force the push git operation (use with "
                     "care!)")
+            parser.add_argument('-d', '--draft',
+                    action='store_true', default=False,
+                    help="create a draft pull request")
         @classmethod
         def run(cls, parser, args):
             head_ref, head_name, remote_head, base, gh_head = \
@@ -1512,8 +1516,12 @@ class PullCmd (IssueCmd):
                     force=args.force_push)
             infof("Creating pull request from branch {} to {}:{}",
                     remote_head, config.upstream, base)
-            pull = req.post(cls.url(), head=gh_head, base=base,
-                    title=title, body=body)
+            media_type = "application/vnd.github.v3+json"
+            # The draft feature is only available in a custom media type
+            if args.draft:
+                media_type = "application/vnd.github.shadow-cat-preview+json"
+            pull = req.post(cls.url(), media_type, head=gh_head, base=base,
+                    title=title, body=body, draft=args.draft)
             IssueCmd.UpdateCmd._do_update(pull['number'], args.labels,
                     args.assignee, args.milestone)
             cls.print_issue_summary(pull)
