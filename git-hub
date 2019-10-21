@@ -61,6 +61,12 @@ ERR   = 0
 # Output functions, all use the str.format() function for formatting
 ########################################################################
 
+def __decode(_string, encoding='utf-8'):
+    if sys.version_info < (3, 0):
+        return _string.decode(encoding, 'replace')
+    else:
+        return _string
+
 def localeprintf(stream, fmt='', *args, **kwargs):
     encoding = sys.getfilesystemencoding()
     msg = __decode(fmt, encoding).format(*args, **kwargs) + '\n'
