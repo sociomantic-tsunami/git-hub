@@ -216,7 +216,7 @@ def git(*args, **kwargs):
     proc = subprocess.Popen(args, **kwargs)
     (stdout, stderr) = proc.communicate()
     if proc.returncode != 0:
-        raise GitError(proc.returncode, args, stderr.rstrip('\n'))
+        raise GitError(proc.returncode, args, stderr.rstrip())
     return stdout.rstrip('\n')
 
 # Check if the git version is at least min_version
