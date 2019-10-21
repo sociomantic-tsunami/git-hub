@@ -311,6 +311,11 @@ COMMANDS
     \-f, --force-push
       Force the push operations. Use with care!
 
+    \-d, --draft
+      Create a draft pull request. Draft pull requests cannot be merged,
+      and code owners are not automatically requested to review draft pull
+      requests.
+
   `attach` ISSUE [HEAD]
     Convert the issue identified by **ISSUE** to a pull request by attaching
     commits to it. The branch (or git ref) where your changes are
