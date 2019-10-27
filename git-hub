@@ -318,13 +318,13 @@ def git_dir():
 def editor(help_msg, msg=None):
     prog = git('var', 'GIT_EDITOR')
     fname = os.path.join(git_dir(), 'HUB_EDITMSG')
-    with file(fname, 'w') as f:
+    with open(fname, 'w') as f:
         f.write(msg or '')
         f.write(help_msg)
     status = subprocess.call([prog + ' "$@"', prog, fname], shell=True)
     if status != 0:
         die("Editor returned {}, aborting...", status)
-    with file(fname) as f:
+    with open(fname) as f:
         msg = f.read()
     return msg
 
