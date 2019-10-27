@@ -2181,7 +2181,10 @@ def main():
             'git config --global --unset {0}password',
             GIT_CONFIG_PREFIX)
 
-    args.run(parser, args)
+    if hasattr(args, 'run'):
+        args.run(parser, args)
+    else:
+        parser.print_usage()
 
 
 # Entry point of the program, just calls main() and handles errors.
