@@ -61,10 +61,31 @@ ERR   = 0
 # Output functions, all use the str.format() function for formatting
 ########################################################################
 
+def _encode(_string, encoding=None):
+    if not encoding:
+        encoding = sys.getfilesystemencoding()
+    if sys.version_info < (3, 0):
+        return _string.encode(encoding, 'replace')
+    else:
+        if type(_string) == str:
+            return bytes(_string, encoding)
+        else:
+            return _string
+
+def _decode(_string, encoding=None):
+    if not encoding:
+        encoding = sys.getfilesystemencoding()
+    if sys.version_info < (3, 0):
+        return _string.decode(encoding, 'replace')
+    else:
+        if type(_string) == bytes:
+            return _string.decode(encoding)
+        else:
+            return _string
+
 def localeprintf(stream, fmt='', *args, **kwargs):
-    encoding = sys.getfilesystemencoding()
-    msg = fmt.decode(encoding, 'replace').format(*args, **kwargs) + '\n'
-    stream.write(msg.encode(encoding, 'replace'))
+    msg = _decode(fmt).format(*args, **kwargs) + '\n'
+    stream.write(msg)
 
 def pformat(obj):
     return pprint.pformat(obj, indent=4)
@@ -85,7 +106,7 @@ def warnf(fmt='', *args, **kwargs):
     msg = ''
     if sys.stderr.isatty():
         msg += '\033[33m'
-    msg += 'Warning: ' + fmt.format(*args, **kwargs)
+    msg += 'Warning: ' + _decode(fmt).format(*args, **kwargs)
     if sys.stderr.isatty():
         msg += '\033[0m'
     localeprintf(sys.stderr, '{}', msg)
@@ -97,7 +118,7 @@ def errf(fmt='', *args, **kwargs):
     msg = ''
     if sys.stderr.isatty():
         msg += '\033[31m'
-    msg += 'Error: ' + fmt.format(*args, **kwargs)
+    msg += 'Error: ' + _decode(fmt).format(*args, **kwargs)
     if sys.stderr.isatty():
         msg += '\033[0m'
     localeprintf(sys.stderr, '{}', msg)
@@ -112,7 +133,7 @@ def die(fmt='', *args, **kwargs):
 # is 0 (normal termination). The exception is handled by the regular exception
 # handling code after calling main()
 def interrupt(fmt='', *args, **kwargs):
-    raise InterruptException(fmt.format(*args, **kwargs))
+    raise InterruptException(_decode(fmt).format(*args, **kwargs))
 class InterruptException (Exception):
     def __init__(self, msg):
         super(InterruptException, self).__init__(msg)
@@ -188,7 +209,7 @@ class GitError (subprocess.CalledProcessError):
 
     def __str__(self):
         return '%s failed (return code: %s)\n%s' % (' '.join(self.cmd),
-                self.returncode, self.output)
+                self.returncode, _decode(self.output))
 
 # Convert a variable arguments tuple to an argument list
 #
@@ -216,8 +237,8 @@ def git(*args, **kwargs):
     proc = subprocess.Popen(args, **kwargs)
     (stdout, stderr) = proc.communicate()
     if proc.returncode != 0:
-        raise GitError(proc.returncode, args, stderr.rstrip('\n'))
-    return stdout.rstrip('\n')
+        raise GitError(proc.returncode, args, stderr.rstrip())
+    return _decode(stdout.rstrip())
 
 # Check if the git version is at least min_version
 # Returns a tuple with the current version and True/False depending on how the
@@ -396,8 +417,8 @@ class RequestManager:
 
     # Configure the class to use basic authentication instead of OAuth
     def set_basic_auth(self, username, password):
-        self.basic_auth = "Basic " + base64.urlsafe_b64encode("%s:%s" %
-            (username, password))
+        self.basic_auth = b"Basic " + base64.urlsafe_b64encode(
+                _encode("%s:%s" %(username, password)))
 
     # Open an URL in an authenticated manner using the specified HTTP
     # method. It also add other convenience headers, like Content-Type,
@@ -462,7 +483,7 @@ class RequestManager:
             debugf("Request: {} {}\n{}", method, url, body)
             res = self.auth_urlopen(url, method, body)
             data = res.read()
-            debugf("Response:\n{}", data.decode('UTF8'))
+            debugf("Response:\n{}", _decode(data))
             if data:
                 data = json.loads(data)
                 if isinstance(data, list):
