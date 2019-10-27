@@ -442,7 +442,7 @@ class RequestManager:
                     debugf('{}: {}', h[0], '<hidden>')
                 else:
                     debugf('{}: {}', *h)
-        debugf('{}', req.get_data())
+        debugf('{}', req.data)
         return urllib2.urlopen(req)
 
     # Serialize args OR kwargs (they are mutually exclusive) as json.
