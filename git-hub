@@ -423,8 +423,8 @@ class RequestManager:
     # Open an URL in an authenticated manner using the specified HTTP
     # method. It also add other convenience headers, like Content-Type,
     # Accept (both to json) and Content-Length).
-    def auth_urlopen(self, url, method, body):
-        req = urllib2.Request(url, body)
+    def auth_urlopen(self, url, method, data):
+        req = urllib.request.Request(url, _encode(data))
         if self.basic_auth:
             req.add_header("Authorization", self.basic_auth)
         elif self.oauthtoken:
@@ -432,7 +432,7 @@ class RequestManager:
                     self.oauthtoken)
         req.add_header("Content-Type", "application/json")
         req.add_header("Accept", "application/vnd.github.v3+json")
-        req.add_header("Content-Length", str(len(body) if body else 0))
+        req.add_header("Content-Length", str(len(data) if data else 0))
         req.get_method = lambda: method.upper()
         debugf('{}', req.get_full_url())
         # Hide sensitive information from DEBUG output
