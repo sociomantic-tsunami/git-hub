@@ -2229,7 +2229,7 @@ if __name__ == '__main__':
         errf('{} failed (return code: {})',
             ' '.join(error.cmd), error.returncode)
         if verbose >= ERR:
-            sys.stderr.write(error.output + '\n')
+            sys.stderr.write(_decode(error.output) + '\n')
         sys.exit(7)
     except InterruptException as error:
         infof('{}', error)
