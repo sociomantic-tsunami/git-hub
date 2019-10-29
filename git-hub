@@ -418,7 +418,7 @@ class RequestManager:
     # Configure the class to use basic authentication instead of OAuth
     def set_basic_auth(self, username, password):
         self.basic_auth = b"Basic " + base64.urlsafe_b64encode(
-                _encode("%s:%s" %(username, password)))
+                _encode("%s:%s" % (username, password)))
 
     # Open an URL in an authenticated manner using the specified HTTP
     # method. It also add other convenience headers, like Content-Type,
