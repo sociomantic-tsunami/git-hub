@@ -424,7 +424,7 @@ class RequestManager:
     # method. It also add other convenience headers, like Content-Type,
     # Accept (both to json) and Content-Length).
     def auth_urlopen(self, url, method, data):
-        req = urllib.request.Request(url, _encode(data))
+        req = urllib2.Request(url, _encode(data))
         if self.basic_auth:
             req.add_header("Authorization", self.basic_auth)
         elif self.oauthtoken:
