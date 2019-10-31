@@ -62,6 +62,8 @@ ERR   = 0
 ########################################################################
 
 def _encode(_string, encoding=None):
+    if _string is None:
+        return None
     if not encoding:
         encoding = sys.getfilesystemencoding()
     if sys.version_info < (3, 0):
@@ -73,6 +75,8 @@ def _encode(_string, encoding=None):
             return _string
 
 def _decode(_string, encoding=None):
+    if _string is None:
+        return None
     if not encoding:
         encoding = sys.getfilesystemencoding()
     if sys.version_info < (3, 0):
