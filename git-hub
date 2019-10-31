@@ -2202,8 +2202,7 @@ if __name__ == '__main__':
             if 'errors' in err:
                 for e in err['errors']:
                     if 'message' in err:
-                        errf('{}{message}',
-                                ' ' * len(prefix), **e)
+                        errf('{}{message}', ' ' * len(prefix), **e)
                         error_printed = True
             if not error_printed:
                 errf('{} for {}: {}', error, error.geturl(), body)
