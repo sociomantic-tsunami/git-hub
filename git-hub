@@ -432,8 +432,7 @@ class RequestManager:
         if self.basic_auth:
             req.add_header("Authorization", self.basic_auth)
         elif self.oauthtoken:
-            req.add_header("Authorization", "bearer " +
-                    self.oauthtoken)
+            req.add_header("Authorization", "bearer " + self.oauthtoken)
         req.add_header("Content-Type", "application/json")
         req.add_header("Accept", "application/vnd.github.v3+json")
         req.add_header("Content-Length", str(len(data) if data else 0))
@@ -1151,8 +1150,8 @@ class IssueCmd (CmdGroup):
                 return
             if args.created_by_me and args.assigned_to_me:
                 issues = [
-                        i for i in issues 
-                        if filter(i, 'assignee') 
+                        i for i in issues
+                        if filter(i, 'assignee')
                         or filter(i, 'user')]
             elif args.created_by_me:
                 issues = [
@@ -1716,7 +1715,7 @@ class RebaseCmd (PullUtil):
         if cls.rebasing() or cls.merging():
             return
         head_ref, head_name = cls.get_ref()
-        if (args.action == '--continue' and 
+        if (args.action == '--continue' and
                 cls.get_tmp_ref(args.pull) == head_name):
             return
         answer = ask("No rebase in progress found for this pull "
