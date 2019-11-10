@@ -308,6 +308,9 @@ def git_config(name, default=None, prefix=GIT_CONFIG_PREFIX, value=None, opts=()
 def git_dir():
     return git('rev-parse', '--git-dir')
 
+# Returns the absolute path of the top-level directory
+def git_toplevel_dir():
+    return git('rev-parse', '--show-toplevel')
 
 # Invokes the editor defined by git var GIT_EDITOR.
 #
@@ -1112,6 +1115,35 @@ class IssueUtil (object):
         comment = req.post(url, body=body)
         cls.print_comment(comment)
 
+    # Add the first template file content found to the message. If the message
+    # already exists, the template content is added between the title and the
+    # body of the existent message.
+    @classmethod
+    def add_template(cls, msg, template_names):
+        if not template_names:
+            return msg
+
+        directories = (git_toplevel_dir(),
+            os.path.join(git_toplevel_dir(), '.github'), git_dir())
+
+        template = None
+        for d, f in ((d, f) for d in directories for f in template_names):
+            path = os.path.join(d, f)
+            if os.path.exists(path):
+                try:
+                    file = open(path, "r")
+                    template = file.read()
+                    break
+                except EnvironmentError as e:
+                    die("Error reading template from path '{}': {}", path, e)
+        if template:
+            if msg:
+                (title, body) = split_titled_message(msg)
+                msg = title + "\n\n" + template + "\n" + body
+            else:
+                msg = template
+        return msg
+
 # `git hub issue` command implementation
 class IssueCmd (CmdGroup):
 
@@ -1199,9 +1231,17 @@ class IssueCmd (CmdGroup):
             parser.add_argument('-M', '--milestone', metavar='ID', type=int,
                     help="assign the milestone identified by the "
                     "number ID to the %s" % cls.name)
+            parser.add_argument('--no-template',
+                    action='store_true', default=False,
+                    help="Do not add the template content to the message")
         @classmethod
         def run(cls, parser, args):
-            msg = args.message or cls.editor()
+            msg = args.message
+            if not args.no_template:
+                templates = ('ISSUE_TEMPLATE', 'ISSUE_TEMPLATE.md')
+                msg = cls.add_template(msg, templates)
+            if not args.message:
+                msg = cls.editor(msg)
             (title, body) = split_titled_message(msg)
             issue = req.post(cls.url(), title=title, body=body,
                     assignee=args.assignee, labels=args.labels,
@@ -1501,8 +1541,13 @@ class PullCmd (IssueCmd):
                     cls.get_local_remote_heads(parser, args)
             msg = args.message
             if not msg:
-                msg = cls.editor(cls.get_default_branch_msg(
-                        head_ref, head_name))
+                msg = cls.get_default_branch_msg(head_ref, head_name)
+            if not args.no_template:
+                template_names = ('PULL_REQUEST_TEMPLATE',
+                        'PULL_REQUEST_TEMPLATE.md')
+                msg = cls.add_template(msg, template_names)
+            if not args.message:
+                msg = cls.editor(msg)
             (title, body) = split_titled_message(msg)
             cls.push(head_name or head_ref, remote_head,
                     force=args.force_push)
