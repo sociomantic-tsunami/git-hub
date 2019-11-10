@@ -171,6 +171,14 @@ COMMANDS
   `new`
     Create a new issue.
 
+    The content of the template files **ISSUE_TEMPLATE** or
+    **ISSUE_TEMPLATE.md** will be added to the issue message if any of those
+    template files is found in the top-level directory of the project, the
+    **.github** directory or the **.git** directory.
+    The order for template files lookups matters and it follows the order
+    as described above for template file names and directories. And only the
+    content of the first template found will be added.
+
     \-m MSG, --message=MSG
       Issue title (and description). The first line is used as the issue title
       and any text after an empty line is used as the optional body.  If this
@@ -185,6 +193,9 @@ COMMANDS
 
     \-M ID, --milestone=ID
       Assign the milestone identified by the number ID to the issue.
+
+    \--no-template
+      Do not add the template content to the message.
 
   `update` ISSUE
     Similar to `new` but update an existing issue identified by **ISSUE**.
@@ -274,6 +285,14 @@ COMMANDS
     The repository to issue the pull request from is taken from the
     `hub.forkrepo` configuration, which defaults to
     *hub.username/<hub.upstream project part>*.
+
+    The content of the template files **PULL_REQUEST_TEMPLATE** or
+    **PULL_REQUEST_TEMPLATE.md** will be added to the pull request message
+    if any of those template files is found in the top-level directory of
+    the project, the **.github** directory or the **.git** directory.
+    The order for template files lookups matters and it follows the order
+    as described above for template file names and directories. And only the
+    content of the first template found will be added.
 
     \-m MSG, --message=MSG
       Pull request title (and description). The first line is used as the pull
