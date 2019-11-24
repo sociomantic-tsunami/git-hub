@@ -1516,12 +1516,14 @@ class PullCmd (IssueCmd):
                     force=args.force_push)
             infof("Creating pull request from branch {} to {}:{}",
                     remote_head, config.upstream, base)
-            media_type = "application/vnd.github.v3+json"
-            # The draft feature is only available in a custom media type
             if args.draft:
+                # The draft feature is only available in a custom media type
                 media_type = "application/vnd.github.shadow-cat-preview+json"
-            pull = req.post(cls.url(), media_type, head=gh_head, base=base,
-                    title=title, body=body, draft=args.draft)
+                pull = req.post(cls.url(), media_type, head=gh_head, base=base,
+                        title=title, body=body, draft=args.draft)
+            else:
+                pull = req.post(cls.url(), head=gh_head, base=base,
+                        title=title, body=body)
             IssueCmd.UpdateCmd._do_update(pull['number'], args.labels,
                     args.assignee, args.milestone)
             cls.print_issue_summary(pull)
