@@ -479,6 +479,10 @@ from. These are the git config keys used:
   required, you shouldn't need to set this variable manually. Use the `setup`
   command instead.
 
+`hub.oauthtokencmd`
+  A command to retrieve the oauth token from a password store.
+  When set, `hub.oauthtoken` isn't needed.
+
 `hub.upstream` required
   Blessed repository used to get the issues from and make the pull requests to.
   The format is *<owner>/<project>*. This option can be automatically set by
