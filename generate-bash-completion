@@ -6,7 +6,7 @@ set -e
 # Based on the _git_svn completion function in git distribution's bash
 # completion.
 
-PYTHON=${PYTHON:-python2}
+PYTHON=${PYTHON:-python3}
 
 issue_arg_cmds="issue-show issue-update issue-comment issue-close pull-attach"
 pull_arg_cmds="pull-show pull-update pull-comment pull-close"

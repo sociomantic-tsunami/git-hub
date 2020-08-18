@@ -24,7 +24,7 @@ env:
 
 install: beaver install
 
-script: beaver make PYTHON=python2.7 all deb
+script: beaver make PYTHON=python all deb
 
 deploy:
     provider: script
