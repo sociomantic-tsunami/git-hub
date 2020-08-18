@@ -35,7 +35,7 @@ fpm -s dir -t deb -n "$pkgname" -v "$pkgversion" \
 	--vendor 'dunnhumby Germany GmbH' \
 	--license GPLv3 \
 	--category vcs \
-	--depends python2.7 \
+	--depends python3 \
 	--depends "git (>=1.7.7)" \
 	--deb-changelog "$changelog" \
 	install/usr=/ \

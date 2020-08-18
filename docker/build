@@ -2,4 +2,4 @@
 set -xeu
 
 apt-get update
-apt-get -y install python2.7 python-docutils
+apt-get -y install python3 python-docutils
