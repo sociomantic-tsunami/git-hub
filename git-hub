@@ -42,12 +42,12 @@ import sys
 import time
 import json
 import base64
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import pprint
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import getpass
 import os.path
-import urlparse
+import urllib.parse
 import argparse
 import subprocess
 
@@ -145,7 +145,7 @@ class InterruptException (Exception):
 # Wrapper for raw_input to treat EOF as an empty input
 def user_input(*args, **kwargs):
     try:
-        return raw_input(*args, **kwargs)
+        return input(*args, **kwargs)
     except EOFError:
         sys.stdout.write('\n')
         return ''
@@ -360,7 +360,7 @@ class Config:
                 opts=['--bool']) == "true"
 
     def sanitize_url(self, name, url):
-        u = urlparse.urlsplit(url)
+        u = urllib.parse.urlsplit(url)
         name = GIT_CONFIG_PREFIX + name
         # interpret www.github.com/api/v4 as www.github.com, /api/v4
         if not u.hostname or not u.scheme:
@@ -374,7 +374,7 @@ class Config:
         netloc = u.hostname
         if u.port:
             netloc += ':' + u.port
-        return urlparse.urlunsplit((u.scheme, netloc,
+        return urllib.parse.urlunsplit((u.scheme, netloc,
                 u.path.rstrip('/'), u.query, u.fragment))
 
     def check(self, name):
@@ -428,7 +428,7 @@ class RequestManager:
     # method. It also add other convenience headers, like Content-Type,
     # Accept (both to json) and Content-Length).
     def auth_urlopen(self, url, method, data, media_type):
-        req = urllib2.Request(url, _encode(data))
+        req = urllib.request.Request(url, _encode(data))
         if self.basic_auth:
             req.add_header("Authorization", self.basic_auth)
         elif self.oauthtoken:
@@ -446,7 +446,7 @@ class RequestManager:
                 else:
                     debugf('{}: {}', *h)
         debugf('{}', req.data)
-        return urllib2.urlopen(req)
+        return urllib.request.urlopen(req)
 
     # Serialize args OR kwargs (they are mutually exclusive) as json.
     def dump(self, *args, **kwargs):
@@ -478,7 +478,7 @@ class RequestManager:
             body = self.dump(*args, **kwargs)
         else:
             body = None
-            url += '?' + urllib.urlencode(kwargs)
+            url += '?' + urllib.parse.urlencode(kwargs)
         data = None
         prev_data = None
         while url:
@@ -921,7 +921,7 @@ class CloneCmd (object):
         if '/' not in repo:
             repo = config.username + '/' + repo
         # Get just the owner/repo form from the full URL
-        url = urlparse.urlsplit(repo)
+        url = urllib.parse.urlsplit(repo)
         proj = '/'.join(url.path.split(':')[-1:][0].strip('/').split('/')[-2:])
         return (urltype, proj)
 
@@ -1009,8 +1009,8 @@ class IssueUtil (object):
 
     @classmethod
     def print_issue_summary(cls, issue):
-        infof(u'[{number}] {title} ({user[login]})\n{}{html_url}',
-                u' ' * (len(str(issue['number'])) + 3),
+        infof('[{number}] {title} ({user[login]})\n{}{html_url}',
+                ' ' * (len(str(issue['number'])) + 3),
                 **issue)
 
     @classmethod
@@ -1019,7 +1019,7 @@ class IssueUtil (object):
                 for l in issue.get('labels', [])])
         if issue['labels']:
             issue['labels'] += '\n'
-        infof(u"""
+        infof("""
 #{number}: {title}
 ================================================================================
 {name} is {state}, was reported by {user[login]} and has {comments} comment(s).
@@ -1030,14 +1030,14 @@ class IssueUtil (object):
 """,
                 **issue)
         if issue['comments'] > 0:
-            infof(u'Comments:')
+            infof('Comments:')
 
     @classmethod
-    def print_issue_comment(cls, comment, indent=u''):
+    def print_issue_comment(cls, comment, indent=''):
         body = comment['body']
         body = '\n'.join([indent+'    '+l for l in body.splitlines()])
-        infof(u'{0}On {created_at}, {user[login]}, commented:\n'
-                u'{0}<{html_url}>\n\n{1}\n', indent, body, **comment)
+        infof('{0}On {created_at}, {user[login]}, commented:\n'
+                '{0}<{html_url}>\n\n{1}\n', indent, body, **comment)
 
     @classmethod
     def merge_issue_comments(cls, comments, review_comments):
@@ -1064,14 +1064,14 @@ class IssueUtil (object):
         issue['comments'] += len(comments) + len(review_comments)
         cls.print_issue_header(issue)
         for c in cls.merge_issue_comments(comments, review_comments):
-            infof(u'{}\n', u'-' * 80)
+            infof('{}\n', '-' * 80)
             if 'diff_hunk' in c:
                 hunk = '\n'.join(c['diff_hunk'].splitlines()[-5:])
-                infof(u'diff --git a/{path} b/{path}\n'
-                        u'index {original_commit_id}..{commit_id}\n'
-                        u'--- a/{path}\n'
-                        u'+++ b/{path}\n'
-                        u'{0}\n',
+                infof('diff --git a/{path} b/{path}\n'
+                        'index {original_commit_id}..{commit_id}\n'
+                        '--- a/{path}\n'
+                        '+++ b/{path}\n'
+                        '{0}\n',
                         hunk, **c)
                 indent = '    '
                 cls.print_issue_comment(c, indent)
@@ -1083,9 +1083,9 @@ class IssueUtil (object):
     @classmethod
     def print_comment(cls, comment):
         body = comment['body']
-        infof(u'[{id}] {}{} ({user[login]})\n{html_url}', body[:60],
-                u'…' if len(body) > 60 else u'',
-                u' ' * (len(str(comment['id'])) + 3),
+        infof('[{id}] {}{} ({user[login]})\n{html_url}', body[:60],
+                '…' if len(body) > 60 else '',
+                ' ' * (len(str(comment['id'])) + 3),
                 **comment)
 
     @classmethod
@@ -1147,13 +1147,13 @@ class IssueCmd (CmdGroup):
             if args.created_by_me and args.assigned_to_me:
                 issues = [
                         i for i in issues
-                        if filter(i, 'assignee')
-                        or filter(i, 'user')]
+                        if list(filter(i, 'assignee'))
+                        or list(filter(i, 'user'))]
             elif args.created_by_me:
                 issues = [
-                        i for i in issues if filter(i, 'user')]
+                        i for i in issues if list(filter(i, 'user'))]
             elif args.assigned_to_me:
-                issues = [i for i in issues if filter(i, 'assignee')]
+                issues = [i for i in issues if list(filter(i, 'assignee'))]
             for issue in issues:
                 cls.print_issue_summary(issue)
 
@@ -2198,7 +2198,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except urllib2.HTTPError as error:
+    except urllib.error.HTTPError as error:
         try:
             body = error.read()
             err = json.loads(body)
@@ -2226,7 +2226,7 @@ if __name__ == '__main__':
             errf('{}', body)
             sys.exit(3)
         sys.exit(4)
-    except urllib2.URLError as error:
+    except urllib.error.URLError as error:
         errf('Network error: {}', error)
         sys.exit(5)
     except KeyboardInterrupt:
