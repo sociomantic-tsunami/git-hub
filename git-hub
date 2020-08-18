@@ -48,6 +48,7 @@ import getpass
 import os.path
 import argparse
 import subprocess
+from functools import partial
 
 # Output levels according to user selected verbosity
 DEBUG = 3
@@ -1134,24 +1135,22 @@ class IssueCmd (CmdGroup):
                             cls.name))
         @classmethod
         def run(cls, parser, args):
-            def filter(issue, name):
-                a = issue[name]
+            def filter_issue(name, issue):
+                a = issue.get(name)
                 if a and a['login'] == config.username:
                     return True
+            has_user = partial(filter_issue, 'user')
+            has_assignee = partial(filter_issue, 'assignee')
             state = 'closed' if args.closed else 'open'
             issues = req.get(cls.url(), state=state)
             if not issues:
                 return
             if args.created_by_me and args.assigned_to_me:
-                issues = [
-                        i for i in issues
-                        if list(filter(i, 'assignee'))
-                        or list(filter(i, 'user'))]
+                issues = filter(lambda i: has_user(i) or has_assignee(i), issues)
             elif args.created_by_me:
-                issues = [
-                        i for i in issues if list(filter(i, 'user'))]
+                issues = filter(has_user, issues)
             elif args.assigned_to_me:
-                issues = [i for i in issues if list(filter(i, 'assignee'))]
+                issues = filter(has_assignee, issues)
             for issue in issues:
                 cls.print_issue_summary(issue)
 
