@@ -3,7 +3,7 @@ prefix ?= /usr/local
 # fall back to /etc, ignoring prefix
 sysconfdir ?= /etc
 
-export PYTHON ?= python2
+export PYTHON ?= python3
 RST2MAN ?= rst2man
 
 version ?= $(shell git describe --dirty 2> /dev/null | cut -b2-)
@@ -37,7 +37,7 @@ install: $(install-deps)
 	install -m 755 -D git-hub $(DESTDIR)$(prefix)/bin/git-hub
 	sed -i 's/^VERSION = "git-hub devel"$$/VERSION = "git-hub $(version)"/' \
 			$(DESTDIR)$(prefix)/bin/git-hub
-	sed -i 's|^#!/usr/bin/env python2$$|#!/usr/bin/env $(PYTHON)|' \
+	sed -i 's|^#!/usr/bin/env python3$$|#!/usr/bin/env $(PYTHON)|' \
 			$(DESTDIR)$(prefix)/bin/git-hub
 	install -m 644 -D git-hub.1 $(DESTDIR)$(prefix)/share/man/man1/git-hub.1
 	install -m 644 -D ftdetect.vim \
