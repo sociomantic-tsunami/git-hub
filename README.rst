@@ -151,8 +151,7 @@ Installation
 Dependencies
 ------------
 
-* Python_ 2.7 (3.x can be used too but you have to run the ``2to3`` tool to the
-  script first)
+* Python_ 3.x
 
 * Git_ >= 1.7.7 (if you use Ubuntu_ you can easily get the latest Git version
   using the `Git stable PPA`__)
