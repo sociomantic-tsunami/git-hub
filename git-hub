@@ -42,12 +42,10 @@ import sys
 import time
 import json
 import base64
-import urllib.request, urllib.parse, urllib.error
 import pprint
 import urllib.request, urllib.error, urllib.parse
 import getpass
 import os.path
-import urllib.parse
 import argparse
 import subprocess
 
