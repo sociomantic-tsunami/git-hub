@@ -347,7 +347,7 @@ class Config:
             try:
                 cmd = self.oauthtoken[1:]
                 self.oauthtoken = subprocess.check_output(cmd,
-                        shell=True).strip()
+                        shell=True).decode().strip()
             except (OSError, subprocess.CalledProcessError) as e:
                 die("Failed to run oauthtoken command `{}`: {}", cmd, e)
         self.upstream = git_config('upstream')
