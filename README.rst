@@ -2,6 +2,10 @@
 A Git command line interface to GitHub
 ======================================
 
+.. image:: https://img.shields.io/debian/v/git-hub
+   :target: https://packages.debian.org/source/buster/git-hub
+   :alt: Debian package
+
 .. contents::
    :depth: 1
    :local:
