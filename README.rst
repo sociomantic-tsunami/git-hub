@@ -227,8 +227,8 @@ found, in case they are a better fit for you:
   interest.
 
 * `gh <https://github.com/node-gh/gh>`_: A command line tool based on **NodeJS**.
-  It does offer the rebase capabilities we sought after, but the project was 
-  created after this project was started. 
+  It does offer the rebase capabilities we sought after, but the project was
+  created after this project was started.
 
 Contact
 =======
