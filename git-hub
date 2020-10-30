@@ -343,14 +343,13 @@ class Config:
     def __init__(self):
         self.username = git_config('username', getpass.getuser())
         self.oauthtoken = git_config('oauthtoken')
-        self.oauthtokencmd = git_config('oauthtokencmd')
-        if self.oauthtokencmd is not None:
+        if self.oauthtoken is not None and self.oauthtoken.startswith('!'):
             try:
-                self.oauthtoken = subprocess.check_output(
-                        self.oauthtokencmd, shell=True).strip()
+                cmd = self.oauthtoken[1:]
+                self.oauthtoken = subprocess.check_output(cmd,
+                        shell=True).strip()
             except (OSError, subprocess.CalledProcessError) as e:
-                die("Failed to run oauthtokencmd `{}`: {}",
-                    self.oauthtokencmd, e)
+                die("Failed to run oauthtoken command `{}`: {}", cmd, e)
         self.upstream = git_config('upstream')
         if self.upstream and '/' not in self.upstream:
             die("Invalid hub.upstream configuration, '/' not found")

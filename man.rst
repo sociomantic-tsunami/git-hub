@@ -479,9 +479,11 @@ from. These are the git config keys used:
   required, you shouldn't need to set this variable manually. Use the `setup`
   command instead.
 
-`hub.oauthtokencmd`
-  A command to retrieve the oauth token from a password store.
-  When set, `hub.oauthtoken` isn't needed.
+  If you don't want to store the token in plain text, you can also specify
+  a command by prefixing a `!`. The output of that command will be used as the
+  token. The command will be run with the default shell.
+
+  For example: `oauthtoken = !password-manager ~/my.db get github-oauth-token`.
 
 `hub.upstream` required
   Blessed repository used to get the issues from and make the pull requests to.
