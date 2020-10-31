@@ -37,6 +37,7 @@ issues) to be carried out directly from the command line.
 
 VERSION = "git-hub devel"
 
+import io
 import re
 import sys
 import time
@@ -324,13 +325,12 @@ def git_toplevel_dir():
 def editor(help_msg, msg=None):
     prog = git('var', 'GIT_EDITOR')
     fname = os.path.join(git_dir(), 'HUB_EDITMSG')
-    with open(fname, 'w') as f:
-        f.write(msg or '')
-        f.write(help_msg)
+    with io.open(fname, 'w') as f:
+        f.write(u''.join([msg or '', help_msg]))
     status = subprocess.call([prog + ' "$@"', prog, fname], shell=True)
     if status != 0:
         die("Editor returned {}, aborting...", status)
-    with open(fname) as f:
+    with io.open(fname) as f:
         msg = f.read()
     return msg
 
