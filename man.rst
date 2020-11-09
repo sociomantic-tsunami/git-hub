@@ -330,8 +330,7 @@ __ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-gith
       Branch (or git ref) you want your changes pulled into. By default the
       tracking branch (`branch.<ref>.merge` configuration variable) is used or
       the configuration `hub.pullbase` if not tracking a remote branch. If none
-      is present, it defaults to **master**. The repository to use as the base
-      is taken from the `hub.upstream` configuration.
+      is present an error will be displayed.
 
     \-c NAME, --create-branch=NAME
       Create a new remote branch with (with name **NAME**) as the real head for
@@ -367,11 +366,7 @@ __ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-gith
       first commit message is used as with the `new` subcommand.
 
     \-b BASE, --base=BASE
-      Base branch to which issue the pull request. If this option is not
-      present, then the base branch is taken from the configuration
-      `hub.pullbase` (or just **master** if that configuration is not present
-      either). The repository to use as the base is taken from the
-      `hub.upstream` configuration.
+      Same as `pull new`, please see the details there.
 
     \-c NAME, --create-branch=NAME
       Create a new remote branch with (with name **NAME**) as the real head for

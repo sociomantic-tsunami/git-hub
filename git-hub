@@ -359,7 +359,6 @@ class Config:
             self.forkrepo = self.username + '/' + upstream[1]
         self.upstreamremote = git_config('upstreamremote', 'upstream')
         self.forkremote = git_config('forkremote', 'fork')
-        self.pullbase = git_config('pullbase', 'master')
         self.urltype = git_config('urltype', 'ssh_url')
         self.baseurl = self.sanitize_url('baseurl',
             git_config('baseurl', 'https://api.github.com'))
@@ -1423,7 +1422,13 @@ class PullUtil (IssueUtil):
             die("Can't guess remote branch name, please "
                 "use --create-branch to specify one")
         base = args.base or cls.tracking_branch(head_name) or \
-                config.pullbase
+                git_config('pullbase')
+        if base is None:
+            die('No base branch specified, you have to either use --base, have '
+                    'a tracking branch configured for the current branch or '
+                    'configure a default using `git config hub.pullbase` (to '
+                    're-enable the old global `master` default, use `git '
+                    'config --global hub.pullbase master`)')
         gh_head = config.forkrepo.split('/')[0] + ':' + remote_head
         return head_ref, head_name, remote_head, base, gh_head
 
@@ -1495,7 +1500,7 @@ class PullCmd (IssueCmd):
                     help="branch (or git ref) you want your "
                     "changes pulled into (uses the tracking "
                     "branch by default, or hub.pullbase if "
-                    "there is none, or 'master' as a fallback)")
+                    "there is none)")
             parser.add_argument('-c', '--create-branch',
                     metavar='NAME',
                     help="create a new remote branch with NAME "
