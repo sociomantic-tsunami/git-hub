@@ -558,7 +558,7 @@ though. All you need to do is copy (or preferably make a symbolic link) the
 script to `~/.vim/ftdetect/githubmsg.vim`::
 
   mkdir -p ~/.vim/ftdetect
-  ln -s /usr/share/vim/addons/githubmsg.vim ~/.vim/ftdetect/
+  ln -s /usr/share/vim/addons/ftdetect/githubmsg.vim ~/.vim/ftdetect/
   # or if you are copying from the sources:
   # ln -s ftdetect.vim ~/.vim/ftdetect/githubmsg.vim
 
