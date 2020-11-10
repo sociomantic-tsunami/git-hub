@@ -1447,7 +1447,8 @@ class PullUtil (IssueUtil):
                     'branch.%s.description' % branch_name, '', '')
             if msg:
                 return msg
-        return git('log -1 --pretty=format:%s%n%n%b ' + branch_ref)
+        return git('log -1 --no-show-signature --pretty=format:%s%n%n%b '
+                + branch_ref)
 
     @classmethod
     def get_local_remote_heads(cls, parser, args):
@@ -1967,7 +1968,8 @@ class RebaseCmd (PullUtil):
             head_hash = git('rev-parse FETCH_HEAD')
             cls.git_fetch(base_url, base_ref)
             base_hash = git('rev-parse FETCH_HEAD')
-            parents = git('show --quiet --format=%P ' + head_hash).split()
+            parents = git('show --quiet --no-show-signature --format=%P '
+                    + head_hash).split()
             is_merge = len(parents) > 1
             # Last commit is a merge commit, so ask the user to merge instead
             if is_merge:
