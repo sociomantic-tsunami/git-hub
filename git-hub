@@ -441,7 +441,7 @@ class RequestManager:
         if self.basic_auth:
             req.add_header("Authorization", self.basic_auth)
         elif self.oauthtoken:
-            req.add_header("Authorization", "bearer " + self.oauthtoken)
+            req.add_header("Authorization", "token " + self.oauthtoken)
         req.add_header("Content-Type", "application/json")
         req.add_header("Accept", media_type)
         req.add_header("Content-Length", str(len(data) if data else 0))
