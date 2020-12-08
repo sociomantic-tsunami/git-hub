@@ -45,10 +45,29 @@ __ https://github.com/sociomantic-tsunami/git-hub/blob/master/man.rst
 
 One time global setup to get the credentials
 --------------------------------------------
+
+To use this tool you most likely will need a GitHub PAT (personal access token).
+If you don't have one you regularly use, you can `create a new one`__ (check
+`GitHub docs`__ if you need more help).
+
+Make sure your PAT has at least **repo** and **user** scope.
+
+Then you can use ``git hub setup`` to save it.
+
+__ https://github.com/settings/tokens/new
+__ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token
+
 ::
 
   $ git hub setup --global --user octocat
-  GitHub password (will not be stored):
+
+  You need to use a GitHub Personal Access Token to do almost anything useful.
+  To create one you can go to: https://github.com/settings/tokens/new.
+  More help at: https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token.
+
+  GitHub token: ******
+  Saved git config hub.username
+  Saved git config hub.oauthtoken
 
 You can revoke this credentials at any time in the `GitHub Applications Settings
 page`__.
