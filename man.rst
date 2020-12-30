@@ -49,7 +49,6 @@ GLOBAL OPTIONS
 \-s, --silent
   Be less verbose (can be specified multiple times to get less verbosity)
 
-
 COMMANDS
 ========
 
@@ -161,6 +160,8 @@ __ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-gith
     Any standard **git clone** option can be passed. Not all of them might make
     sense when cloning a GitHub repo to be used with this tool though.
 
+  This command will run the `hub.hookscript` on some events, please have a look
+  at `HOOK SCRIPT`_ for more details.
 
 `issue`
   This command is used to manage GitHub issues through a set of subcommands.
@@ -477,6 +478,45 @@ __ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-gith
     Alias for `issue close`.
 
 
+HOOK SCRIPT
+===========
+
+If the git configuration `hub.hookscript` is present, it will be used as
+a (shell) script to execute on certain events. Some data is passed as
+environment variables to the script. All events will set the `HUB_HOOK`
+environment variable with the name of the hook being executed.
+
+**NOTE:** This is an experimental feature, so it is only enabled for one event
+only so far.
+
+Available hooks (events):
+
+`postclone`
+  Executed after a `clone` command was done succesfully. The script will be run
+  with the freshly cloned repository directory as the current working
+  directory, so the git configuration just done by the `clone` command is
+  available (for example, `git config hub.forkremote` will get the fork
+  remote).
+
+  The following extra environment variables are defined:
+
+  `HUB_TRIANGULAR`
+    will be set to `true` if the clone was done in triangular mode and to
+    `false` otherwise.
+
+  `HUB_FETCHREMOTE`
+    will be set to `hub.forkremote` if `triangular` was used and to
+    `hub.upstreamremote` otherwise.
+
+  This hook is useful to set some extra git configuration that should be
+  enabled only when cloning a repository via this tool. For example, to prune
+  the `fork` remote when it is updated, but only when *triangular* was used in
+  the clone you can use:
+
+  `git config --global hub.hookscript 'if test "$HUB_HOOK" = postclone &&
+  $HUB_TRIANGULAR ; then git config remote.fork.prune true; fi'`
+
+
 CONFIGURATION
 =============
 
@@ -538,6 +578,10 @@ from. These are the git config keys used:
 `hub.triangular`
   Makes **--triangular** for `clone` if set to "true" (boolean value). See
   `clone` documentation for details.
+
+`hub.hookscript`
+  Script to run on certain events. Please have a look at `HOOK SCRIPT`_ for
+  more details.
 
 [1] https://developer.github.com/v3/pulls/#get-a-single-pull-request
 

@@ -38,6 +38,7 @@ issues) to be carried out directly from the command line.
 VERSION = "git-hub devel"
 
 import io
+import os
 import re
 import sys
 import time
@@ -335,6 +336,25 @@ def editor(help_msg, msg=None):
     return msg
 
 
+# Runs a hook script if one was provided
+def run_hookscript(hook, env=None):
+    if config.hookscript is None:
+        return
+    if env is None:
+        env = dict()
+    env['hook'] = hook
+    env = dict(('HUB_{}'.format(k.upper()), str(v).lower()
+            if isinstance(v, bool) else str(v))
+        for (k, v) in env.items())
+    debugf('running script "{}" (env={})...', config.hookscript, env)
+    new_env = dict(os.environ)
+    new_env.update(env)
+    status = subprocess.call(config.hookscript, shell=True, env=new_env)
+    if status != 0:
+        warnf("The hookscript ({}) failed (status={}), continuing anyway...",
+                config.hookscript, status)
+
+
 # git-hub specific configuration container
 #
 # These variables are described in the manual page.
@@ -367,6 +387,7 @@ class Config:
                 opts=['--bool']) == "true"
         self.triangular = git_config('triangular', "true",
                 opts=['--bool']) == "true"
+        self.hookscript = git_config('hookscript')
 
     def sanitize_url(self, name, url):
         u = urllib.parse.urlsplit(url)
@@ -846,6 +867,10 @@ class CloneCmd (object):
         cls.git_retry_if(args.triangular and forked,
                 'fetch', ['--', fetchremote],
                 'Fetching from {} ({})'.format(fetchremote, remote_url))
+        run_hookscript('postclone', env=dict(
+            fetchremote=fetchremote,
+            triangular=triangular,
+        ))
 
     @classmethod
     def git_retry_if(cls, condition, cmd, args, progress_msg):
