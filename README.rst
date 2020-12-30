@@ -236,10 +236,14 @@ found, in case they are a better fit for you:
 
 * `hub <https://hub.github.com/>`_: Is the *official* tool, but it completely
   replaces the Git command, adding special syntax for official git commands.
-  This is definitely something we didn't want. We don't want to mess with Git.
 
-* `ghi <https://github.com/stephencelis/ghi>`_:  This only handle issues. Not
-  what we needed.
+* `gh <https://github.com/cli/cli>`_: Another *official* tool, that tries to bring
+  all the GitHub UI features but with a CLI interface. It works side-by-side
+  with git.
+
+* `ghi <https://github.com/stephencelis/ghi>`_:  This only handle issues. It
+  seems a bit abandoned (at the time of writing it was last updated in October
+  2016).
 
 * `git-spindle <https://github.com/seveas/git-spindle>`_: This tool was
   discovered after we started and published this project. It covers similar
@@ -248,10 +252,6 @@ found, in case they are a better fit for you:
   adding the ``hub`` command, which can introduce a lot of confusion to users.
   We might try to merge our code into that project eventually, if there is
   interest.
-
-* `gh <https://github.com/node-gh/gh>`_: A command line tool based on **NodeJS**.
-  It does offer the rebase capabilities we sought after, but the project was
-  created after this project was started.
 
 Contact
 =======
