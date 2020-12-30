@@ -55,15 +55,21 @@ COMMANDS
 
 `setup`
   This command performs an initial setup to connect to GitHub. It basically
-  asks GitHub for an authorization token and stores it in the Git configuration
-  variable `hub.oauthtoken` for future use so you don't need to type your
-  password each time (or store it in the config). The username is also stored
-  for future use in the `hub.username` variable. If the base URL is specified,
-  it is stored in `hub.baseurl` too. By default configuration is stored in the
-  repository's ``.git/config`` file (using ``git config``). If you want your
-  configuration to be global to your user or system-wide, use the ``--global``
-  or ``--system`` option respectively. These options are passed straight to
-  ``git config``.
+  asks for a username and a GitHub Personal Access Token (PAT), which is
+  needed to perform most actions.
+
+  The token will be stored it in the Git configuration variable
+  `hub.oauthtoken` for future use. If you don't have one, you can `create it`__
+  (check `GitHub docs`__ if you need more help).  Make sure your PAT has at
+  least **repo** and **user** scope.
+
+  The username is also stored for future use in the `hub.username` variable. If
+  the base URL is specified, it is stored in `hub.baseurl` too.
+
+  By default configuration is stored in the repository's ``.git/config`` file
+  (using ``git config``). If you want your configuration to be global to your
+  user or system-wide, use the ``--global`` or ``--system`` option
+  respectively. These options are passed straight to ``git config``.
 
   \-u USERNAME, --username=USERNAME
     GitHub's username (login name), will be stored in the configuration
@@ -71,8 +77,11 @@ COMMANDS
     that e-mail will be searched and used instead, if found (for this to work
     the e-mail must be part of the public profile).
 
-  \-p PASSWORD, --password=PASSWORD
-    GitHub's password (will not be stored).
+  \-o TOKEN, --oauthtoken=TOKEN
+    GitHub's Personal Access Token (PAT), will be stored in the configuration
+    variable `hub.username`. If an e-mail is provided, then a username matching
+    that e-mail will be searched and used instead, if found (for this to work
+    the e-mail must be part of the public profile).
 
   \-b URL, --baseurl=URL
     GitHub's base URL to use to access the API. Set this when your GitHub API is
@@ -86,6 +95,9 @@ COMMANDS
   \--system
     Store settings in the system configuration (see --system option in `git
     config(1)` for details).
+
+__ https://github.com/settings/tokens/new
+__ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token
 
 `clone` REPO [DEST]
   This command is used to clone **REPO**, a GitHub repository, to a **DEST**
