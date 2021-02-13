@@ -782,24 +782,21 @@ class SetupCmd (object):
                 ', '.join(users))
         return users[0].encode('UTF8')
 
+# `git hub setup-fork` command implementation
+class SetupForkCmd (object):
 
-# `git hub clone` command implementation
-class CloneCmd (object):
-
+    cmd_name = "setup-fork"
     cmd_required_config = ['username', 'oauthtoken']
-    cmd_help = 'clone a GitHub repository (and fork as needed)'
-    cmd_usage = '%(prog)s [OPTIONS] [GIT CLONE OPTIONS] REPO [DEST]'
+    cmd_help = 'fork a GitHub repository'
+    cmd_usage = '%(prog)s [OPTIONS] [REPO]'
 
     @classmethod
     def setup_parser(cls, parser):
-        parser.add_argument('repository', metavar='REPO',
+        parser.add_argument('repository', metavar='REPO', nargs='?',
                 help="name of the repository to fork; in "
                 "<owner>/<project> format is the upstream repository, "
                 "if only <project> is specified, the <owner> part is "
                 "taken from hub.username")
-        parser.add_argument('dest', metavar='DEST', nargs='?',
-                help="destination directory where to put the new "
-                "cloned repository")
         parser.add_argument('-U', '--upstreamremote', metavar='NAME',
                 default=config.upstreamremote,
                 help="use NAME as the upstream remote repository name "
@@ -816,60 +813,112 @@ class CloneCmd (object):
         parser.add_argument('--no-triangular', action="store_false",
                 dest='triangular',
                 help="do not use Git 'triangular workflow' setup")
-        return True # we need to get unknown arguments
 
     @classmethod
     def run(cls, parser, args):
-        (urltype, proj) = cls.parse_repo(args.repository)
-        (repo, upstream, forked) = cls.setup_repo(proj)
-        dest = args.dest or repo['name']
+        if args.repository is not None:
+            (urltype, proj) = cls.parse_repo(args.repository)
+        else:
+            git_remotes = git('remote', 'show', '-n').split('\n')
+            remote = args.upstreamremote
+            if remote not in git_remotes:
+                die("No REPO specified, nor does `{}` remote exist", remote)
+            git_url = git('remote', 'get-url', '--', remote)
+            (urltype, proj) = cls.parse_repo(git_url)
+        (repo, upstream, forked) = cls.maybe_fork(proj)
+        cls.setup_dest(parser, args, urltype, proj, repo, upstream, forked, None)
+
+    @classmethod
+    def setup_dest(cls, parser, args, urltype, proj, repo, upstream, forked, dest):
+        personal = False
+        if upstream is None:
+            if args.upstreamremote != args.forkremote:
+                die('You are setting up with a personal repository as upstream, '
+                        '`--upstreamremote` and `--forkremote` must match')
+            upstream = proj
+            personal = True
         triangular = cls.check_triangular(args.triangular
                 if args.triangular is not None else config.triangular)
-        if triangular and not upstream:
-            parser.error("Can't use triangular workflow without "
-                    "an upstream repo")
-        url = repo['parent'][urltype] if triangular else repo[urltype]
-        validate_url(url, urltype)
-        remote = args.upstreamremote if triangular else args.forkremote
-        # It's complicated to allow the user to use the --origin option, there
-        # is enough complexity with --upstreamremote and --forkremote, so ask
-        # the user to use those instead
-        for a in args.unknown_args:
-            if a in ('-o', '--origin') or a.startswith('-o', '--origin='):
-                die("Please use --forkremote or --upstreamremote to name your "
-                    "remotes instead of using Git's `{}` option!", a)
-        # If we just forked the repo, GitHub might still be doing the actual
-        # fork, so cloning could fail temporarily. See
-        # https://github.com/sociomantic-tsunami/git-hub/issues/214
-        cls.git_retry_if(not args.triangular and forked,
-                'clone',
-                args.unknown_args + ['--origin', remote, '--', url, dest],
-                'Cloning {} to {}'.format(url, dest))
-        if not upstream:
-            # Not a forked repository, nothing else to do
-            return
-        # Complete the repository setup
-        os.chdir(dest)
-        fetchremote = args.forkremote if triangular else args.upstreamremote
-        remote_url = repo['parent'][urltype]
+        if personal and triangular:
+            warnf('You are setting up with a personal repository as upstream, '
+                        'forcing `--no-triangular` mode')
+            triangular = False
         if triangular:
+            url = repo['parent'][urltype]
+            remote = args.upstreamremote
+        else:
+            url = repo[urltype]
+            remote = args.forkremote
+        validate_url(url, urltype)
+        if dest is not None:
+            # Cloning to dest
+            #
+            # It's complicated to allow the user to use the --origin option, there
+            # is enough complexity with --upstreamremote and --forkremote, so ask
+            # the user to use those instead
+            for a in args.unknown_args:
+                if a in ('-o', '--origin') or a.startswith('-o', '--origin='):
+                    die("Please use --forkremote or --upstreamremote to name your "
+                        "remotes instead of using Git's `{}` option!", a)
+            # If we just forked the repo, GitHub might still be doing the actual
+            # fork, so cloning could fail temporarily. See
+            # https://github.com/sociomantic-tsunami/git-hub/issues/214
+            cls.git_retry_if(not args.triangular and forked,
+                    'clone',
+                    args.unknown_args + ['--origin', remote, '--', url, dest],
+                    'Cloning {} to {}'.format(url, dest))
+            # Complete the repository setup
+            os.chdir(dest)
+        else:
+            # We are inside working directory of a pre-cloned repository, just
+            # setup a remote and fetch it
+            added=cls.git_add_remote(remote, url)
+            if added:
+                cls.git_retry_if(not args.triangular and forked,
+                        'fetch', ['--', remote],
+                        'Fetching from {} ({})'.format(remote, url))
+
+        if triangular:
+            fetchremote = args.forkremote
             remote_url = repo[urltype]
             git_config('remote.pushdefault', prefix='', value=fetchremote)
-        git_config('upstreamremote', value=args.upstreamremote)
-        git_config('forkremote', value=args.forkremote)
-        git_config('urltype', value=urltype)
-        git_config('upstream', value=upstream)
+        else:
+            fetchremote = args.upstreamremote
+            remote_url = repo['parent'][urltype] if not personal else repo[urltype]
         validate_url(remote_url, urltype)
-        git('remote', 'add', '--', fetchremote, remote_url)
-        # We also need to retry in here, although is less likely since we
-        # already spent some time doing the previous clone
-        cls.git_retry_if(args.triangular and forked,
-                'fetch', ['--', fetchremote],
-                'Fetching from {} ({})'.format(fetchremote, remote_url))
-        run_hookscript('postclone', env=dict(
+        added=cls.git_add_remote(fetchremote, remote_url)
+        if added:
+            # We also need to retry in here, although is less likely since we
+            # already spent some time doing the previous clone
+            cls.git_retry_if(args.triangular and forked,
+                    'fetch', ['--', fetchremote],
+                    'Fetching from {} ({})'.format(fetchremote, remote_url))
+        git_config('urltype', value=urltype)
+        git_config('forkremote', value=args.forkremote)
+        git_config('upstreamremote', value=args.upstreamremote)
+        git_config('upstream', value=upstream)
+        git_config('triangular', value='true' if triangular else 'false')
+        run_hookscript('post-setup-fork', env=dict(
             fetchremote=fetchremote,
             triangular=triangular,
         ))
+
+    @classmethod
+    def git_add_remote(cls, remote, url):
+        git_remotes = git('remote', 'show', '-n').split('\n')
+        if remote in git_remotes:
+            git_url = git('remote', 'get-url', '--', remote)
+
+            repo = cls.parse_repo(url)
+            git_repo = cls.parse_repo(git_url)
+            if repo[1] != git_repo[1]:
+                die("Remote {} already exists and is set to {} instead of {}", remote, git_url, url)
+            else:
+                infof("Nothing to do, remote {} already exists and is already set to {}", remote, git_url)
+            return False
+        else:
+            git('remote', 'add', '--', remote, url)
+            return True
 
     @classmethod
     def git_retry_if(cls, condition, cmd, args, progress_msg):
@@ -924,18 +973,15 @@ class CloneCmd (object):
         return (urltype, proj)
 
     @classmethod
-    def setup_repo(cls, proj):
+    def maybe_fork(cls, proj):
         forked = False
-        # Own repo
         if proj.split('/')[0] == config.username:
+            # Our own repository
             repo = req.get('/repos/' + proj)
             if repo['fork']:
                 upstream = repo['parent']['full_name']
             else:
                 upstream = None
-                warnf('Repository {} is not a fork, just '
-                        'cloning, upstream will not be set',
-                        repo['full_name'])
         else:
             upstream = proj
             # Try to fork, if a fork already exists, we'll get the
@@ -944,9 +990,9 @@ class CloneCmd (object):
             #      API docs, but it seems to work as of Sep 2016.
             #      See https://github.com/sociomantic-tsunami/git-hub/pull/193
             #      for more details.
-            infof('Checking for existing fork / forking...')
+            infof('Checking for existing fork / forking {}...', upstream)
             repo = req.post('/repos/' + upstream + '/forks')
-            infof('Fork at {}', repo['html_url'])
+            infof('Fork exists / created at {}', repo['html_url'])
             forked = True
         return (repo, upstream, forked)
 
@@ -974,6 +1020,48 @@ class CloneCmd (object):
             return False
         return True
 
+# `git hub clone` command implementation
+class CloneCmd (SetupForkCmd):
+
+    cmd_name = "clone"
+    cmd_required_config = ['username', 'oauthtoken']
+    cmd_help = 'clone a GitHub repository (and fork as needed)'
+    cmd_usage = '%(prog)s [OPTIONS] [GIT CLONE OPTIONS] REPO [DEST]'
+
+    @classmethod
+    def setup_parser(cls, parser):
+        parser.add_argument('repository', metavar='REPO',
+                help="name of the repository to fork; in "
+                "<owner>/<project> format is the upstream repository, "
+                "if only <project> is specified, the <owner> part is "
+                "taken from hub.username")
+        parser.add_argument('dest', metavar='DEST', nargs='?',
+                help="destination directory where to put the new "
+                "cloned repository")
+        parser.add_argument('-U', '--upstreamremote', metavar='NAME',
+                default=config.upstreamremote,
+                help="use NAME as the upstream remote repository name "
+                "instead of the default '{}'".format(config.upstreamremote))
+        parser.add_argument('-F', '--forkremote', metavar='NAME',
+                default=config.forkremote,
+                help="use NAME as the fork remote repository name "
+                "instead of the default '{}'".format(config.forkremote))
+        parser.add_argument('-t', '--triangular', action="store_true",
+                default=None,
+                help="use Git 'triangular workflow' setup, so you can "
+                "push by default to your fork but pull by default "
+                "from 'upstream'")
+        parser.add_argument('--no-triangular', action="store_false",
+                dest='triangular',
+                help="do not use Git 'triangular workflow' setup")
+        return True # we need to get unknown arguments
+
+    @classmethod
+    def run(cls, parser, args):
+        (urltype, proj) = cls.parse_repo(args.repository)
+        (repo, upstream, forked) = cls.maybe_fork(proj)
+        dest = args.dest or repo['name']
+        cls.setup_dest(parser, args, urltype, proj, repo, upstream, forked, dest)
 
 # Utility class that groups common functionality used by the multiple
 # `git hub issue` (and `git hub pull`) subcommands.
@@ -2205,6 +2293,7 @@ class HubCmd (CmdGroup):
     cmd_title = "subcommands"
     cmd_help = "git command line interface to GitHub"
     SetupCmd = SetupCmd
+    SetupForkCmd = SetupForkCmd
     CloneCmd = CloneCmd
     IssueCmd = IssueCmd
     PullCmd = PullCmd
