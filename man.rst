@@ -99,29 +99,57 @@ __ https://github.com/settings/tokens/new
 __ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token
 
 `clone` REPO [DEST]
-  This command is used to clone **REPO**, a GitHub repository, to a **DEST**
-  directory (defaults to the name of the project being cloned). If the
-  repository is specified in *<owner>/<project>* form, the **REPO** will be
-  used as upstream and a personal fork will be looked up. If none is found,
-  a new fork will be created. In both cases, the fork will be cloned instead of
-  the upstream repository. The **REPO** can be specified as a regular *clone*
-  URL too (http, ssh, git), in that case the URL will be inspected and the
-  `hub.urltype` will be set as appropriate.
+  This command is used to fork **REPO** on GitHub (the same way `setup-fork`
+  command does), then clone the resulting fork to **DEST** directory (defaults
+  to the name of the project being cloned), and then setup the resulting local
+  copy (the same way `setup-fork` command does).
+
+  This command has all the same options as `setup-fork` but any unknown options
+  are passed to **git clone** instead of causing errors. Not all of them might
+  make sense when cloning a GitHub repo to be used with this tool though.
+
+  This command will run the `hub.hookscript` exactly as `setup-fork` command
+  does, see that command for more details.
+
+`setup-fork` [REPO]
+  This command is used to fork **REPO**, a GitHub repository, on GitHub and
+  setup the current working directory as the local copy of the resulting GitHub
+  fork. (That is, "set the current working directory up as a local copy of my
+  GitHub fork of **REPO**.)
+
+  Normally, this command is used internally by the `clone` command, but you
+  might want to call it explicitly in case you have a local copy of **REPO** (or
+  some related repository) and now you want to fork **REPO** on GitHub and setup
+  the current working directory as its local copy.
+
+  If **REPO** is not specified then the URL of `--upstreamremote` (or
+  `hub.upstreamremote`, `upstream` by default) remote will be used.
+
+  If **REPO** is specified in *<owner>/<project>* or a regular *clone* URL
+  (http, ssh, git) form, the **REPO** will be used as upstream.
+
+  In both cases, if a regular URL is available then the `hub.urltype` will be
+  set as appropriate.
+
+  In both cases a personal fork will be looked up at GitHub. If none is found, a
+  new fork will be created.
 
   If only *<project>* is specified as **REPO**, then the configuration
-  `hub.username` is used as *<owner>*, and the parent repository is looked up
-  at GitHub to determine the real upstream repository.
+  `hub.username` is used as *<owner>*, and the parent repository is looked up at
+  GitHub to determine the real upstream repository.
 
-  The upstream repository is cloned as `--upstreamremote` (or
-  `hub.upstreamremote`, `upstream` by default), the remote for the fork is
-  added as `--forkremote` (or `hub.forkremote`, `fork` by default) and the fork
-  is set as the git `remote.pushdefault` (so pushing will hit the fork by
-  default), unless `--no-triangular` is used (please see the option for more
-  details).
+  The upstream repository is fetched as `--upstreamremote` (or
+  `hub.upstreamremote`, `upstream` by default), the remote for the fork is added
+  as `--forkremote` (or `hub.forkremote`, `fork` by default) and the fork is set
+  as the git `remote.pushdefault` (so pushing will hit the fork by default),
+  unless `--no-triangular` is used (please see the option for more details).
 
-  After cloning and fetching, the git configuration variables `hub.upstream`,
-  `hub.upstreamremote` and `hub.forkremote` are set in the new cloned repo (see
+  After fetching, the git configuration variables `hub.upstream`,
+  `hub.upstreamremote` and `hub.forkremote` are set in the new repository (see
   CONFIGURATION_).
+
+  This command will run the `hub.hookscript` on some events, please have a look
+  at `HOOK SCRIPT`_ for more details.
 
   \-U NAME, --upstreamremote=NAME
     Use `NAME` as the upstream remote repository name instead of the default
@@ -148,20 +176,15 @@ __ https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-gith
     CONFIGURATION_ for details.
 
   \--no-triangular
-    Don't use Git's *triangular workflow* configuration (this is only available
-    for backwards compatibility but is not recommended). This option clones
+    Don't use Git's *triangular workflow* configuration. This option clones
     from the forked repository instead of cloning the upstream/parent repo, so
     both pulls and pushes will be done with the fork by default.
 
-    This option could be also used to clone a GitHub repository without forking
-    it, but some functionality of the tool will be lost.
+    For upstream+fork setups this is only available for backwards compatibility
+    and is not recommended.
 
-  GIT CLONE OPTIONS
-    Any standard **git clone** option can be passed. Not all of them might make
-    sense when cloning a GitHub repo to be used with this tool though.
-
-  This command will run the `hub.hookscript` on some events, please have a look
-  at `HOOK SCRIPT`_ for more details.
+    This option is implied when you are setting up git-hub to work with a
+    personal GitHub repository (that is not a fork of any other).
 
 `issue`
   This command is used to manage GitHub issues through a set of subcommands.
@@ -486,7 +509,7 @@ only so far.
 
 Available hooks (events):
 
-`postclone`
+`post-setup-fork`
   Executed after a `clone` command was done succesfully. The script will be run
   with the freshly cloned repository directory as the current working
   directory, so the git configuration just done by the `clone` command is
@@ -508,7 +531,7 @@ Available hooks (events):
   the `fork` remote when it is updated, but only when *triangular* was used in
   the clone you can use:
 
-  `git config --global hub.hookscript 'if test "$HUB_HOOK" = postclone &&
+  `git config --global hub.hookscript 'if test "$HUB_HOOK" = post-setup-fork &&
   $HUB_TRIANGULAR ; then git config remote.fork.prune true; fi'`
 
 
@@ -580,6 +603,88 @@ from. These are the git config keys used:
 
 [1] https://developer.github.com/v3/pulls/#get-a-single-pull-request
 
+
+EXAMPLES
+========
+
+1. Fork a project on GitHub and clone a local copy linked to it in a single command::
+
+    git-hub clone https://github.com/sociomantic-tsunami/git-hub
+    cd git-hub
+    git remote show -n
+    #fork
+    #upstream
+
+2. Fork a project on GitHub and link the fork to a previously created local copy::
+
+    git clone --origin upstream https://github.com/sociomantic-tsunami/git-hub
+    cd git-hub
+    git-hub setup-fork
+    git remote show -n
+    #fork
+    #upstream
+
+  alternatively::
+
+    git clone https://github.com/sociomantic-tsunami/git-hub
+    cd git-hub
+    git remote rename origin upstream
+    git-hub setup-fork
+    git remote show -n
+    #fork
+    #upstream
+
+3. The same, but with custom upstream remote name::
+
+    git clone https://github.com/sociomantic-tsunami/git-hub
+    cd git-hub
+    git-hub setup-fork -U origin
+    git remote show -n
+    #fork
+    #origin
+
+4. The same, but starting from a related repository that is neither upstream, nor fork::
+
+    git clone https://github.com/<somebody>/git-hub
+    cd git-hub
+    git-hub setup-fork https://github.com/sociomantic-tsunami/git-hub
+    git remote show -n
+    #fork
+    #origin
+    #upstream
+
+5. Similarly, but with your own personal project (no upstream)::
+
+    git clone https://github.com/<yourself>/<your-personal-project>
+    cd <your-personal-project>
+    git-hub setup-fork --no-triangular -U origin -F origin
+    git remote show -n
+    #origin
+
+6. The same, but in a single command::
+
+    git-hub clone --no-triangular -U origin -F origin https://github.com/<yourself>/<your-personal-project>
+    cd <your-personal-project>
+    git remote show -n
+    #origin
+
+7. Look at some issues::
+
+    cd repo
+    git-hub issue show 1 2 3 5
+
+8. Create a new issue::
+
+    cd repo
+    git-hub issue new
+
+7. Create a new PR::
+
+    cd repo
+    git checkout -b feature-branch
+    git status # did I commit everything?
+    git log -p upstream/master..HEAD # does it look good?
+    git-hub pull new
 
 FILES
 =====
