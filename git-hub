@@ -1473,7 +1473,7 @@ class PullUtil (IssueUtil):
             if error.code == 404:
                 die("The base branch '{}' or upstream repo '{}' don't "
                         "exist (or you don't have enough permissions). "
-                        "Please speficy a valid base branch using `--base` "
+                        "Please specify a valid base branch using `--base` "
                         "and upstream repo using `git config hub.upstream "
                         "<owner>/<repo>`.", base, config.upstream)
 

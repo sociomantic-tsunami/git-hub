@@ -487,7 +487,7 @@ only so far.
 Available hooks (events):
 
 `postclone`
-  Executed after a `clone` command was done succesfully. The script will be run
+  Executed after a `clone` command was done successfully. The script will be run
   with the freshly cloned repository directory as the current working
   directory, so the git configuration just done by the `clone` command is
   available (for example, `git config hub.forkremote` will get the fork
