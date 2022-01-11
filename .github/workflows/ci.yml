@@ -8,6 +8,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Needed to make sure to proper git describe
+      # This is a workaround for https://github.com/actions/checkout/issues/649
+      - name: Fix fetched tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: /usr/bin/git -c protocol.version=2 fetch --prune --progress
+            --no-recurse-submodules origin +"$GITHUB_REF:$GITHUB_REF"
       - name: Install dependencies
         run: |
           sudo apt-get update
