@@ -1125,7 +1125,7 @@ class IssueUtil (object):
         template = None
         for d, f in ((d, f) for d in directories for f in template_names):
             path = os.path.join(d, f)
-            if os.path.exists(path):
+            if os.path.isfile(path):
                 try:
                     file = open(path, "r")
                     template = file.read()
