@@ -1287,6 +1287,11 @@ class IssueCmd (CmdGroup):
                     "number ID to the %s" % cls.name)
         @classmethod
         def run(cls, parser, args):
+            # URL fixed to issues, pull requests updates are made
+            # through issues to allow changing labels, assignee and
+            # milestone (even when GitHub itself doesn't support it
+            # :D)
+            url = '/repos/%s/issues/%s' % (config.upstream, args.issue)
             title_body = dict()
             msg = args.message
             title = args.title
@@ -1303,17 +1308,12 @@ class IssueCmd (CmdGroup):
                 (title, body) = split_titled_message(msg)
                 title_body['title'] = title
                 title_body['body'] = body
-            cls._do_update(args.issue, args.label, args.assignee,
+            cls._do_update(url, args.label, args.assignee,
                     args.milestone, args.state, **title_body)
             cls.print_issue_summary(issue)
         @classmethod
-        def _do_update(cls, issue_id, labels=None, assignee=None,
+        def _do_update(cls, url, labels=None, assignee=None,
                 milestone=None, state=None, title=None, body=None):
-            # URL fixed to issues, pull requests updates are made
-            # through issues to allow changing labels, assignee and
-            # milestone (even when GitHub itself doesn't support it
-            # :D)
-            url = '/repos/%s/issues/%s' % (config.upstream, issue_id)
             params = dict()
             # Should labels be cleared?
             if (labels and len(labels) == 1 and not labels[0]):
