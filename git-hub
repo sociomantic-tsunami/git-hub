@@ -1308,7 +1308,7 @@ class IssueCmd (CmdGroup):
                 (title, body) = split_titled_message(msg)
                 title_body['title'] = title
                 title_body['body'] = body
-            cls._do_update(url, args.label, args.assignee,
+            issue = cls._do_update(url, args.labels, args.assignee,
                     args.milestone, args.state, **title_body)
             cls.print_issue_summary(issue)
         @classmethod
@@ -1330,7 +1330,7 @@ class IssueCmd (CmdGroup):
                 params['title'] = title
             if body:
                 params['body'] = body
-            issue = req.patch(url, **params)
+            return req.patch(url, **params)
 
     class CommentCmd (IssueUtil):
         cmd_help = "add a comment to an existing issue"
