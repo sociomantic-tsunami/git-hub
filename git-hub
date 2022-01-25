@@ -1287,11 +1287,6 @@ class IssueCmd (CmdGroup):
                     "number ID to the %s" % cls.name)
         @classmethod
         def run(cls, parser, args):
-            # URL fixed to issues, pull requests updates are made
-            # through issues to allow changing labels, assignee and
-            # milestone (even when GitHub itself doesn't support it
-            # :D)
-            url = '/repos/%s/issues/%s' % (config.upstream, args.issue)
             title_body = dict()
             msg = args.message
             title = args.title
@@ -1299,7 +1294,7 @@ class IssueCmd (CmdGroup):
                 title_body['title'] = title
             if args.edit_message:
                 if not msg:
-                    issue = req.get(url)
+                    issue = req.get(cls.url(args.issue))
                     msg = title if title else issue['title']
                     if issue['body']:
                         msg += '\n\n' + issue['body']
@@ -1308,11 +1303,14 @@ class IssueCmd (CmdGroup):
                 (title, body) = split_titled_message(msg)
                 title_body['title'] = title
                 title_body['body'] = body
-            issue = cls._do_update(url, args.labels, args.assignee,
-                    args.milestone, args.state, **title_body)
-            cls.print_issue_summary(issue)
+            issue = cls._do_update(args.issue, args.labels,
+                    args.assignee, args.milestone, args.state, **title_body)
+            if issue is None:
+                infof('Nothing to update for #{}', args.issue)
+            else:
+                cls.print_issue_summary(issue)
         @classmethod
-        def _do_update(cls, url, labels=None, assignee=None,
+        def _do_update(cls, issue_num, labels=None, assignee=None,
                 milestone=None, state=None, title=None, body=None):
             params = dict()
             # Should labels be cleared?
@@ -1330,7 +1328,12 @@ class IssueCmd (CmdGroup):
                 params['title'] = title
             if body:
                 params['body'] = body
-            return req.patch(url, **params)
+            if not params:
+                return None  # Make sure we don't make an invalid empty request
+            # The URL is "hardcoded" to the issue URL here because the GitHub
+            # API allows updating some metadata (like assignee, milestone and
+            # labels), through it.
+            return req.patch(IssueUtil.url(issue_num), **params)
 
     class CommentCmd (IssueUtil):
         cmd_help = "add a comment to an existing issue"
