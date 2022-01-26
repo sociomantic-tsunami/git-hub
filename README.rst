@@ -6,6 +6,10 @@ A Git command line interface to GitHub
    :target: https://packages.debian.org/source/unstable/git-hub
    :alt: Debian package
 
+.. image:: https://img.shields.io/ubuntu/v/git-hub
+   :target: https://packages.ubuntu.com/search?keywords=git-hub&searchon=names&suite=all&section=all
+   :alt: Ubuntu package
+
 .. contents::
    :depth: 1
    :local:
