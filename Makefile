@@ -5,6 +5,7 @@ sysconfdir ?= /etc
 
 export PYTHON ?= python3
 RST2MAN ?= rst2man
+SED ?= sed
 
 version ?= $(shell git describe --dirty 2> /dev/null | cut -b2-)
 version := $(if $(version),$(version),devel)
@@ -26,7 +27,7 @@ deb: $(install-deps)
 man: git-hub.1
 
 git-hub.1: man.rst git-hub
-	sed 's/^:Version: devel$$/:Version: $(version)/' $< | \
+	$(SED) 's/^:Version: devel$$/:Version: $(version)/' $< | \
 		$(RST2MAN) --exit-status=1 > $@ || ($(RM) $@ && false)
 
 bash-completion: generate-bash-completion git-hub
@@ -35,9 +36,9 @@ bash-completion: generate-bash-completion git-hub
 .PHONY: install
 install: $(install-deps)
 	install -m 755 -D git-hub $(DESTDIR)$(prefix)/bin/git-hub
-	sed -i 's/^VERSION = "git-hub devel"$$/VERSION = "git-hub $(version)"/' \
+	$(SED) -i 's/^VERSION = "git-hub devel"$$/VERSION = "git-hub $(version)"/' \
 			$(DESTDIR)$(prefix)/bin/git-hub
-	sed -i 's|^#!/usr/bin/env python3$$|#!/usr/bin/env $(PYTHON)|' \
+	$(SED) -i 's|^#!/usr/bin/env python3$$|#!/usr/bin/env $(PYTHON)|' \
 			$(DESTDIR)$(prefix)/bin/git-hub
 	install -m 644 -D git-hub.1 $(DESTDIR)$(prefix)/share/man/man1/git-hub.1
 	install -m 644 -D ftdetect.vim \

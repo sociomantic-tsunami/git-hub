@@ -230,6 +230,9 @@ activate the *ftdetect* plugin by copying or symbolic-linking it to
   # or if you are copying from the sources:
   # ln -s ftdetect.vim ~/.vim/ftdetect/githubmsg.vim
 
+On macOS set environment variable ``SED`` to ``gsed``. ``gsed`` can be installed
+with ``sudo port install gsed`` from MacPorts.
+
 
 Similar Projects
 ================
